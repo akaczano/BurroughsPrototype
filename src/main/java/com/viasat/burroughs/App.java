@@ -16,6 +16,7 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.utils.InfoCmp;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -23,6 +24,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Scanner;
 
 public class App {
@@ -31,7 +33,6 @@ public class App {
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RESET = "\u001B[0m";
-
 
 
     private static void loadConfiguration(Burroughs burroughs) {
@@ -65,6 +66,7 @@ public class App {
     }
 
 
+    public static volatile boolean alive = true;
 
     public static void main(String[] args) throws IOException {
 
@@ -77,17 +79,19 @@ public class App {
         LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .build();
+
         String prompt = "sql>";
         while (true) {
             String line = null;
             try {
                 line = lineReader.readLine(prompt);
-            } catch(UserInterruptException e) {
+            } catch (UserInterruptException e) {
 
-            } catch(EndOfFileException e) {
+            } catch (EndOfFileException e) {
                 return;
             }
             burroughs.handleCommand(line);
         }
     }
+
 }

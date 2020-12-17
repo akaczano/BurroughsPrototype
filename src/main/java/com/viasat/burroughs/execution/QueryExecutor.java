@@ -6,13 +6,12 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlSelect;
 
-import java.util.Properties;
 import java.util.UUID;
 
 public class QueryExecutor {
 
-    private StatementService service;
-    private DBProvider dbInfo;
+    private final StatementService service;
+    private final DBProvider dbInfo;
     private QueryBase currentQuery;
     public QueryExecutor(StatementService service, DBProvider dbInfo) {
         this.service = service;
@@ -40,25 +39,40 @@ public class QueryExecutor {
         String preparedQuery = query.toString().replace(query.getFrom().toString(), streamName);
         preparedQuery = preparedQuery.replaceAll("`", "");
 
+        QueryProperties props = new QueryProperties();
+        props.setDbInfo(this.dbInfo);
+        props.setId(id);
+        props.setStreamName(streamName);
+        props.setTopicName(topicName);
 
-        currentQuery = new SimpleQuery(service, packageProperties()
-                , preparedQuery, topicName, streamName);
-        currentQuery.execute(id);
+        currentQuery = new SimpleQuery(service, props, preparedQuery);
+        try {
+            currentQuery.execute();
+        } catch(ExecutionException e) {
+            currentQuery.destroy();
+            throw new ExecutionException("An error occurred during query processing: " +
+                    e.getMessage());
+        }
+        System.out.println("Your query is now active. Use .status to check on it.");
         return id;
-    }
-
-    private Properties packageProperties() {
-        Properties props = new Properties();
-        props.put("DB_HOST", dbInfo.getDbHost());
-        props.put("DATABASE", dbInfo.getDatabase());
-        props.put("DB_USER", dbInfo.getDbUser());
-        props.put("DB_PASSWORD", dbInfo.getDbPassword());
-        props.put("DB_TABLE", dbInfo.getDbTable());
-        return props;
     }
 
     public void stop() {
         currentQuery.destroy();
+        currentQuery = null;
     }
+
+    private Thread t;
+
+    public void status() {
+        if (currentQuery == null) {
+            System.out.println("There is no active query. Enter some SQL to execute one.");
+        }
+        else {
+            System.out.printf("Active Query ID: %s\n", currentQuery.getId());
+            currentQuery.printStatus();
+        }
+    }
+
 
 }

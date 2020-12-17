@@ -8,42 +8,65 @@ import java.util.Properties;
 public class SimpleQuery extends QueryBase {
 
     private final String query;
-    private final String topicName;
-    private final String streamName;
 
     private String stream = null;
     private String table = null;
     private String connector = null;
 
-    public SimpleQuery(StatementService service, Properties props, String query,
-                       String topicName, String streamName) {
+    public SimpleQuery(StatementService service, QueryProperties props, String query) {
         super(service, props);
         this.query = query;
-        this.topicName = topicName;
-        this.streamName = streamName;
     }
 
     @Override
-    public void execute(String id) {
-        if (!streamExists(streamName)) {
-            createStream(streamName, topicName, Format.AVRO);
+    public void execute() {
+        System.out.printf("Creating stream %s...", properties.getStreamName());
+        if (!streamExists(properties.getStreamName())) {
+            createStream(properties.getStreamName(), properties.getTopicName(), Format.AVRO);
+            System.out.print("Done\n");
         }
-        createTable(id, query);
-        createConnector(id);
+        else {
+            System.out.println("\nStream already exists");
+        }
+        System.out.print("Creating table from stream...");
+        createTable(properties.getId(), query);
+        System.out.print("Done\n");
+        System.out.print("Linking to database...");
+        createConnector(properties.getId());
+        System.out.print("Done\n");
+        startTime = System.currentTimeMillis();
     }
 
     @Override
     public void destroy() {
         if (table != null) {
+            System.out.print("Dropping table " + table + "...");
             dropTable(table);
+            System.out.print("Done\n");
         }
         if (stream != null) {
+            System.out.print("Dropping stream " + stream + "...");
             dropStream(stream);
+            System.out.print("Done\n");
         }
         if (connector != null) {
+            System.out.print("Dropping connector " + connector + "...");
             dropConnector(connector);
+            System.out.print("Done\n");
         }
+        System.out.print("Dropping output table...");
         dropOutput();
+        System.out.print("Done\n");
+    }
+
+    @Override
+    public void printStatus() {
+        if (table != null) {
+            super.printStatisticsForTable(this.table);
+        }
+        else {
+            System.out.println("Table not created");
+        }
     }
 
     @Override

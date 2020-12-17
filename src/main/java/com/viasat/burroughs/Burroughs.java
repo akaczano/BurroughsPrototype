@@ -1,12 +1,16 @@
 package com.viasat.burroughs;
 
 import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.execution.QueryBase;
 import com.viasat.burroughs.execution.QueryExecutor;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.StatusService;
 import com.viasat.burroughs.service.model.HealthStatus;
 import com.viasat.burroughs.service.model.StatementError;
 import com.viasat.burroughs.service.model.StatementResponse;
+import com.viasat.burroughs.service.model.description.DescribeResponse;
+import com.viasat.burroughs.service.model.description.Field;
+import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.validation.QueryValidator;
@@ -14,6 +18,7 @@ import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.jline.reader.UserInterruptException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -42,6 +47,7 @@ public class Burroughs implements DBProvider {
         this.handlers.put(".table", this::handleTable);
         this.handlers.put(".topics", this::handleTopics);
         this.handlers.put(".status", this::handleStatus);
+        this.handlers.put(".topic", this::handleTopic);
     }
 
     public void init() {
@@ -52,10 +58,11 @@ public class Burroughs implements DBProvider {
     }
 
     public void handleCommand(String command) {
+        if (command == null) return;
         try {
             command = command.trim();
             if (command.startsWith(".")) {
-                String commandWord = command.split(" ")[0];
+                String commandWord = command.split("\\s+")[0];
                 if (this.handlers.containsKey(commandWord)) {
                     this.handlers.get(commandWord).handle(command);
                 } else {
@@ -65,11 +72,14 @@ public class Burroughs implements DBProvider {
                 processQuery(command);
             }
         } catch(ExecutionException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
     private void processQuery(String query) {
+        if (query.endsWith(";")) {
+            query = query.substring(0, query.length() - 1);
+        }
         SqlSelect parsedQuery = validateQuery(query);
         if (parsedQuery != null) {
             if (this.dbTable == null) {
@@ -86,13 +96,50 @@ public class Burroughs implements DBProvider {
     }
 
     private void handleTable(String command) {
-        String[] words = command.split(" ");
-        if (words.length != 2) {
+        String[] words = command.split("\\s+");
+
+        if (words.length == 1) {
+            if (dbTable == null) {
+                System.out.println("No table selected yet.");
+            }
+            else {
+                System.out.println(this.dbTable);
+            }
+        }
+        else if (words.length > 2) {
             System.out.println("Usage: .table <tablename>");
         }
         else {
             this.dbTable = words[1];
             System.out.println("Set output table to " + words[1]);
+        }
+    }
+
+    private void handleTopic(String command) {
+        String[] words = command.split("\\s+");
+        if (words.length != 2) {
+            System.out.println("Usage: .topic <topic>");
+        }
+        else {
+            String topicName = words[1];
+            if (!QueryBase.streamExists(service, "BURROUGHS_" + topicName)) {
+                QueryBase.createStream(service, "BURROUGHS_" + topicName, topicName,
+                        Format.AVRO);
+            }
+            StatementResponse response = service.executeStatement("DESCRIBE BURROUGHS_" + topicName + ";");
+            if (response == null) {
+                System.out.println("Failed to retrieve topic metadata due to connection error.");
+            }
+            else if (response instanceof StatementError) {
+                throw new ExecutionException((StatementError)response);
+            }
+            else {
+                DescribeResponse description = (DescribeResponse)response;
+                System.out.println("Field Name: Type");
+                for (Field f : description.getSourceDescription().getFields()) {
+                    System.out.printf("%s: %s\n", f.getName(), f.getSchema().getType());
+                }
+            }
         }
     }
 
@@ -113,7 +160,8 @@ public class Burroughs implements DBProvider {
     }
 
     private void handleStatus(String command) {
-        System.out.println("Current status:");
+        System.out.println("Status:");
+        this.executor.status();
     }
 
     private boolean checkKsqlConnection() {
