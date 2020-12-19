@@ -16,16 +16,10 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.InfoCmp;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.io.PrintStream;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Scanner;
 
 public class App {
 
@@ -41,6 +35,7 @@ public class App {
         String database = "postgres";
         String dbUser = "postgres";
         String dbPassword = "";
+        String kafkaHost = "localhost:9092";
 
         Map<String, String> env = System.getenv();
         if (env.containsKey("KSQL_HOST")) {
@@ -58,22 +53,30 @@ public class App {
         if (env.containsKey("DATABASE")) {
             database = env.get("DATABASE");
         }
+        if (env.containsKey("KAFKA_HOST")) {
+            kafkaHost = env.get("KAFKA_HOST");
+        }
         burroughs.setKsqlHost(ksqlHost);
         burroughs.setDbHost(dbHost);
         burroughs.setDatabase(database);
         burroughs.setDbUser(dbUser);
         burroughs.setDbPassword(dbPassword);
+        burroughs.setKafkaHost(kafkaHost);
     }
 
-
-    public static volatile boolean alive = true;
-
     public static void main(String[] args) throws IOException {
-
+        System.setErr(new PrintStream(System.err){
+            public void println(String l) {
+                if (!l.startsWith("SLF4J")) {
+                    super.println(l);
+                }
+            }
+        });
         System.out.println("Welcome to Burroughs!");
         Burroughs burroughs = new Burroughs();
         loadConfiguration(burroughs);
         burroughs.init();
+        System.out.println("Not sure what to do now? Enter .help for a list of commands.");
 
         Terminal terminal = TerminalBuilder.terminal();
         LineReader lineReader = LineReaderBuilder.builder()

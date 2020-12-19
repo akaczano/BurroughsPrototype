@@ -14,17 +14,27 @@ import java.util.concurrent.ExecutionException;
 public class KafkaService {
 
     private final String kafkaHost;
+    private AdminClient adminClient;
+    private KafkaConsumer<?, ?> consumer;
+
+    private String groupCache = "";
+    private String topicCache = "";
+    private int partitionCache = -1;
+
     public KafkaService(String kafkaHost) {
         this.kafkaHost = kafkaHost;
     }
 
     public Map<TopicPartition, Long> getCurrentOffset(String consumerGroup) {
         Map<TopicPartition, Long> results = new HashMap<>();
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaHost);
-        AdminClient client = KafkaAdminClient.create(properties);
+        if (!consumerGroup.equals(groupCache)) {
+            Properties properties = new Properties();
+            properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaHost);
+            adminClient = KafkaAdminClient.create(properties);
+            groupCache = consumerGroup;
+        }
         try {
-            Map<TopicPartition, OffsetAndMetadata> map = client
+            Map<TopicPartition, OffsetAndMetadata> map = adminClient
                     .listConsumerGroupOffsets(consumerGroup)
                     .partitionsToOffsetAndMetadata().get();
             for (TopicPartition tp : map.keySet()) {
@@ -37,15 +47,17 @@ public class KafkaService {
     }
 
     public Long getLogMaxOffset(String consumerGroup, TopicPartition tp) {
-
-        Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaHost);
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
-        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
-        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(properties);
+        if (!consumerGroup.equals(groupCache) ||
+                !(topicCache.equals(tp.topic()) && partitionCache == tp.partition())) {
+            Properties properties = new Properties();
+            properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaHost);
+            properties.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
+            properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+            properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
+            properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+            properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+           consumer = new KafkaConsumer<>(properties);
+        }
         consumer.assign(Collections.singleton(tp));
         consumer.seekToEnd(Collections.singleton(tp));
 

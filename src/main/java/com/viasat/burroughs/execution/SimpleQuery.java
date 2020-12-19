@@ -1,9 +1,9 @@
 package com.viasat.burroughs.execution;
 
+import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.list.Format;
 
-import java.util.Properties;
 
 public class SimpleQuery extends QueryBase {
 
@@ -13,8 +13,9 @@ public class SimpleQuery extends QueryBase {
     private String table = null;
     private String connector = null;
 
-    public SimpleQuery(StatementService service, QueryProperties props, String query) {
-        super(service, props);
+    public SimpleQuery(StatementService service, KafkaService kafkaService,
+                       QueryProperties props, String query) {
+        super(service, kafkaService, props);
         this.query = query;
     }
 

@@ -1,6 +1,7 @@
 package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
+import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
@@ -11,11 +12,13 @@ import java.util.UUID;
 public class QueryExecutor {
 
     private final StatementService service;
+    private final KafkaService kafkaService;
     private final DBProvider dbInfo;
     private QueryBase currentQuery;
-    public QueryExecutor(StatementService service, DBProvider dbInfo) {
+    public QueryExecutor(StatementService service, KafkaService ks, DBProvider dbInfo) {
         this.service = service;
         this.dbInfo = dbInfo;
+        this.kafkaService = ks;
     }
 
     public String executeQuery(SqlSelect query) {
@@ -45,7 +48,7 @@ public class QueryExecutor {
         props.setStreamName(streamName);
         props.setTopicName(topicName);
 
-        currentQuery = new SimpleQuery(service, props, preparedQuery);
+        currentQuery = new SimpleQuery(service, kafkaService, props, preparedQuery);
         try {
             currentQuery.execute();
         } catch(ExecutionException e) {
@@ -54,12 +57,18 @@ public class QueryExecutor {
                     e.getMessage());
         }
         System.out.println("Your query is now active. Use .status to check on it.");
+        System.out.println("Use .stop to terminate.");
         return id;
     }
 
     public void stop() {
-        currentQuery.destroy();
-        currentQuery = null;
+        if (currentQuery != null) {
+            currentQuery.destroy();
+            currentQuery = null;
+        }
+        else {
+            System.out.println("No active query. Type some SQL to run one.");
+        }
     }
 
     private Thread t;

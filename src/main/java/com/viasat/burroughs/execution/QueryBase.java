@@ -25,12 +25,15 @@ public abstract class QueryBase {
 
     protected final StatementService service;
     protected final QueryProperties properties;
+    protected final KafkaService kafkaService;
 
     protected long startTime = Long.MIN_VALUE;
 
-    public QueryBase(StatementService service, QueryProperties properties) {
+    public QueryBase(StatementService service, KafkaService kafkaService,
+                     QueryProperties properties) {
         this.service = service;
         this.properties = properties;
+        this.kafkaService = kafkaService;
     }
 
 
