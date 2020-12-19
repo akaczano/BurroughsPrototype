@@ -1,0 +1,3 @@
+FROM openjdk
+COPY ["target/DemoPipelineMaven-1.0-SNAPSHOT-jar-with-dependencies.jar", "/program.jar"]
+ENTRYPOINT ["java", "-jar", "program.jar", "produce-csv"]
