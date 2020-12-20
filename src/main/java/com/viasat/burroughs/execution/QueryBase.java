@@ -176,8 +176,11 @@ public abstract class QueryBase {
     }
 
     protected void drop(String objectType, String name) {
-        StatementResponse dropResponse = service.executeStatement(String.format(
-                "DROP %s %s;", objectType, name));
+        String command = String.format("DROP %s %s%s",
+                objectType, name,
+                objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
+        System.out.println(command);
+        StatementResponse dropResponse = service.executeStatement(command);
         if (dropResponse == null) {
             throw new ExecutionException(String
                     .format("Failed to drop %s due to connection error",

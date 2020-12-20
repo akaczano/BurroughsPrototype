@@ -1,15 +1,6 @@
 package com.viasat.burroughs;
 
 
-import com.viasat.burroughs.execution.QueryExecutor;
-import com.viasat.burroughs.service.StatementService;
-import com.viasat.burroughs.service.StatusService;
-import com.viasat.burroughs.service.model.HealthStatus;
-import com.viasat.burroughs.validation.QueryValidator;
-import com.viasat.burroughs.validation.TopicNotFoundException;
-import com.viasat.burroughs.validation.UnsupportedQueryException;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.parser.SqlParseException;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;

@@ -40,6 +40,11 @@ public class SimpleQuery extends QueryBase {
 
     @Override
     public void destroy() {
+        if (connector != null) {
+            System.out.print("Dropping connector " + connector + "...");
+            dropConnector(connector);
+            System.out.print("Done\n");
+        }
         if (table != null) {
             System.out.print("Dropping table " + table + "...");
             dropTable(table);
@@ -50,11 +55,7 @@ public class SimpleQuery extends QueryBase {
             dropStream(stream);
             System.out.print("Done\n");
         }
-        if (connector != null) {
-            System.out.print("Dropping connector " + connector + "...");
-            dropConnector(connector);
-            System.out.print("Done\n");
-        }
+
         System.out.print("Dropping output table...");
         dropOutput();
         System.out.print("Done\n");
