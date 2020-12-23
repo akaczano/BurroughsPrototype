@@ -4,12 +4,8 @@ import com.viasat.burroughs.App;
 import com.viasat.burroughs.DBProvider;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
-import com.viasat.burroughs.service.model.StatementError;
-import com.viasat.burroughs.service.model.StatementResponse;
-import com.viasat.burroughs.service.model.body.StreamProperties;
 import com.viasat.burroughs.service.model.command.CommandResponse;
-import com.viasat.burroughs.service.model.description.DescribeResponse;
-import com.viasat.burroughs.service.model.description.Query;
+import com.viasat.burroughs.service.model.description.*;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
@@ -51,15 +47,7 @@ public abstract class QueryBase {
         String tableName = "burroughs_" + id;
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
-        StatementResponse response = service.executeStatement(statement,
-                new StreamProperties(true));
-        if (response == null) {
-            throw new ExecutionException("Failed to create table due to connection error");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            CommandResponse result = (CommandResponse) response;
-        }
+        CommandResponse response = service.executeStatement(statement, "create table");
         return tableName;
     }
 
@@ -71,19 +59,15 @@ public abstract class QueryBase {
                                       String topic, Format format) {
         String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
                 streamName, topic, format.toString());
-        StatementResponse response = service.executeStatement(query);
-        if (response == null) {
-            throw new ExecutionException("Failed to create stream due to connection error");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            CommandResponse result = (CommandResponse) response;
-        }
+        CommandResponse result = service.executeStatement(query, "create stream");
         return streamName;
     }
 
 
     protected String createConnector(String id) {
+        // Sometimes we will need to do this
+        // 'key.converter' = 'org.apache.kafka.connect.converters.IntegerConverter'
+
         DBProvider dbInfo = properties.getDbInfo();
         String command = "CREATE SINK CONNECTOR ";
         command += "burr_connect_" + id + " WITH (";
@@ -102,15 +86,8 @@ public abstract class QueryBase {
         command += "'pk.mode' = 'record_key',";
         command += "'auto.create' = true);";
 
-        StatementResponse response = service.executeStatement(command);
-        if (response == null) {
-            throw new ExecutionException("Failed to create connector due to connection error.");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            CommandResponse result = (CommandResponse) response;
-            return "burr_connect_" + id;
-        }
+        CommandResponse response = service.executeStatement(command, "create connector");
+        return "burr_connect_" + id;
     }
 
     protected boolean streamExists(String streamName) {
@@ -118,11 +95,9 @@ public abstract class QueryBase {
     }
 
     public static boolean streamExists(StatementService service, String streamName) {
-        StatementResponse response = service.executeStatement("LIST STREAMS;");
-        if (!(response instanceof ListResponse)) {
-            throw new ExecutionException("Failed to executed statement: LIST STREAMS;");
-        }
-        ListResponse listResponse = (ListResponse) response;
+        ListResponse listResponse = service.executeStatement("LIST STREAMS;",
+                "executed statement: LIST STREAMS");
+
         return Arrays.stream(listResponse.getStreams())
                 .anyMatch(s -> s.getName().equalsIgnoreCase(streamName));
     }
@@ -134,35 +109,22 @@ public abstract class QueryBase {
 
 
     private void terminateQuery(String queryId) {
-        StatementResponse response = service.executeStatement(
-                String.format("TERMINATE %s;", queryId));
-        if (response == null) {
-            throw new ExecutionException("Failed to terminate query due to connection error");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            CommandResponse result = (CommandResponse) response;
-            if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
-                throw new ExecutionException(result.getCommandStatus().getMessage());
-            }
+        CommandResponse result = service.executeStatement(
+                String.format("TERMINATE %s;", queryId),
+                "terminate query");
+        if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
+            throw new ExecutionException(result.getCommandStatus().getMessage());
         }
     }
 
     private void terminateQueries(String objectName) {
-        StatementResponse response = service.
-                executeStatement(String.format("DESCRIBE %s;", objectName));
-        if (response == null) {
-            throw new ExecutionException("Failed to terminate queries due to connection error.");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            DescribeResponse description = (DescribeResponse) response;
-            for (Query query : description.getSourceDescription().getReadQueries()) {
-                terminateQuery(query.getId());
-            }
-            for (Query query : description.getSourceDescription().getWriteQueries()) {
-                terminateQuery(query.getId());
-            }
+        DescribeResponse description = service.
+                executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
+        for (Query query : description.getSourceDescription().getReadQueries()) {
+            terminateQuery(query.getId());
+        }
+        for (Query query : description.getSourceDescription().getWriteQueries()) {
+            terminateQuery(query.getId());
         }
     }
 
@@ -179,17 +141,8 @@ public abstract class QueryBase {
         String command = String.format("DROP %s %s%s",
                 objectType, name,
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
-        System.out.println(command);
-        StatementResponse dropResponse = service.executeStatement(command);
-        if (dropResponse == null) {
-            throw new ExecutionException(String
-                    .format("Failed to drop %s due to connection error",
-                            objectType.toLowerCase()));
-        } else if (dropResponse instanceof StatementError) {
-            throw new ExecutionException((StatementError) dropResponse);
-        } else {
-            CommandResponse result = (CommandResponse) dropResponse;
-        }
+        CommandResponse result = service.executeStatement(command, String.format("drop %s",
+                objectType.toLowerCase()));
     }
 
     protected void dropOutput() {
@@ -209,51 +162,74 @@ public abstract class QueryBase {
     }
 
     protected void printStatisticsForTable(String tableName) {
-        StatementResponse response = service
-                .executeStatement(String.format("DESCRIBE EXTENDED %s;", tableName));
-        if (response == null) {
-            throw new ExecutionException("Failed to retrieve query status due to connection error.");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            DescribeResponse description = (DescribeResponse) response;
-            if (description.getSourceDescription() == null) {
-                throw new ExecutionException("There was an error retrieving query status:" +
-                        " source description is null.");
+        // 1. Table description/statistics
+
+        DescribeResponse description = service.executeStatement(
+                String.format("DESCRIBE EXTENDED %s;", tableName),
+                "describe table");
+
+        if (description.getSourceDescription() == null) {
+            throw new ExecutionException("There was an error retrieving query status:" +
+                    " source description is null.");
+        }
+        String statistics = description.getSourceDescription().getStatistics();
+        String[] words = statistics.split("\\s+");
+        if (words.length < 4) { // This will execute if there is no data in the topic
+            System.out.println("Status not available.");
+            return;
+        }
+        System.out.println("Process rate: " + words[1] + " messages/s");
+        System.out.println("Total messages processed: " + words[3]);
+
+        // 2. Progress from kafka consumer metadata
+
+        KafkaService kafkaService = new KafkaService("broker:29092");
+        int tpCounter = 0;
+        long currentTotal = 0;
+        long maxTotal = 0;
+        for (Query query : description.getSourceDescription().getWriteQueries()) {
+            String consumerGroup = String.format("_confluent-ksql-default_query_%s",
+                    query.getId());
+            Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
+            for (TopicPartition tp : queryStatuses.keySet()) {
+                long current = queryStatuses.get(tp);
+                long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
+                System.out.printf("Query %d: %d%% (%d/%d)\n",
+                        tpCounter + 1, (int) ((((double) current) / max) * 100), current, max);
+                tpCounter++;
+                currentTotal += current;
+                maxTotal += max;
             }
-            String statistics = description.getSourceDescription().getStatistics();
-            String[] words = statistics.split("\\s+");
-            System.out.println("Process rate: " + words[1] + " messages/s");
-            System.out.println("Total messages processed: " + words[3]);
-            KafkaService kafkaService = new KafkaService("broker:29092");
-            int tpCounter = 0;
-            long currentTotal = 0;
-            long maxTotal = 0;
-            for (Query query : description.getSourceDescription().getWriteQueries()) {
-                String consumerGroup = String.format("_confluent-ksql-default_query_%s",
-                        query.getId());
-                Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
-                for (TopicPartition tp : queryStatuses.keySet()) {
-                    long current = queryStatuses.get(tp);
-                    long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
-                    System.out.printf("Query %d: %d%% (%d/%d)\n",
-                            tpCounter + 1, (int) ((((double) current) / max) * 100), current, max);
-                    tpCounter++;
-                    currentTotal += current;
-                    maxTotal += max;
-                }
-            }
+
             double totalProgress = (((double) currentTotal) / maxTotal);
             double totalRuntime = (System.currentTimeMillis() - startTime);
 
             System.out.printf("Total Progress: %d%% (%d/%d)\n",
-                    (int)(totalProgress * 100),
+                    (int) (totalProgress * 100),
                     currentTotal, maxTotal);
             System.out.printf("Total run time: %.1f seconds\n", totalRuntime / 1000.0);
             System.out.printf("Estimated time remaining: %.1f seconds\n",
-                    ((totalRuntime / (totalProgress)) - totalRuntime)/1000.0);
+                    ((totalRuntime / (totalProgress)) - totalRuntime) / 1000.0);
         }
 
+    }
+    protected void checkConnectorStatus(String connector) {
+        ConnectorDescription description = service.executeStatement(
+                String.format("DESCRIBE CONNECTOR %s;", connector),
+                "describe connector"
+        );
+        ConnectorStatus status = description.getStatus();
+        if (status.getTasks().length < 1) {
+            System.out.println(App.ANSI_YELLOW + "Connector not running" + App.ANSI_RESET);
+        }
+        else {
+            for (ConnectorTask task : status.getTasks()) {
+                if (!task.getState().equals("RUNNING") && task.getTrace() != null) {
+                    System.out.println(App.ANSI_RED + "Connector Error:" + App.ANSI_RESET);
+                    System.out.println(task.getTrace());
+                }
+            }
+        }
     }
 
 }

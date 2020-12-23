@@ -72,7 +72,7 @@ public class Burroughs implements DBProvider {
         try {
             command = command.trim();
             if ((!ksqlConnected || !dbConnected) && !command.equals(".connect") &&
-                !command.equals(".connection")) {
+                    !command.equals(".connection")) {
                 System.out.println("Connection not established");
                 System.out.println("Use .connect to re-connect");
                 System.out.println("Use .connection to view connection info");
@@ -179,17 +179,11 @@ public class Burroughs implements DBProvider {
                 QueryBase.createStream(service, "BURROUGHS_" + topicName, topicName,
                         Format.AVRO);
             }
-            StatementResponse response = service.executeStatement("DESCRIBE BURROUGHS_" + topicName + ";");
-            if (response == null) {
-                System.out.println("Failed to retrieve topic metadata due to connection error.");
-            } else if (response instanceof StatementError) {
-                throw new ExecutionException((StatementError) response);
-            } else {
-                DescribeResponse description = (DescribeResponse) response;
-                System.out.println("Field Name: Type");
-                for (Field f : description.getSourceDescription().getFields()) {
-                    System.out.printf("%s: %s\n", f.getName(), f.getSchema().getType());
-                }
+            DescribeResponse description = service.executeStatement("DESCRIBE BURROUGHS_" + topicName + ";",
+                    "retrieve topic metadata");
+            System.out.println("Field Name: Type");
+            for (Field f : description.getSourceDescription().getFields()) {
+                System.out.printf("%s: %s\n", f.getName(), f.getSchema().getType());
             }
         }
     }

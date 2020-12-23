@@ -69,6 +69,12 @@ public class SimpleQuery extends QueryBase {
         else {
             System.out.println("Table not created");
         }
+        if (connector != null) {
+            super.checkConnectorStatus(connector);
+        }
+        else {
+            System.out.println("Connector not created");
+        }
     }
 
     @Override

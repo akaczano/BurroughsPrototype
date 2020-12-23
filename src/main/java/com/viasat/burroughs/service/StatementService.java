@@ -2,12 +2,13 @@ package com.viasat.burroughs.service;
 
 
 import com.google.gson.Gson;
-import com.viasat.burroughs.service.model.HealthStatus;
+import com.viasat.burroughs.execution.ExecutionException;
 import com.viasat.burroughs.service.model.StatementError;
 import com.viasat.burroughs.service.model.StatementResponse;
 import com.viasat.burroughs.service.model.body.StatementHolder;
 import com.viasat.burroughs.service.model.body.StreamProperties;
 import com.viasat.burroughs.service.model.command.CommandResponse;
+import com.viasat.burroughs.service.model.description.ConnectorDescription;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.list.ListResponse;
 
@@ -51,7 +52,19 @@ public class StatementService {
     }
 
     public StatementResponse executeStatement(String statement) {
-        return executeStatement(statement, new StreamProperties());
+        return executeStatement(statement, new StreamProperties(true));
+    }
+
+    public <T extends StatementResponse> T executeStatement(String statement, String message) {
+        StatementResponse response = executeStatement(statement);
+        if (response == null) {
+            throw new ExecutionException(String.format("Failed to %s due to connection error",
+                    message));
+        } else if (response instanceof StatementError) {
+            throw new ExecutionException((StatementError) response);
+        } else {
+            return (T) response;
+        }
     }
 
     public StatementResponse executeStatement(String statement, StreamProperties properties) {
@@ -61,14 +74,14 @@ public class StatementService {
             Class<? extends StatementResponse> format;
             if (up.startsWith("CREATE") || up.startsWith("TERMINATE") || up.startsWith("DROP")) {
                 format = CommandResponse.class;
-            }
-            else if (up.startsWith("SHOW") || up.startsWith("LIST")) {
+            } else if (up.startsWith("SHOW") || up.startsWith("LIST")) {
                 format = ListResponse.class;
-            }
-            else if (up.startsWith("DESCRIBE")) {
+
+            } else if (up.startsWith("DESCRIBE CONNECTOR")) {
+                format = ConnectorDescription.class;
+            } else if (up.startsWith("DESCRIBE")) {
                 format = DescribeResponse.class;
-            }
-            else {
+            } else {
                 throw new IllegalArgumentException("Invalid Command");
             }
             Object result = execute(statement, properties, format);
@@ -77,7 +90,7 @@ public class StatementService {
             } else {
                 return (StatementError) result;
             }
-        } catch(IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             return null;
         }
     }
