@@ -7,6 +7,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlSelect;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public class QueryExecutor {
@@ -31,7 +32,7 @@ public class QueryExecutor {
             SqlNode n = query.getGroup().get(i);
             if (n instanceof SqlNumericLiteral) {
                 SqlNumericLiteral literal = (SqlNumericLiteral)n;
-                int position = literal.getPrec();
+                int position = ((BigDecimal)literal.getValue()).intValueExact();
                 if (literal.isInteger()) {
                     query.getGroup().set(i, query.getSelectList().get(position - 1));
                 }
