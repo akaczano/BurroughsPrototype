@@ -23,6 +23,7 @@ import org.apache.calcite.sql.parser.SqlParseException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -56,6 +57,7 @@ public class Burroughs implements DBProvider {
         this.handlers.put(".help", this::handleHelp);
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".connect", this::handleConnect);
+        this.handlers.put(".quit", this::handleQuit);
     }
 
     public void init() {
@@ -145,6 +147,8 @@ public class Burroughs implements DBProvider {
         System.out.println("\tDisplays connection information/status.");
         System.out.println(".connect");
         System.out.println("\tAttempts to reconnect to ksqlDB and PostgreSQL");
+        System.out.println(".quit");
+        System.out.println("\tExits burroughs. Ctrl+D works too.");
         System.out.println("Any other input will be treated like a SQL query.");
     }
 
@@ -207,6 +211,11 @@ public class Burroughs implements DBProvider {
         this.executor.status();
     }
 
+    private void handleQuit(String command) {
+        System.out.println("Goodbye!");
+        System.exit(0);
+    }
+
     private boolean checkKsqlConnection() {
         StatusService statusService = new StatusService(ksqlHost);
 
@@ -234,6 +243,17 @@ public class Burroughs implements DBProvider {
             conn = DriverManager.getConnection(conString, props);
             System.out.println("Database connected successfully");
         } catch (SQLException e) {
+            if (e.getMessage().contains("database \"") && e.getMessage().contains("\" does not exist")) {
+                try {
+                    String cString = String.format("jdbc:postgresql://%s/", dbHost);
+                    Connection c = DriverManager.getConnection(cString, props);
+                    Statement createDB = c.createStatement();
+                    createDB.execute(String.format("CREATE DATABASE %s;", database));
+                    return checkDatabaseConnection();
+                } catch(SQLException ex) {
+                    e = ex;
+                }
+            }
             System.err.printf("Failed to connect to database: %s\n", e.getMessage());
             System.err.printf("Database host: %s\nUser: %s\n Database: %s\n", dbHost, dbUser, database);
         }

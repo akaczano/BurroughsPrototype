@@ -33,3 +33,30 @@ To build and run burroughs do the following (from the root directory).
 ```
 If you setup everything successfully, you should see something like the following.
 ![screenshot](images/landing.png)
+
+You can use `.help` to see a list of useful commands that are available.
+
+### 4. Executing a simple query
+First, we will need to set a name for our output table: 
+```burroughs
+.table test
+```
+Once that is done, enter the following:
+```sql
+select storer, sum(spend) from transactions group by storer
+```
+If everything works correctly, the output should look like this:
+
+![screenshot](images/execution.png)
+
+To see your data, open a second terminal and enter the following:
+```bash
+docker exec -it postgres psql -U postgres
+```
+Once you have a psql shell, you will need to execute `\connect burroughs` to access the burroughs output data.
+
+You should now be able to view your results:
+
+![screenshot](images/output.png)
+
+When you're done, don't forget to run `.stop` to clean up all of the stream processing infrastructure. `.quit` or Ctrl+D exits the burroughs shell.

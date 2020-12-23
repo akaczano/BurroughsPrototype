@@ -59,6 +59,8 @@ public class QueryExecutor {
         }
         System.out.println("Your query is now active. Use .status to check on it.");
         System.out.println("Use .stop to terminate.");
+        System.out.printf("Want to see your output data? Try:\ndocker exec -it postgres psql -U %s\n",
+                dbInfo.getDbUser());
         return id;
     }
 
