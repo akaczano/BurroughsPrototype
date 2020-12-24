@@ -3,7 +3,6 @@ package com.viasat.burroughs.execution;
 import com.viasat.burroughs.DBProvider;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
-import com.viasat.burroughs.service.model.description.DataType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlSelect;
@@ -65,8 +64,6 @@ public class QueryExecutor {
         }
         System.out.println("Your query is now active. Use .status to check on it.");
         System.out.println("Use .stop to terminate.");
-        System.out.printf("Want to see your output data? Try:\ndocker exec -it postgres psql -U %s\n",
-                dbInfo.getDbUser());
         return id;
     }
 
@@ -79,8 +76,6 @@ public class QueryExecutor {
             System.out.println("No active query. Type some SQL to run one.");
         }
     }
-
-    private Thread t;
 
     public void status() {
         if (currentQuery == null) {

@@ -30,6 +30,8 @@ public class KafkaService {
         if (!consumerGroup.equals(groupCache)) {
             Properties properties = new Properties();
             properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaHost);
+            properties.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 5000);
+            properties.put(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, 5001);
             adminClient = KafkaAdminClient.create(properties);
             groupCache = consumerGroup;
         }

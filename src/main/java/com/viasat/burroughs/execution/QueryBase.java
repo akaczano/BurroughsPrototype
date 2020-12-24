@@ -112,11 +112,13 @@ public abstract class QueryBase {
         command += "'pk.fields' = 'rowkey',";
         command += "'pk.mode' = 'record_key',";
         command += String.format("'key.converter' = '%s',", keyConverter);
+        command += "'transforms'='tombstoneHandlerExample',";
+        command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
         command += "'auto.create' = true);";
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
-            throw new ExecutionException("Failed to create connector");
+            throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
         return "burr_connect_" + id;
     }
@@ -231,27 +233,30 @@ public abstract class QueryBase {
             String consumerGroup = String.format("_confluent-ksql-default_query_%s",
                     query.getId());
             Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
-            for (TopicPartition tp : queryStatuses.keySet()) {
-                long current = queryStatuses.get(tp);
-                long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
-                System.out.printf("Query %d: %d%% (%d/%d)\n",
-                        tpCounter + 1, (int) ((((double) current) / max) * 100), current, max);
-                tpCounter++;
-                currentTotal += current;
-                maxTotal += max;
+            if (queryStatuses != null) {
+                for (TopicPartition tp : queryStatuses.keySet()) {
+                    long current = queryStatuses.get(tp);
+                    long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
+                    System.out.printf("Query %d: %d%% (%d/%d)\n",
+                            tpCounter + 1, (int) ((((double) current) / max) * 100), current, max);
+                    tpCounter++;
+                    currentTotal += current;
+                    maxTotal += max;
+                }
+                double totalProgress = (((double) currentTotal) / maxTotal);
+                double totalRuntime = (System.currentTimeMillis() - startTime);
+
+                System.out.printf("Total Progress: %d%% (%d/%d)\n",
+                        (int) (totalProgress * 100),
+                        currentTotal, maxTotal);
+                System.out.printf("Total run time: %.1f seconds\n", totalRuntime / 1000.0);
+                System.out.printf("Estimated time remaining: %.1f seconds\n",
+                        ((totalRuntime / (totalProgress)) - totalRuntime) / 1000.0);
             }
-
-            double totalProgress = (((double) currentTotal) / maxTotal);
-            double totalRuntime = (System.currentTimeMillis() - startTime);
-
-            System.out.printf("Total Progress: %d%% (%d/%d)\n",
-                    (int) (totalProgress * 100),
-                    currentTotal, maxTotal);
-            System.out.printf("Total run time: %.1f seconds\n", totalRuntime / 1000.0);
-            System.out.printf("Estimated time remaining: %.1f seconds\n",
-                    ((totalRuntime / (totalProgress)) - totalRuntime) / 1000.0);
+            else {
+                System.out.println("Kafka not connected. Can't print progress information.");
+            }
         }
-
     }
     protected void checkConnectorStatus(String connector) {
         ConnectorDescription description = service.executeStatement(
