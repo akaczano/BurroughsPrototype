@@ -51,9 +51,8 @@ If everything works correctly, the output should look like this:
 
 To see your data, open a second terminal and enter the following:
 ```bash
-docker exec -it postgres psql -U postgres
+docker exec -it postgres psql -U postgres burroughs
 ```
-Once you have a psql shell, you will need to execute `\connect burroughs` to access the burroughs output data.
 
 You should now be able to view your results:
 
