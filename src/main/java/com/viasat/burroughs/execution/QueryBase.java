@@ -14,6 +14,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -24,6 +25,8 @@ public abstract class QueryBase {
     protected final KafkaService kafkaService;
 
     protected long startTime = Long.MIN_VALUE;
+
+    private String keyConverter = "org.apache.kafka.connect.storage.StringConverter";
 
     public QueryBase(StatementService service, KafkaService kafkaService,
                      QueryProperties properties) {
@@ -38,6 +41,30 @@ public abstract class QueryBase {
     public abstract void destroy();
 
     public abstract void printStatus();
+
+    public abstract void setGroupBy(String field);
+
+    public void setGroupByDataType(DataType type) {
+        switch (type) {
+            case BIGINT:
+                keyConverter = "org.apache.kafka.connect.converters.LongConverter";
+                return;
+            case INTEGER:
+                keyConverter = "org.apache.kafka.connect.converters.IntegerConverter";
+                return;
+            case DOUBLE:
+                keyConverter = "org.apache.kafka.connect.converters.DoubleConverter";
+                return;
+            case BOOLEAN:
+                keyConverter = "org.apache.kafka.connect.converters.BooleanConverter";
+                return;
+            case STRING:
+                keyConverter = "org.apache.kafka.connect.storage.StringConverter";
+                return;
+            default:
+                keyConverter = "org.apache.kafka.connect.converters.ByteArrayConverter";
+        }
+    }
 
     public String getId() {
         return this.properties.getId();
@@ -73,7 +100,7 @@ public abstract class QueryBase {
         command += "burr_connect_" + id + " WITH (";
         command += "'connector.class' = 'io.confluent.connect.jdbc.JdbcSinkConnector',";
         command += String.format("'connection.url' = 'jdbc:postgresql://%s/%s',",
-                dbInfo.getDbHost(), dbInfo.getDatabase());
+                dbInfo.getConnectorDb(), dbInfo.getDatabase());
         command += String.format("'connection.user' = '%s',",
                 dbInfo.getDbUser());
         command += String.format("'connection.password' = '%s',",
@@ -84,10 +111,24 @@ public abstract class QueryBase {
         command += "'insert.mode' = 'upsert',";
         command += "'pk.fields' = 'rowkey',";
         command += "'pk.mode' = 'record_key',";
+        command += String.format("'key.converter' = '%s',", keyConverter);
         command += "'auto.create' = true);";
 
         CommandResponse response = service.executeStatement(command, "create connector");
+        if (response.getType().equals("error_entity")) {
+            throw new ExecutionException("Failed to create connector");
+        }
         return "burr_connect_" + id;
+    }
+
+    protected Map<String, DataType> GetSchema(String stream) {
+        DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
+                        "describe stream");
+        Map<String, DataType> results = new HashMap<>();
+        for (Field f : description.getSourceDescription().getFields()) {
+            results.put(f.getName(), f.getSchema().getType());
+        }
+        return results;
     }
 
     protected boolean streamExists(String streamName) {
@@ -183,7 +224,6 @@ public abstract class QueryBase {
 
         // 2. Progress from kafka consumer metadata
 
-        KafkaService kafkaService = new KafkaService("broker:29092");
         int tpCounter = 0;
         long currentTotal = 0;
         long maxTotal = 0;

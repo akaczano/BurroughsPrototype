@@ -2,6 +2,7 @@ package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
 
 
@@ -13,27 +14,39 @@ public class SimpleQuery extends QueryBase {
     private String table = null;
     private String connector = null;
 
+    private String groupby;
+
     public SimpleQuery(StatementService service, KafkaService kafkaService,
                        QueryProperties props, String query) {
         super(service, kafkaService, props);
         this.query = query;
     }
 
+    public void setGroupBy(String field) {
+        groupby = field;
+    }
+
     @Override
     public void execute() {
         System.out.printf("Creating stream %s...", properties.getStreamName());
         if (!streamExists(properties.getStreamName())) {
-            createStream(properties.getStreamName(), properties.getTopicName(), Format.AVRO);
+            stream = createStream(properties.getStreamName(), properties.getTopicName(), Format.AVRO);
             System.out.print("Done\n");
         }
         else {
             System.out.println("\nStream already exists");
         }
+        stream = properties.getStreamName();
+        if (groupby != null) {
+            DataType dType = GetSchema(stream).get(groupby);
+            setGroupByDataType(dType);
+        }
+
         System.out.print("Creating table from stream...");
-        createTable(properties.getId(), query);
+        table = createTable(properties.getId(), query);
         System.out.print("Done\n");
         System.out.print("Linking to database...");
-        createConnector(properties.getId());
+        connector = createConnector(properties.getId());
         System.out.print("Done\n");
         startTime = System.currentTimeMillis();
     }
@@ -77,18 +90,10 @@ public class SimpleQuery extends QueryBase {
         }
     }
 
-    @Override
-    protected String createStream(String streamName, String topic, Format format) {
-        return (stream = super.createStream(streamName, topic, format));
-    }
 
     @Override
     protected String createTable(String id, String query) {
         return (table = super.createTable(id, query));
     }
 
-    @Override
-    protected String createConnector(String id) {
-        return (connector = super.createConnector(id));
-    }
 }

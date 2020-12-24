@@ -3,6 +3,7 @@ package com.viasat.burroughs.execution;
 import com.viasat.burroughs.DBProvider;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.description.DataType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.SqlSelect;
@@ -49,7 +50,12 @@ public class QueryExecutor {
         props.setStreamName(streamName);
         props.setTopicName(topicName);
 
+
         currentQuery = new SimpleQuery(service, kafkaService, props, preparedQuery);
+        if (query.getGroup().getList().size() == 1) {
+            String groupByField = query.getGroup().get(0).toString();
+            currentQuery.setGroupBy(groupByField);
+        }
         try {
             currentQuery.execute();
         } catch(ExecutionException e) {

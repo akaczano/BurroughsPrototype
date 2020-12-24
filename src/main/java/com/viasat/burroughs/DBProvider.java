@@ -7,4 +7,5 @@ public interface DBProvider {
     String getDbPassword();
     String getDatabase();
     String getDbTable();
+    String getConnectorDb();
 }

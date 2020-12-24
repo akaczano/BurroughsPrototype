@@ -37,6 +37,7 @@ public class Burroughs implements DBProvider {
     private String dbPassword;
     private String dbTable;
     private String kafkaHost;
+    private String connectorDB;
 
     private StatementService service;
     private QueryExecutor executor;
@@ -64,8 +65,8 @@ public class Burroughs implements DBProvider {
         ksqlConnected = checkKsqlConnection();
         dbConnected = checkDatabaseConnection() != null;
         this.service = new StatementService(ksqlHost);
-        this.executor = new QueryExecutor(service, kafkaService, this);
         this.kafkaService = new KafkaService(kafkaHost);
+        this.executor = new QueryExecutor(service, kafkaService, this);
     }
 
 
@@ -314,5 +315,13 @@ public class Burroughs implements DBProvider {
 
     public void setKafkaHost(String kafkaHost) {
         this.kafkaHost = kafkaHost;
+    }
+
+    public String getConnectorDb() {
+        return connectorDB;
+    }
+
+    public void setConnectorDb(String connectorDB) {
+        this.connectorDB = connectorDB;
     }
 }

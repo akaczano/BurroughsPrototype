@@ -23,6 +23,7 @@ public class App {
     private static void loadConfiguration(Burroughs burroughs) {
         String ksqlHost = "http://localhost:8088";
         String dbHost = "localhost:5432";
+        String connectorDB = "postgres:5432";
         String database = "burroughs";
         String dbUser = "postgres";
         String dbPassword = "";
@@ -47,12 +48,16 @@ public class App {
         if (env.containsKey("KAFKA_HOST")) {
             kafkaHost = env.get("KAFKA_HOST");
         }
+        if (env.containsKey("CONNECTOR_DB")) {
+            connectorDB = env.get("CONNECTOR_DB");
+        }
         burroughs.setKsqlHost(ksqlHost);
         burroughs.setDbHost(dbHost);
         burroughs.setDatabase(database);
         burroughs.setDbUser(dbUser);
         burroughs.setDbPassword(dbPassword);
         burroughs.setKafkaHost(kafkaHost);
+        burroughs.setConnectorDb(connectorDB);
     }
 
     public static void main(String[] args) throws IOException {
