@@ -68,10 +68,6 @@ public class SimpleQuery extends QueryBase {
             dropStream(stream);
             System.out.print("Done\n");
         }
-
-        System.out.print("Dropping output table...");
-        dropOutput();
-        System.out.print("Done\n");
     }
 
     @Override

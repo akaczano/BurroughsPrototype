@@ -59,6 +59,7 @@ public class QueryExecutor {
             currentQuery.execute();
         } catch(ExecutionException e) {
             currentQuery.destroy();
+            currentQuery = null;
             throw new ExecutionException("An error occurred during query processing: " +
                     e.getMessage());
         }

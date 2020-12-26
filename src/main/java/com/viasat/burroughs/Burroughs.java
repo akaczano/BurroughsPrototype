@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -142,8 +143,9 @@ public class Burroughs implements DBProvider {
         System.out.println("\tPrints the schema for the specified topic.");
         System.out.println(".status");
         System.out.println("\tPrints the status of the currently executing query.");
-        System.out.println(".stop");
-        System.out.println("\tHalts query execution, removes all associated ksqlDB objects and drops output table.");
+        System.out.println(".stop [keep-table]");
+        System.out.println("\tHalts query execution, removes all associated ksqlDB objects and " +
+                "\n\tdrops output table unless keep-table is specified.");
         System.out.println(".connection");
         System.out.println("\tDisplays connection information/status.");
         System.out.println(".connect");
@@ -155,6 +157,24 @@ public class Burroughs implements DBProvider {
 
     private void handleStop(String command) {
         executor.stop();
+        if (Arrays.stream(command.split(" "))
+                .noneMatch(w -> w.equalsIgnoreCase("keep-table"))) {
+
+            System.out.print("Dropping output table...");
+            String conString = String.format("jdbc:postgresql://%s/%s",
+                    dbHost, database);
+            Properties props = new Properties();
+            props.put("user", dbUser);
+            props.put("password", dbPassword);
+            try {
+                Connection conn = DriverManager.getConnection(conString, props);
+                conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s;",
+                        dbTable));
+            } catch (SQLException e) {
+                throw new ExecutionException("Failed to drop table from database");
+            }
+            System.out.print("Done\n");
+        }
     }
 
     private void handleTable(String command) {
@@ -251,7 +271,7 @@ public class Burroughs implements DBProvider {
                     Statement createDB = c.createStatement();
                     createDB.execute(String.format("CREATE DATABASE %s;", database));
                     return checkDatabaseConnection();
-                } catch(SQLException ex) {
+                } catch (SQLException ex) {
                     e = ex;
                 }
             }

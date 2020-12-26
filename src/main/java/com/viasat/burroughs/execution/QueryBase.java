@@ -188,21 +188,7 @@ public abstract class QueryBase {
                 objectType.toLowerCase()));
     }
 
-    protected void dropOutput() {
-        DBProvider dbInfo = properties.getDbInfo();
-        String conString = String.format("jdbc:postgresql://%s/%s",
-                dbInfo.getDbHost(), dbInfo.getDatabase());
-        Properties props = new Properties();
-        props.put("user", dbInfo.getDbUser());
-        props.put("password", dbInfo.getDbPassword());
-        try {
-            Connection conn = DriverManager.getConnection(conString, props);
-            conn.createStatement().execute(String.format("DROP TABLE IF EXISTS %s;",
-                    dbInfo.getDbTable()));
-        } catch (SQLException e) {
-            throw new ExecutionException("Failed to drop table from database");
-        }
-    }
+
 
     protected void printStatisticsForTable(String tableName) {
         // 1. Table description/statistics
