@@ -1,0 +1,18 @@
+[
+  {
+    "name": "trans_producer",
+    "topic": "small_topic",
+    "delay": 0,
+    "max_records": -1,
+    "schema": "transaction.avsc",
+    "key_field": "STORER",
+    "data_source": {
+      "type": "file",
+      "source": {
+        "location": "datafiles/transactions.csv",
+        "header": true,
+        "delimiter": ","
+      }
+    }
+  }
+]

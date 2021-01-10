@@ -3,6 +3,8 @@ package com.viasat.burroughs;
 import com.viasat.burroughs.execution.ExecutionException;
 import com.viasat.burroughs.execution.QueryBase;
 import com.viasat.burroughs.execution.QueryExecutor;
+import com.viasat.burroughs.producer.Producer;
+import com.viasat.burroughs.producer.ProducerInterface;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.StatusService;
@@ -38,11 +40,13 @@ public class Burroughs implements DBProvider {
     private String dbPassword;
     private String dbTable;
     private String kafkaHost;
+    private String schemaRegistry;
     private String connectorDB;
 
     private StatementService service;
     private QueryExecutor executor;
     private KafkaService kafkaService;
+    private ProducerInterface producerInterface;
 
     private boolean ksqlConnected = false;
     private boolean dbConnected = false;
@@ -59,6 +63,8 @@ public class Burroughs implements DBProvider {
         this.handlers.put(".help", this::handleHelp);
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".connect", this::handleConnect);
+        this.handlers.put(".producer", command -> producerInterface.handleCommand(command));
+        this.handlers.put(".producers", command -> producerInterface.printList());
         this.handlers.put(".quit", this::handleQuit);
     }
 
@@ -68,8 +74,16 @@ public class Burroughs implements DBProvider {
         this.service = new StatementService(ksqlHost);
         this.kafkaService = new KafkaService(kafkaHost);
         this.executor = new QueryExecutor(service, kafkaService, this);
+        if (ksqlConnected) {
+            this.producerInterface = new ProducerInterface(kafkaHost, schemaRegistry);
+        }
     }
 
+    public void dispose() {
+        if (producerInterface != null) {
+            producerInterface.stopProducers();
+        }
+   }
 
     public void handleCommand(String command) {
         if (command == null) return;
@@ -343,5 +357,9 @@ public class Burroughs implements DBProvider {
 
     public void setConnectorDb(String connectorDB) {
         this.connectorDB = connectorDB;
+    }
+
+    public void setSchemaRegistry(String schemaRegistry) {
+        this.schemaRegistry = schemaRegistry;
     }
 }

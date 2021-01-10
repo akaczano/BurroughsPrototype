@@ -28,6 +28,7 @@ public class App {
         String dbUser = "postgres";
         String dbPassword = "";
         String kafkaHost = "localhost:9092";
+        String schemaRegistry = "http://localhost:8081";
 
         Map<String, String> env = System.getenv();
         if (env.containsKey("KSQL_HOST")) {
@@ -51,6 +52,9 @@ public class App {
         if (env.containsKey("CONNECTOR_DB")) {
             connectorDB = env.get("CONNECTOR_DB");
         }
+        if (env.containsKey("SCHEMA_REGISTRY")) {
+            schemaRegistry = env.get("SCHEMA_REGISTRY");
+        }
         burroughs.setKsqlHost(ksqlHost);
         burroughs.setDbHost(dbHost);
         burroughs.setDatabase(database);
@@ -58,12 +62,13 @@ public class App {
         burroughs.setDbPassword(dbPassword);
         burroughs.setKafkaHost(kafkaHost);
         burroughs.setConnectorDb(connectorDB);
+        burroughs.setSchemaRegistry(schemaRegistry);
     }
 
     public static void main(String[] args) throws IOException {
         System.setErr(new PrintStream(System.err){
             public void println(String l) {
-                if (!l.startsWith("SLF4J")) {
+                if (!l.startsWith("SLF4J") && !l.startsWith("log4j")) {
                     super.println(l);
                 }
             }
@@ -85,8 +90,9 @@ public class App {
             try {
                 line = lineReader.readLine(prompt);
             } catch (UserInterruptException e) {
-
+                continue;
             } catch (EndOfFileException e) {
+                burroughs.dispose();
                 return;
             }
             burroughs.handleCommand(line);
