@@ -27,10 +27,8 @@ public class AppTest
      */
     @Test
     public void shouldAnswerWithTrue() throws IOException {
-        List<ProducerEntry> producers = ProducerEntry.parse(Path.of("producers.json"));
-        for (ProducerEntry entry : producers) {
-            entry.buildAndStart("localhost:9092", "http://localhost:8081");
-        }
-       // while (producers.stream().anyMatch(p -> p.getStatus().equals("Running")));
+        Schema.Parser parser = new Schema.Parser();
+        Schema s = parser.parse(new File("producer/transaction.avsc"));
+        System.out.println(s.getField("Date").getObjectProp("logicalType").equals("date"));
     }
 }

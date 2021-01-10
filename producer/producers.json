@@ -1,15 +1,29 @@
 [
   {
-    "name": "trans_producer",
-    "topic": "small_topic",
+    "name": "transactions_producer",
+    "topic": "transactions",
     "delay": 0,
-    "max_records": -1,
     "schema": "transaction.avsc",
-    "key_field": "STORER",
+	  "key_field": "StoreR", 
     "data_source": {
       "type": "file",
       "source": {
         "location": "datafiles/transactions.csv",
+        "header": true,
+        "delimiter": ","
+      }
+    }
+  },
+  {
+    "name": "customers_producer",
+    "topic": "customers",
+    "delay": 0,
+    "schema": "customer.avsc",
+    "key_field": "BasketNum",
+    "data_source": {
+      "type": "file",
+      "source": {
+        "location": "datafiles/customers.csv",
         "header": true,
         "delimiter": ","
       }

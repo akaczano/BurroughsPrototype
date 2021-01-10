@@ -7,6 +7,7 @@ import org.apache.avro.generic.GenericRecord;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Date;
 import java.util.Scanner;
 
 public class FileSource implements IDataSource {
@@ -59,8 +60,15 @@ public class FileSource implements IDataSource {
 
             if (type.equalsIgnoreCase("string"))
                 record.put(field.name(), value);
-            else if (type.equalsIgnoreCase("int"))
-                record.put(field.name(), Integer.parseInt(value));
+            else if (type.equalsIgnoreCase("int")) {
+                Object lt = field.getObjectProp("logicalType");
+                if (lt != null && lt.equals("date")) {
+                    record.put(field.name(), (int)(Date.parse(value) / 86_400_000L));
+                }
+                else {
+                    record.put(field.name(), Integer.parseInt(value));
+                }
+            }
             else if (type.equalsIgnoreCase("boolean"))
                 record.put(field.name(), Boolean.parseBoolean(value));
             else if (type.equalsIgnoreCase("long"))

@@ -9,8 +9,13 @@ import java.util.List;
 public class ProducerInterface {
 
     private HashMap<String, ProducerEntry> producers;
+    private String kafkaHost;
+    private String schemaRegistry;
 
     public ProducerInterface(String kafkaHost, String schemaRegistry) {
+        this.kafkaHost = kafkaHost;
+        this.schemaRegistry = schemaRegistry;
+
         System.out.println("Loading producers...");
         File producerFile = new File("/producer/producers.json");
         if (!producerFile.exists()) {
@@ -26,8 +31,6 @@ public class ProducerInterface {
                     System.out.printf("%d producers loaded\n", entries.size());
                     for (ProducerEntry entry : entries) {
                         producers.put(entry.getName(), entry);
-                        System.out.printf("Starting producer %s\n", entry.getName());
-                        entry.buildAndStart(kafkaHost, schemaRegistry);
                     }
                 }
             } catch(JsonSyntaxException e) {
@@ -71,7 +74,17 @@ public class ProducerInterface {
             entry.terminate();
         }
         else if (op.equalsIgnoreCase("start")) {
-
+            if (words.length > 3) {
+                try {
+                    int limit = Integer.parseInt(words[3]);
+                    entry.buildAndStart(kafkaHost, schemaRegistry, limit);
+                } catch(NumberFormatException e) {
+                    System.out.printf("Invalid limit %s\n", words[3]);
+                }
+            }
+            else {
+                entry.buildAndStart(kafkaHost, schemaRegistry, -1);
+            }
         }
         else {
             System.out.printf("Unknown operation: %s\n", op);
@@ -86,9 +99,6 @@ public class ProducerInterface {
     }
 
     public void stopProducers() {
-        if (producers.size() > 0) {
-            System.out.println("Stopping producers...");
-        }
         for (ProducerEntry p : producers.values()) {
             p.terminate();
         }

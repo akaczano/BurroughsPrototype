@@ -8,7 +8,8 @@
         },
         {
             "name": "Date",
-            "type": "string"
+            "type": "int",
+		    "logicalType": "date"
         },
         {
             "name": "ProductNum",

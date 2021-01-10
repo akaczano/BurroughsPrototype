@@ -27,32 +27,53 @@ public class ProducerEntry {
 
     private Producer producer;
 
-    public void buildAndStart(String kafka, String schemaRegistry) {
-        if (status != null) return;
+    public void buildAndStart(String kafka, String schemaRegistry, int maxRecords) {
+        if (maxRecords >= 0) {
+            this.maxRecords = maxRecords;
+        }
         producer = new Producer(kafka, schemaRegistry, this);
         producer.start();
     }
 
     public void pause() {
+        if (producer == null) {
+            System.out.println("Producer not started");
+            return;
+        }
         producer.pauseProducer();
     }
 
     public void pause(int time) {
+        if (producer == null) {
+            System.out.println("Producer not started");
+            return;
+        }
         producer.pauseProducer(System.currentTimeMillis() + time);
     }
 
     public void resume() {
+        if (producer == null) {
+            System.out.println("Producer not started");
+            return;
+        }
         producer.resumeProducer();
     }
 
     public void terminate() {
+        if (producer == null) {
+            return;
+        }
+        if (!producer.getStatus().equalsIgnoreCase("Stopped")) {
+            System.out.printf("Stopping producer %s...\n", this.name);
+        }
         producer.stopProducer();
+        producer = null;
     }
 
     public void printStatus() {
         System.out.printf("Producer %s status\n", this.name);
         if (producer == null) {
-            System.out.println("Failed to create producer");
+            System.out.println("Producer not started");
             return;
         }
         System.out.printf("Producer status: %s\n", producer.getStatus());
@@ -106,8 +127,9 @@ public class ProducerEntry {
                 // Basic configuration
                 producer.name = o.get("name").getAsString();
                 producer.topic = o.get("topic").getAsString();
-                producer.delay = o.get("delay").getAsInt();
-                producer.maxRecords = o.get("max_records").getAsInt();
+                if (o.has("delay")) {
+                    producer.delay = o.get("delay").getAsInt();
+                }
 
                 // Schema
                 File schemaFile = new File("/producer/" + o.get("schema").getAsString());
@@ -117,8 +139,9 @@ public class ProducerEntry {
                 }
                 Schema.Parser parser = new Schema.Parser();
                 producer.schema = parser.parse(Files.readString(schemaFile.toPath()));
-                producer.keyField = o.get("key_field").getAsString();
-
+                if (o.has("key_field")) {
+                    producer.keyField = o.get("key_field").getAsString();
+                }
                 // Data source
                 JsonObject ds = o.get("data_source").getAsJsonObject();
                 JsonObject source = ds.getAsJsonObject("source");
@@ -152,8 +175,6 @@ public class ProducerEntry {
             return "Producer must have topic property";
         if (!o.has("schema"))
             return "Producer must specify schema";
-        if (!o.has("key_field"))
-            return "Producer must specify key_field";
         if (!o.has("data_source"))
             return "Producer must have data_source";
         JsonObject dataSource = o.get("data_source").getAsJsonObject();

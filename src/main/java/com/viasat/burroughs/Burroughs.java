@@ -164,6 +164,16 @@ public class Burroughs implements DBProvider {
         System.out.println("\tDisplays connection information/status.");
         System.out.println(".connect");
         System.out.println("\tAttempts to reconnect to ksqlDB and PostgreSQL");
+        System.out.println(".producers");
+        System.out.println("\tDisplays a list of producers");
+        System.out.println(".producer <producer> <operation> [arguments]");
+        System.out.println("\tExecutes the given command for the specified producer.");
+        System.out.println("\tAvailable operations");
+        System.out.println("\tstart [limit]: starts the producer");
+        System.out.println("\tstatus: prints the producer's status");
+        System.out.println("\tpause [delay (ms)]: pauses the producer indefinitely or for a length of time");
+        System.out.println("\tresume: resumes producer operation");
+        System.out.println("\tkill: stops producer operation");
         System.out.println(".quit");
         System.out.println("\tExits burroughs. Ctrl+D works too.");
         System.out.println("Any other input will be treated like a SQL query.");

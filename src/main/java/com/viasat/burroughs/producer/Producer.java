@@ -43,24 +43,29 @@ public class Producer extends Thread implements Callback {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 KafkaAvroSerializer.class);
 
-        Optional<Field> potField = schema.getFields().stream()
-                .filter(f -> f.name().equalsIgnoreCase(keyField))
-                .findFirst();
-        if (potField.isEmpty()) {
-            throw new ProducerException(String.format("Field %s not found", keyField));
+        if (keyField != null) {
+            Optional<Field> potField = schema.getFields().stream()
+                    .filter(f -> f.name().equalsIgnoreCase(keyField))
+                    .findFirst();
+            if (potField.isEmpty()) {
+                throw new ProducerException(String.format("Field %s not found", keyField));
+            }
+            String type = potField.get().schema().getType().getName();
+            String configName = ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
+            if (type.equalsIgnoreCase("int")) {
+                props.put(configName, IntegerSerializer.class);
+            } else if (type.equalsIgnoreCase("string")) {
+                props.put(configName, StringSerializer.class);
+            } else if (type.equalsIgnoreCase("long")) {
+                props.put(configName, LongSerializer.class);
+            } else if (type.equalsIgnoreCase("double")) {
+                props.put(configName, DoubleSerializer.class);
+            } else {
+                props.put(configName, ByteArraySerializer.class);
+            }
         }
-        String type = potField.get().schema().getType().getName();
-        String configName = ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG;
-        if (type.equalsIgnoreCase("int")) {
-            props.put(configName, IntegerSerializer.class);
-        } else if (type.equalsIgnoreCase("string")) {
-            props.put(configName, StringSerializer.class);
-        } else if (type.equalsIgnoreCase("long")) {
-            props.put(configName, LongSerializer.class);
-        } else if (type.equalsIgnoreCase("double")) {
-            props.put(configName, DoubleSerializer.class);
-        } else {
-            props.put(configName, ByteArraySerializer.class);
+        else {
+            props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
         }
 
         producer = new KafkaProducer<>(props);
@@ -110,6 +115,7 @@ public class Producer extends Thread implements Callback {
             }
             source.close();
         } catch (Exception e) {
+            e.printStackTrace();
             status = "Error";
         }
         if (status.equals("Running")) status = "Stopped";
