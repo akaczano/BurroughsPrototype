@@ -3,7 +3,6 @@ package com.viasat.burroughs;
 import com.viasat.burroughs.execution.ExecutionException;
 import com.viasat.burroughs.execution.QueryBase;
 import com.viasat.burroughs.execution.QueryExecutor;
-import com.viasat.burroughs.producer.Producer;
 import com.viasat.burroughs.producer.ProducerInterface;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
@@ -75,7 +74,7 @@ public class Burroughs implements DBProvider {
         this.kafkaService = new KafkaService(kafkaHost);
         this.executor = new QueryExecutor(service, kafkaService, this);
         if (ksqlConnected) {
-            this.producerInterface = new ProducerInterface(kafkaHost, schemaRegistry);
+            this.producerInterface = new ProducerInterface(kafkaHost, schemaRegistry, this);
         }
     }
 

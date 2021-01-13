@@ -1,6 +1,7 @@
 package com.viasat.burroughs.producer;
 
 import com.google.gson.JsonSyntaxException;
+import com.viasat.burroughs.DBProvider;
 
 import java.io.File;
 import java.util.HashMap;
@@ -12,7 +13,7 @@ public class ProducerInterface {
     private String kafkaHost;
     private String schemaRegistry;
 
-    public ProducerInterface(String kafkaHost, String schemaRegistry) {
+    public ProducerInterface(String kafkaHost, String schemaRegistry, DBProvider defaultDB) {
         this.kafkaHost = kafkaHost;
         this.schemaRegistry = schemaRegistry;
 
@@ -24,7 +25,7 @@ public class ProducerInterface {
         else {
             producers = new HashMap<>();
             try {
-                List<ProducerEntry> entries = ProducerEntry.parse(producerFile.toPath());
+                List<ProducerEntry> entries = ProducerEntry.parse(producerFile.toPath(), defaultDB);
                 if (entries == null) {
                     System.out.println("Unable to load producers.");
                 } else {

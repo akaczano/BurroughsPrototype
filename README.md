@@ -108,11 +108,15 @@ The below tables describe all of these properties and their uses. All paths are 
 | data_source | The data source to pull records from | Object | Yes | None |
 
 The data source object must have a type field which can be either "file" or "database". It must also have a source object whose fields are defined below.
-| Property | Description | Type | Data source |
-| -------- | ----------- | ---- | ----------- |
-| location | Path to the data file | String | File |
-| delimiter | Specifies the delimiter | Stirng | File |
-| header | Whether or not the file contains a header line which must be skipped | Boolean | File |
+| Property | Description | Type | Data source | Default |
+| -------- | ----------- | ---- | ----------- | ------- | 
+| location | Path to the data file | String | File | None |
+| delimiter | Specifies the delimiter | String | File | , |
+| header | Whether or not the file contains a header line which must be skipped | Boolean | File | false |
+| hostname | Database hostname | String | Database | Burroughs database host |
+| database | Database name | String | Database | Burroughs database name |
+| username | Database user | String | Database | Burroughs database user |
+| password | Database password | String | Database | Burroughs database password |
 
 Producers can be started using the command:
 ```burroughs

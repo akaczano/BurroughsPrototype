@@ -51,28 +51,21 @@ public class QueryValidator {
     }
 
     private void validateFrom(SqlNode from) throws TopicNotFoundException {
-        if (from.isA(Collections.singleton(SqlKind.JOIN))) {
+        if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
             SqlNode left = join.getLeft();
             SqlNode right = join.getRight();
-            validateSide(left);
-            validateSide(right);
+            validateFrom(left);
+            validateFrom(right);
         }
-        else if (!validateTopic(from.toString())) {
-            throw new TopicNotFoundException(from.toString());
+        else if (from instanceof SqlBasicCall) {
+            SqlBasicCall call = (SqlBasicCall)from;
+            validateFrom(call.operand(0));
         }
-    }
-
-    private void validateSide(SqlNode reference) throws TopicNotFoundException {
-        if (reference instanceof SqlBasicCall) {
-            String topicName = ((SqlBasicCall)reference).getOperands()[0].toString();
-            if (!validateTopic(topicName)) {
-                throw new TopicNotFoundException(topicName);
-            }
-        }
-        else {
-            if (!validateTopic(reference.toString())) {
-                throw new TopicNotFoundException(reference.toString());
+        else if (from instanceof SqlIdentifier) {
+            SqlIdentifier identifier = (SqlIdentifier)from;
+            if (!validateTopic(identifier.getSimple())) {
+                throw new TopicNotFoundException(from.toString());
             }
         }
     }

@@ -4,14 +4,19 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.viasat.burroughs.DBProvider;
 import org.apache.avro.Schema;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class ProducerEntry {
 
@@ -111,7 +116,7 @@ public class ProducerEntry {
         return this.topic;
     }
 
-    public static List<ProducerEntry> parse(Path file) {
+    public static List<ProducerEntry> parse(Path file, DBProvider defaultDB) {
         List<ProducerEntry> producers = new ArrayList<>();
         try {
             String text = Files.readString(file);
@@ -161,6 +166,39 @@ public class ProducerEntry {
                     }
                     producer.dataSource = fs;
                 }
+                else if (ds.get("type").getAsString().equalsIgnoreCase("database")) {
+                    String hostName = defaultDB.getDbHost();
+                    String database = defaultDB.getDatabase();
+                    String username = defaultDB.getDbUser();
+                    String password = defaultDB.getDbPassword();
+
+                    if (source.has("hostname")) {
+                        hostName = source.get("hostname").getAsString();
+                    }
+                    if (source.has("database")) {
+                        database = source.get("database").getAsString();
+                    }
+                    if (source.has("username")) {
+                        username = source.get("username").getAsString();
+                    }
+                    if (source.has("password")) {
+                        password = source.get("password").getAsString();
+                    }
+
+                    String conString = String.format("jdbc:postgresql://%s/%s",
+                            hostName, database);
+                    Properties props = new Properties();
+                    props.put("user", username);
+                    props.put("password", password);
+                    try {
+                        Connection connect = DriverManager.getConnection(conString, props);
+                        producer.dataSource = new DBSource(connect, producer.schema, source.get("table").getAsString());
+                    } catch(SQLException e) {
+                        System.out.printf("Failed to load producer %s\n", producer.name);
+                        e.printStackTrace();
+                        continue;
+                    }
+                }
                 producers.add(producer);
             }
         } catch(IOException e) {
@@ -193,11 +231,13 @@ public class ProducerEntry {
             if (!source.has("location"))
                 return "File source must specify file location";
         }
-        else if (type.equalsIgnoreCase("db")) {
-            //TODO
+        else if (type.equalsIgnoreCase("database")) {
+            JsonObject source = dataSource.get("source").getAsJsonObject();
+            if (!source.has("table"))
+                return "Database source must specify table";
         }
         else {
-            return "Data source type must be one of file or db";
+            return "Data source type must be one of file or database";
         }
         return null;
     }
