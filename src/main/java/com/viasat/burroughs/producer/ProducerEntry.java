@@ -16,7 +16,7 @@ import java.util.List;
 public class ProducerEntry {
 
     private String name;
-    private int delay = 0;
+    private volatile int delay = 0;
     private int maxRecords = Integer.MAX_VALUE;
     private Schema schema;
     private String topic;
@@ -80,6 +80,9 @@ public class ProducerEntry {
         System.out.printf("Records produced: %d\n", producer.getRecordsProduced());
         System.out.printf("Records lost: %d\n", producer.getFailedRecords());
     }
+
+
+    public void setDelay(int delay) { this.delay = delay; }
 
     public String getName() {
         return this.name;

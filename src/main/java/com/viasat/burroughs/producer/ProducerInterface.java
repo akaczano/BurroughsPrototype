@@ -86,6 +86,21 @@ public class ProducerInterface {
                 entry.buildAndStart(kafkaHost, schemaRegistry, -1);
             }
         }
+        else if (op.equalsIgnoreCase("set-delay")) {
+            if (words.length < 4) {
+                System.out.println("Usage: .producer <producer> set-delay delay (ms)");
+            }
+            else {
+                try {
+                    int delay = Integer.parseInt(words[3]);
+                    System.out.printf("Changed delay from %d to %d\n",
+                            entry.getDelay(), delay);
+                    entry.setDelay(delay);
+                } catch(NumberFormatException e) {
+                    System.out.printf("Invalid delay: %s\n", words[3]);
+                }
+            }
+        }
         else {
             System.out.printf("Unknown operation: %s\n", op);
         }

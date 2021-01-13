@@ -174,6 +174,7 @@ public class Burroughs implements DBProvider {
         System.out.println("\tpause [delay (ms)]: pauses the producer indefinitely or for a length of time");
         System.out.println("\tresume: resumes producer operation");
         System.out.println("\tkill: stops producer operation");
+        System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
         System.out.println(".quit");
         System.out.println("\tExits burroughs. Ctrl+D works too.");
         System.out.println("Any other input will be treated like a SQL query.");

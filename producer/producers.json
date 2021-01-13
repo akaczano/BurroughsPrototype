@@ -2,7 +2,6 @@
   {
     "name": "transactions_producer",
     "topic": "transactions",
-    "delay": 0,
     "schema": "transaction.avsc",
 	  "key_field": "StoreR", 
     "data_source": {
@@ -17,7 +16,6 @@
   {
     "name": "customers_producer",
     "topic": "customers",
-    "delay": 0,
     "schema": "customer.avsc",
     "key_field": "BasketNum",
     "data_source": {

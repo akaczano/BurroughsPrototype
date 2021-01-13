@@ -3,11 +3,9 @@ package com.viasat.burroughs.execution;
 import com.viasat.burroughs.DBProvider;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNumericLiteral;
+
 import org.apache.calcite.sql.SqlSelect;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 public class QueryExecutor {
@@ -23,34 +21,11 @@ public class QueryExecutor {
     }
 
     public String executeQuery(SqlSelect query) {
-        // For now, we will assume this is a simple query
-        String topicName = query.getFrom().toString().toLowerCase();
-        String streamName = "burroughs_" + topicName;
-        String id = UUID.randomUUID().toString().replaceAll("-", "");
-
-        for (int i = 0; i < query.getGroup().getList().size(); i++) {
-            SqlNode n = query.getGroup().get(i);
-            if (n instanceof SqlNumericLiteral) {
-                SqlNumericLiteral literal = (SqlNumericLiteral)n;
-                int position = ((BigDecimal)literal.getValue()).intValueExact();
-                if (literal.isInteger()) {
-                    query.getGroup().set(i, query.getSelectList().get(position - 1));
-                }
-            }
-        }
-        // In the simplest case, the only thing we have to do is replace the topic
-        // name with the appropriate stream name and run the query
-        String preparedQuery = query.toString().replace(query.getFrom().toString(), streamName);
-        preparedQuery = preparedQuery.replaceAll("`", "");
-
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
-        props.setId(id);
-        props.setStreamName(streamName);
-        props.setTopicName(topicName);
+        props.setId(UUID.randomUUID().toString().replaceAll("-", ""));
 
-
-        currentQuery = new SimpleQuery(service, kafkaService, props, preparedQuery);
+        currentQuery = new SimpleQuery(service, kafkaService, props, query);
         if (query.getGroup().getList().size() == 1) {
             String groupByField = query.getGroup().get(0).toString();
             currentQuery.setGroupBy(groupByField);
@@ -65,7 +40,7 @@ public class QueryExecutor {
         }
         System.out.println("Your query is now active. Use .status to check on it.");
         System.out.println("Use .stop to terminate.");
-        return id;
+        return props.getId();
     }
 
     public void stop() {

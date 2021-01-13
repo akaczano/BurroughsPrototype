@@ -13,7 +13,7 @@ import java.util.Properties;
 
 public class Producer extends Thread implements Callback {
 
-    private final int delay;
+    private final ProducerEntry config;
     private final int maxRecords;
     private final IDataSource source;
     private final String keyField;
@@ -28,11 +28,11 @@ public class Producer extends Thread implements Callback {
     private String status = "Not started";
 
     public Producer(String kafkaHost, String schemaRegistry, ProducerEntry config) {
-        this.delay = config.getDelay();
         this.maxRecords = config.getMaxRecords();
         this.source = config.getDataSource();
         this.keyField = config.getKeyField();
         this.topic = config.getTopic();
+        this.config = config;
 
         Schema schema = config.getSchema();
 
@@ -108,7 +108,7 @@ public class Producer extends Thread implements Callback {
                 int cache = counter;
                 counter = cache + 1;
                 try {
-                    Thread.sleep(delay);
+                    Thread.sleep(config.getDelay());
                 } catch (InterruptedException e) {
                     break;
                 }
