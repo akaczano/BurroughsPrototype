@@ -2,11 +2,13 @@ package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
 
+/**
+ * This is a bean meant to contain all of the information a query needs to execute.
+ * It used to contain a lot more stuff.
+ */
 public class QueryProperties {
 
     private String id;
-    private String streamName;
-    private String topicName;
     private DBProvider dbInfo;
 
     public DBProvider getDbInfo() {
@@ -25,19 +27,4 @@ public class QueryProperties {
         this.id = id;
     }
 
-    public String getStreamName() {
-        return streamName;
-    }
-
-    public void setStreamName(String streamName) {
-        this.streamName = streamName;
-    }
-
-    public String getTopicName() {
-        return topicName;
-    }
-
-    public void setTopicName(String topicName) {
-        this.topicName = topicName;
-    }
 }

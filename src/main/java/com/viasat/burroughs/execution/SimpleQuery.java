@@ -13,34 +13,55 @@ import java.util.*;
 
 public class SimpleQuery extends QueryBase {
 
+    // The parsed query
     private final SqlSelect query;
 
-    private String stream = null;
+    // The ksqlDB table. There can only be one of these per query
     private String table = null;
-    private String connector = null;
-    private List<String> streams = new ArrayList<>();
 
+    // The ksqlDB sink connector
+    private String connector = null;
+
+    // All of the associated streams
+    private final List<String> streams = new ArrayList<>();
+
+    // Not currently in use
     private String groupby;
 
+    /**
+     * Creates a new query object
+     * @param service The ksqlDB statement service
+     * @param kafkaService The Kafka service for query status
+     * @param props Query properties
+     * @param query The SQL query itself
+     */
     public SimpleQuery(StatementService service, KafkaService kafkaService,
                        QueryProperties props, SqlSelect query) {
         super(service, kafkaService, props);
         this.query = query;
     }
 
+    /**
+     * Sets the group by field from which the key converter can be determined
+     * @param field Field name
+     */
     public void setGroupBy(String field) {
         groupby = field;
     }
 
+    /**
+     * Translates and executes the query
+     */
     @Override
     public void execute() {
         // TODO deal with this
         setGroupByDataType(DataType.ARRAY);
 
+        // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();
         createStreams(replacements, query.getFrom());
 
-
+        // Create table and connector
         String queryString = translateQuery(query, replacements);
         System.out.print("Creating table...");
         table = createTable(properties.getId(), queryString);
@@ -51,6 +72,12 @@ public class SimpleQuery extends QueryBase {
         startTime = System.currentTimeMillis();
     }
 
+    /**
+     * Creates all of the streams a query depends on and discovers
+     * necessary translations
+     * @param replacements
+     * @param from
+     */
     private void createStreams(Map<String, String> replacements, SqlNode from) {
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
@@ -88,6 +115,15 @@ public class SimpleQuery extends QueryBase {
         }
     }
 
+    /**
+     * Translates the query by doing the following steps
+     * 1. Replace integers in the group by with the actual stream name
+     * 2. Perform all replacements demanded by createStreams
+     * 3. Remove backticks
+     * @param query The parsed query
+     * @param replacements The replacements to perform
+     * @return The fully translated query string to pass to a create table statement
+     */
     private String translateQuery(SqlSelect query, Map<String, String> replacements) {
         for (int i = 0; i < query.getGroup().getList().size(); i++) {
             SqlNode n = query.getGroup().get(i);
@@ -108,6 +144,9 @@ public class SimpleQuery extends QueryBase {
         return preparedQuery;
     }
 
+    /**
+     * Removes all associated ksqlDB objects.
+     */
     @Override
     public void destroy() {
         if (connector != null) {
@@ -120,7 +159,7 @@ public class SimpleQuery extends QueryBase {
             dropTable(table);
             System.out.print("Done\n");
         }
-        Collections.reverse(streams);
+        Collections.reverse(streams); // Delete streams in the reverse order they were created
         for (String stream : streams) {
             System.out.print("Dropping stream " + stream + "...");
             dropStream(stream);
@@ -128,6 +167,9 @@ public class SimpleQuery extends QueryBase {
         }
     }
 
+    /**
+     * Print table statistics and connector status
+     */
     @Override
     public void printStatus() {
         if (table != null) {
@@ -144,7 +186,12 @@ public class SimpleQuery extends QueryBase {
         }
     }
 
-
+    /**
+     * Stores the table name whenever a table is creaated
+     * @param id The query ID to be used in the naming of the table
+     * @param query The query to build the table from
+     * @return The table name
+     */
     @Override
     protected String createTable(String id, String query) {
         return (table = super.createTable(id, query));

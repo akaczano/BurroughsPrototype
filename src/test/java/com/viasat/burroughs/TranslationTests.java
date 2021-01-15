@@ -34,8 +34,12 @@ public class TranslationTests extends ServiceTest{
 
     @Test
     public void testJoinTranslation() throws TopicNotFoundException, UnsupportedQueryException, SqlParseException {
-        String query = "select c.custid, sum(spend) from transactions t " +
-                "left join customers c on t.basketnum = c.basketnum left join products p on t.productnum = p.productnum";
+        String query = "select c.custid, sum(spend) " +
+                "from transactions t " +
+                "left join customers c " +
+                "on t.basketnum = c.basketnum" +
+                " left join products p " +
+                "on t.productnum = p.productnum";
 
         String query2 = "select count(*) from (select distinct basketnum from transactions)";
 
@@ -46,10 +50,13 @@ public class TranslationTests extends ServiceTest{
                 .setConformance(SqlConformanceEnum.BABEL)
                 .build();
         SqlSelect node1 = (SqlSelect) SqlParser.create(query, config).parseQuery();
+        System.out.println(node1.getSelectList().toString());
+        System.out.println(node1.getFrom().toString());
+
         SqlNode node2 = SqlParser.create(query2, config).parseQuery();
         SqlNode node3 = SqlParser.create(query3, config).parseQuery();
-        processFrom(node1.getFrom());
-        System.out.println(node1.toString());
+        //processFrom(node1.getFrom());
+
     }
 
     public void processFrom(SqlNode from) {

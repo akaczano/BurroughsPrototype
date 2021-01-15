@@ -59,6 +59,9 @@ public class KafkaService {
             properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
             properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
            consumer = new KafkaConsumer<>(properties);
+           groupCache = consumerGroup;
+           topicCache = tp.topic();
+           partitionCache = tp.partition();
         }
         consumer.assign(Collections.singleton(tp));
         consumer.seekToEnd(Collections.singleton(tp));

@@ -14,12 +14,22 @@ import java.util.Map;
 
 public class App {
 
+    // Character sequences used to change text color
     public static final String ANSI_YELLOW = "\u001B[33m";
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RESET = "\u001B[0m";
 
 
+    /**
+     * All of the configuration for Burroughs, things like the hostnames
+     * of ksqlD and Kafka, database connection info, are loaded from
+     * environment variables. This method is called at startup to load
+     * configuration from the environment variables when present and use
+     * a reasonable default when not. See the README for the full list of environment
+     * variables and their descriptions.
+     * @param burroughs The Burroughs object to load configuration into
+     */
     private static void loadConfiguration(Burroughs burroughs) {
         String ksqlHost = "http://localhost:8088";
         String dbHost = "localhost:5432";
@@ -65,7 +75,15 @@ public class App {
         burroughs.setSchemaRegistry(schemaRegistry);
     }
 
+    /**
+     * Main method. This is where the JLine terminal is intialized and the REPL
+     * is executed.
+     * @param args Command line arguments (not used)
+     * @throws IOException The JLine terminal could throw an IOException
+     * which we can't really recover from
+     */
     public static void main(String[] args) throws IOException {
+        // This is used to filter out annoying warnings printed by SLF4J and log4j
         System.setErr(new PrintStream(System.err){
             public void println(String l) {
                 if (!l.startsWith("SLF4J") && !l.startsWith("log4j")) {
@@ -79,23 +97,26 @@ public class App {
         burroughs.init();
         System.out.println("Not sure what to do now? Enter .help for a list of commands.");
 
+        // Create the JLine terminal
         Terminal terminal = TerminalBuilder.terminal();
         LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .build();
-
+        // The prompt that is shown when expecting user input
         String prompt = "sql>";
         while (true) {
-            String line = null;
+            String line;
             try {
                 line = lineReader.readLine(prompt);
             } catch (UserInterruptException e) {
+                // This will execute when Ctrl+C is pressed
                 continue;
             } catch (EndOfFileException e) {
-                burroughs.dispose();
+                // This will execute when Ctrl+D is pressed
+                burroughs.dispose(); // Stop producers
                 return;
             }
-            burroughs.handleCommand(line);
+            burroughs.handleCommand(line); // Pass the command to Burroughs
         }
     }
 

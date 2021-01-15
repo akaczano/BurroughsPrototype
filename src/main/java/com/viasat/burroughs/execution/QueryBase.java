@@ -14,16 +14,45 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Base class that provides a large array of useful methods
+ * for interacting with ksqlDB
+ */
 public abstract class QueryBase {
 
+    /**
+     * Service object for execution ksql statements
+     */
     protected final StatementService service;
+
+    /**
+     * Query properties including query id and database
+     * connection info.
+     */
     protected final QueryProperties properties;
+
+    /**
+     * Kafka service that can access Kafka broker directly. Used to get consumer
+     * group offsets during .status execution
+     */
     protected final KafkaService kafkaService;
 
+    /**
+     * Query start time
+     */
     protected long startTime = Long.MIN_VALUE;
 
+    /**
+     * Key converter class used by connector. String by default.
+     */
     private String keyConverter = "org.apache.kafka.connect.storage.StringConverter";
 
+    /**
+     * Initializes new Query given dependencies
+     * @param service Statement service
+     * @param kafkaService Kafka service
+     * @param properties Query properties
+     */
     public QueryBase(StatementService service, KafkaService kafkaService,
                      QueryProperties properties) {
         this.service = service;
@@ -31,15 +60,31 @@ public abstract class QueryBase {
         this.kafkaService = kafkaService;
     }
 
-
+    /**
+     * Where the query would actually be translated and executed
+     */
     public abstract void execute();
 
+    /**
+     * Remove all ksqlDB objects associated with this query
+     */
     public abstract void destroy();
 
+    /**
+     * Print the query status
+     */
     public abstract void printStatus();
 
+    /**
+     * Set the group by field from which the group by data type can be determined
+     * @param field Field name
+     */
     public abstract void setGroupBy(String field);
 
+    /**
+     * Set the group by data type which is used to determine the Key converter class
+     * @param type Data type
+     */
     public void setGroupByDataType(DataType type) {
         switch (type) {
             case BIGINT:
@@ -62,10 +107,20 @@ public abstract class QueryBase {
         }
     }
 
+    /**
+     * Gets the query ID
+     * @return The query ID
+     */
     public String getId() {
         return this.properties.getId();
     }
 
+    /**
+     * Creates a ksqlDB table
+     * @param id The query ID to be used in the naming of the table
+     * @param query The query to build the table from
+     * @return The table's name
+     */
     protected String createTable(String id, String query) {
         String tableName = "burroughs_" + id;
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
@@ -74,10 +129,25 @@ public abstract class QueryBase {
         return tableName;
     }
 
+    /**
+     * Creates a ksqlDB stream
+     * @param streamName The name of the stream to create
+     * @param topic The topic to create the stream from
+     * @param format The topic serialization format (only AVRO for now)
+     * @return The stream name
+     */
     protected String createStream(String streamName, String topic, Format format) {
         return createStream(service, streamName, topic, format);
     }
 
+    /**
+     * Actually does the work of creating the stream.
+     * @param service The statement service to send the query with
+     * @param streamName The name of the stream
+     * @param topic The topic to create the stream from
+     * @param format The value format
+     * @return The name of the stream
+     */
     public static String createStream(StatementService service, String streamName,
                                       String topic, Format format) {
         String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
@@ -86,11 +156,12 @@ public abstract class QueryBase {
         return streamName;
     }
 
-
+    /**
+     * Creates a sink connector for a table
+     * @param id The id from which to get the table name
+     * @return The name of the connector.
+     */
     protected String createConnector(String id) {
-        // Sometimes we will need to do this
-        // 'key.converter' = 'org.apache.kafka.connect.converters.IntegerConverter'
-
         DBProvider dbInfo = properties.getDbInfo();
         String command = "CREATE SINK CONNECTOR ";
         command += "burr_connect_" + id + " WITH (";
@@ -108,6 +179,8 @@ public abstract class QueryBase {
         command += "'pk.fields' = 'rowkey',";
         command += "'pk.mode' = 'record_key',";
         command += String.format("'key.converter' = '%s',", keyConverter);
+        // Tombstone handler to drop null records
+        // Only applies when there is a having clause
         command += "'transforms'='tombstoneHandlerExample',";
         command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
         command += "'auto.create' = true);";
@@ -119,6 +192,12 @@ public abstract class QueryBase {
         return "burr_connect_" + id;
     }
 
+    /**
+     * Gets the schema, as a field name - data type table,
+     * for a stream
+     * @param stream The desired stream
+     * @return The schema
+     */
     protected Map<String, DataType> GetSchema(String stream) {
         DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
                         "describe stream");
@@ -129,10 +208,21 @@ public abstract class QueryBase {
         return results;
     }
 
+    /**
+     * Checks if a stream exists
+     * @param streamName The name of the stream
+     * @return Whether or not the stream exists
+     */
     protected boolean streamExists(String streamName) {
         return streamExists(service, streamName);
     }
 
+    /**
+     * Checks if a stream exists
+     * @param service The StatementService object to use
+     * @param streamName The stream to look for
+     * @return Whether or not the stream exists
+     */
     public static boolean streamExists(StatementService service, String streamName) {
         ListResponse listResponse = service.executeStatement("LIST STREAMS;",
                 "executed statement: LIST STREAMS");
@@ -141,12 +231,19 @@ public abstract class QueryBase {
                 .anyMatch(s -> s.getName().equalsIgnoreCase(streamName));
     }
 
+    /**
+     * Utility method for dropping a stream
+     * @param streamName The stream to drop
+     */
     protected void dropStream(String streamName) {
         terminateQueries(streamName);
         drop("STREAM", streamName);
     }
 
-
+    /**
+     * Terminates the given query
+     * @param queryId The query to terminate
+     */
     private void terminateQuery(String queryId) {
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
@@ -156,6 +253,10 @@ public abstract class QueryBase {
         }
     }
 
+    /**
+     * Terminates all queries that depend upon the given object
+     * @param objectName The object to check, usually a table
+     */
     private void terminateQueries(String objectName) {
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
@@ -167,15 +268,29 @@ public abstract class QueryBase {
         }
     }
 
+    /**
+     * Drops the specified table
+     * @param tableName the table to drop
+     */
     protected void dropTable(String tableName) {
         terminateQueries(tableName);
         drop("TABLE", tableName);
     }
 
+    /**
+     * Drops the specified connector
+     * @param connectorName The connector to drop
+     */
     protected void dropConnector(String connectorName) {
         drop("CONNECTOR", connectorName);
     }
 
+    /**
+     * Generalized drop method which can drop streams, tables, and connectors.
+     * It also deletes the underlying topic for any tables.
+     * @param objectType The type of object (stream, table, or connector)
+     * @param name The name of the object
+     */
     protected void drop(String objectType, String name) {
         String command = String.format("DROP %s %s%s",
                 objectType, name,
@@ -185,7 +300,11 @@ public abstract class QueryBase {
     }
 
 
-
+    /**
+     * Uses both table statistics and consumer group metadata to print
+     * query status
+     * @param tableName The table to investigate
+     */
     protected void printStatisticsForTable(String tableName) {
         // 1. Table description/statistics
 
@@ -240,6 +359,11 @@ public abstract class QueryBase {
             }
         }
     }
+
+    /**
+     * Checks if the connector is still running and, if not, print an error
+     * @param connector The name of the connector
+     */
     protected void checkConnectorStatus(String connector) {
         ConnectorDescription description = service.executeStatement(
                 String.format("DESCRIBE CONNECTOR %s;", connector),

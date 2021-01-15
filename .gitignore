@@ -1,4 +1,6 @@
 target/**/
 target/
+target/*
 producer/target/**/
 producer/target
+

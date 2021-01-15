@@ -8,8 +8,6 @@ import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.StatusService;
 import com.viasat.burroughs.service.model.HealthStatus;
-import com.viasat.burroughs.service.model.StatementError;
-import com.viasat.burroughs.service.model.StatementResponse;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Format;
@@ -20,6 +18,7 @@ import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
+import org.jline.reader.EndOfFileException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,6 +31,8 @@ import java.util.Properties;
 
 public class Burroughs implements DBProvider {
 
+
+    // System configuration
     private String ksqlHost;
     private String dbHost;
     private String database;
@@ -42,16 +43,40 @@ public class Burroughs implements DBProvider {
     private String schemaRegistry;
     private String connectorDB;
 
+    /**
+     * Provides access to ksqlDB
+     */
     private StatementService service;
+
+    /**
+     * In charge of the parsing and execution of queries
+     */
     private QueryExecutor executor;
+
+    /**
+     * Used to get metadata directly from Kafka
+     */
     private KafkaService kafkaService;
+
+    /**
+     * Loads, stores, and executes producers
+     */
     private ProducerInterface producerInterface;
 
+    // Connection status
     private boolean ksqlConnected = false;
     private boolean dbConnected = false;
 
+    /**
+     * Symbol table that maps commands to the method that handles
+     * them. Only the first word of the command, which always starts
+     * with '.', is used as the key.
+     */
     private final Map<String, CommandHandler> handlers;
 
+    /**
+     * Burroughs constructor. Initialize command handlers.
+     */
     public Burroughs() {
         this.handlers = new HashMap<>();
         this.handlers.put(".stop", this::handleStop);
@@ -67,6 +92,11 @@ public class Burroughs implements DBProvider {
         this.handlers.put(".quit", this::handleQuit);
     }
 
+    /**
+     * Called after the configuration is loaded from environment variables.
+     * Established connection to KsqlDB, PostgreSQL and the Kafka broker. Also
+     * loads producers.
+     */
     public void init() {
         ksqlConnected = checkKsqlConnection();
         dbConnected = checkDatabaseConnection() != null;
@@ -78,16 +108,27 @@ public class Burroughs implements DBProvider {
         }
     }
 
+    /**
+     * Called when Burroughs exits. Stops any running producer threads.
+     */
     public void dispose() {
         if (producerInterface != null) {
             producerInterface.stopProducers();
         }
-   }
+    }
 
+    /**
+     * Method that receives all raw text from the JLine terminal.
+     *
+     * @param command The command to handle.
+     */
     public void handleCommand(String command) {
         if (command == null) return;
         try {
-            command = command.trim();
+            command = command.trim(); // We always trim off whitespace
+
+            // Only the .connect and .connection commands can run without connection
+            // to KsqlDB and PostgreSQL established
             if ((!ksqlConnected || !dbConnected) && !command.equals(".connect") &&
                     !command.equals(".connection")) {
                 System.out.println("Connection not established");
@@ -96,6 +137,7 @@ public class Burroughs implements DBProvider {
                 return;
             }
             if (command.startsWith(".")) {
+                // Lookup command in handlers and execute the correct one
                 String commandWord = command.split("\\s+")[0];
                 if (this.handlers.containsKey(commandWord)) {
                     this.handlers.get(commandWord).handle(command);
@@ -103,32 +145,54 @@ public class Burroughs implements DBProvider {
                     System.out.println("Unknown command: " + commandWord);
                 }
             } else {
+                // If it doesn't start with a period, we assume it's a SQL query.
                 processQuery(command);
             }
         } catch (ExecutionException e) {
+            // Display error
             System.out.println(e.getMessage());
         }
     }
 
+    /**
+     * Method that processes all SQL queries
+     *
+     * @param query Raw SQL to execute
+     */
     private void processQuery(String query) {
+        // Surprisingly, Calcite will not tolerate a semicolon at the end of the query
         if (query.endsWith(";")) {
             query = query.substring(0, query.length() - 1);
         }
+        // Perform validation (and parsing also)
         SqlSelect parsedQuery = validateQuery(query);
         if (parsedQuery != null) {
             if (this.dbTable == null) {
                 System.out.println("No output table set. Use .table to configure one.");
             } else {
+                // Execute query
                 executor.executeQuery(parsedQuery);
             }
         }
     }
 
+    /**
+     * Called when the .connect command is run. Simply calls the init method again
+     * in an attempt to establish connection.
+     *
+     * @param command Not used.
+     */
     private void handleConnect(String command) {
         System.out.println("Connecting...");
         this.init();
     }
 
+    /**
+     * Called when the .connection command is executed.
+     * Prints connection status.
+     *
+     * @param command Not used.
+     */
     private void handleConnection(String command) {
         System.out.printf("ksqlDB Hostname: %s, Status: %s%s%s\n",
                 ksqlHost,
@@ -142,6 +206,11 @@ public class Burroughs implements DBProvider {
                 App.ANSI_RESET);
     }
 
+    /**
+     * Prints the instructions
+     *
+     * @param command Not used.
+     */
     private void handleHelp(String command) {
         System.out.println("Available Commands");
         System.out.println(".help");
@@ -179,8 +248,16 @@ public class Burroughs implements DBProvider {
         System.out.println("Any other input will be treated like a SQL query.");
     }
 
+    /**
+     * Handles the .stop command; destroys all Burroughs
+     * objects.
+     *
+     * @param command Command string
+     */
     private void handleStop(String command) {
         executor.stop();
+        // Check if keep-table flag is present
+        // If not, drop the table
         if (Arrays.stream(command.split(" "))
                 .noneMatch(w -> w.equalsIgnoreCase("keep-table"))) {
 
@@ -201,6 +278,11 @@ public class Burroughs implements DBProvider {
         }
     }
 
+    /**
+     * Corresponds to the .table command. Sets the current output table
+     *
+     * @param command Command string
+     */
     private void handleTable(String command) {
         String[] words = command.split("\\s+");
 
@@ -218,6 +300,11 @@ public class Burroughs implements DBProvider {
         }
     }
 
+    /**
+     * Prints the schema for the specified topic
+     *
+     * @param command The command string
+     */
     private void handleTopic(String command) {
         String[] words = command.split("\\s+");
         if (words.length != 2) {
@@ -237,34 +324,49 @@ public class Burroughs implements DBProvider {
         }
     }
 
+    /**
+     * Prints a list of available topics
+     *
+     * @param command Command string starting with .topics
+     */
     private void handleTopics(String command) {
-        StatementResponse response = service.executeStatement("SHOW TOPICS;");
-        if (response == null) {
-            throw new ExecutionException("Failed to list topics due to connection error.");
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            ListResponse results = (ListResponse) response;
-            for (Topic t : results.getTopics()) {
-                System.out.println(t);
-            }
+        ListResponse results = service.executeStatement("SHOW TOPICS;",
+                "list topics");
+        for (Topic t : results.getTopics()) {
+            System.out.println(t);
         }
     }
 
+    /**
+     * Prints the status of the active query
+     *
+     * @param command Command string beginning with .status
+     */
     private void handleStatus(String command) {
         System.out.println("Status:");
         this.executor.status();
     }
 
+    /**
+     * Exits Burroughs
+     *
+     * @param command Command string beginning with .quit
+     */
     private void handleQuit(String command) {
+        dispose();
         System.out.println("Goodbye!");
         System.exit(0);
     }
 
+    /**
+     * Verifies that KsqlDB is connected
+     *
+     * @return Whether or not a connection is established
+     */
     private boolean checkKsqlConnection() {
         StatusService statusService = new StatusService(ksqlHost);
 
-        // Verify ksqlDB connection
+        // Send request to /healthcheck endpoint
         HealthStatus status = statusService.checkConnection();
         if (status == null) {
             System.err.printf("Failed to connect to ksqlDB at %s\n", ksqlHost);
@@ -278,6 +380,10 @@ public class Burroughs implements DBProvider {
         }
     }
 
+    /**
+     * Verifies the configured PostgreSQL connection
+     * @return A Connection object or null if it failed
+     */
     private Connection checkDatabaseConnection() {
         String conString = String.format("jdbc:postgresql://%s/%s", dbHost, database);
         Properties props = new Properties();
@@ -288,6 +394,8 @@ public class Burroughs implements DBProvider {
             conn = DriverManager.getConnection(conString, props);
             System.out.println("Database connected successfully");
         } catch (SQLException e) {
+            // If the exception message says that the database doesn't exist,
+            // create the database and then reconnect
             if (e.getMessage().contains("database \"") && e.getMessage().contains("\" does not exist")) {
                 try {
                     String cString = String.format("jdbc:postgresql://%s/", dbHost);
@@ -305,6 +413,13 @@ public class Burroughs implements DBProvider {
         return conn;
     }
 
+    /**
+     * Performs basic query validation. Checks that the SQL is valid,
+     * the topics reference exist, and that the query is supported by
+     * Burroughs.
+     * @param query The raw query string
+     * @return The parsed query as a SqlSelect object
+     */
     private SqlSelect validateQuery(String query) {
         QueryValidator validator = new QueryValidator(this.service);
         try {
@@ -317,6 +432,7 @@ public class Burroughs implements DBProvider {
     }
 
 
+    // Getters and setters
     public void setKsqlHost(String ksqlHost) {
         this.ksqlHost = ksqlHost;
     }
