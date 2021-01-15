@@ -1,20 +1,55 @@
+# Burroughs Developer Notes
+
+## Table of Contents
+- [Burroughs Developer Notes](#burroughs-developer-notes)
+  - [Table of Contents](#table-of-contents)
+  - [Background and Dependencies](#background-and-dependencies)
+    - [REST APIs](#rest-apis)
+      - [Requests](#requests)
+      - [Responses](#responses)
+      - [KsqlDB REST API Documentation](#ksqldb-rest-api-documentation)
+      - [Prototyping with PostMan](#prototyping-with-postman)
+      - [Code Examples](#code-examples)
+    - [Gson](#gson)
+      - [Serialization](#serialization)
+      - [Deserialization](#deserialization)
+    - [Apache Calcite](#apache-calcite)
+      - [Query Parsing](#query-parsing)
+      - [The Object Model](#the-object-model)
+    - [JLine](#jline)
+    - [JDBC](#jdbc)
+    - [Single Message Transforms](#single-message-transforms)
+    - [Advanced Java Syntax](#advanced-java-syntax)
+  - [Application Overview](#application-overview)
+    - [Command Handling](#command-handling)
+    - [Query Validation](#query-validation)
+    - [Query Execution](#query-execution)
+    - [Query Status](#query-status)
+    - [Query Disposal](#query-disposal)
+  - [Development Workflow](#development-workflow)
+    - [Git basics](#git-basics)
+    - [Branching and Pull Requests](#branching-and-pull-requests)
+    - [Issues](#issues)
 ## Background and Dependencies
 ### REST APIs
 A REST API is an interface for connection applications together over HTTP that follows a certain architecture. REST APIs make use of the standard array of HTTP methods (GET, POST, PATCH, PUT, DELETE, etc.) and send and receive JSON data. All of the interactions between Burroughs and KsqlDB are done through REST API.
-
+#### Requests
 A simple REST request is made up of the following components:
 - A URL that identifies the server to send the request to
 - The HTTP method to use (mostly GET or POST in our case)
 - A body if applicable (GET requests can't have bodies). The request body is always going to be JSON encoded.
 - Headers which are used to specify authentication or additional metadata. The ksqlBD REST API doesn't use very many request headers. 
 - Query parameters or path parameters that get embedded in the URL
-
+#### Responses
 A REST response will usually have a body (also JSON) containing the response data as well as a status code which is usually a 3-digit number. Responses in the 200s are good, 400s and 500s are bad.
 
+#### KsqlDB REST API Documentation
 The full KsqlDB REST API documentation can be found [here](https://docs.ksqldb.io/en/latest/developer-guide/api/)
 
+#### Prototyping with PostMan
 While the docs demonstrate using the `curl` command to test the REST API, doing so is difficult. Instead, you can use [PostMan](https://www.postman.com/) to test the different endpoints. 
 
+#### Code Examples
 Below is an example of sending a REST request using the Java HttpClient API.
 ```java
 // Create a new HTTP client
@@ -35,6 +70,7 @@ HttpResponse<String> response = client.send(request,
 ### Gson
 From the previous section, it is clear the the Burroughs application needs to be able to send and receive lots of JSON data in order to interact with KsqlDB. The problem with this is that generating and parsing JSON strings is a lot of hassle and not particulary necessary. The Gson library provides the ability to convert Java objects to JSON strings and vice versa. The docs can be found [here](https://sites.google.com/site/gson/gson-user-guide).
 
+#### Serialization
  Consider the Java class below:
 ```java
 public class Example {
@@ -58,6 +94,7 @@ A couple of things to note:
 1. The field `animalType` was renamed to `animal_type`: its serialized name
 2. The field time was not included because it was marked as transient, the standard Java keyword for marking fields that don't get serialized.
 
+#### Deserialization
 To get the Java object back, you could do the following:
 ```java
 Example thing = new Gson().fromJson(json, Example.class);
@@ -68,6 +105,7 @@ Specifying the class will result in a strongly typed deserialization. If the cla
 ### Apache Calcite
 In order to perform translation, Burroughs needs to be able to analyze and modify SQL queries. Instead of parsing raw SQL strings, we use the Apache Calcite library which provides a SQL parser and object model. The Apache Calcite docs can be found [here](https://calcite.apache.org/docs/reference.html) and the JavaDoc, which contains the full list of classes, [here](https://javadoc.io/doc/org.apache.calcite/calcite-core/latest/index.html).
 
+#### Query Parsing
 A query can be parsed using the following code:
 ```java
 String query = "select c.custid, sum(spend) " +
@@ -82,7 +120,7 @@ SqlParser.Config config = SqlParser.configBuilder()
     .build();
 SqlNode node = SqlParser.create(query, config).parseQuery();
 ```
-
+#### The Object Model
 Every SQL component inherits from the SqlNode class. Some examples of subclasses are:
 - SqlSelect
 - SqlOrderBy

@@ -1,5 +1,15 @@
 # Burroughs Prototype
-
+## Table of Contents
+- [Burroughs Prototype](#burroughs-prototype)
+  - [Table of Contents](#table-of-contents)
+  - [Quick Start](#quick-start)
+    - [1. Confluent Platform Setup](#1-confluent-platform-setup)
+    - [2. Running Burroughs](#2-running-burroughs)
+    - [3. Test Data](#3-test-data)
+    - [4. Executing a simple query](#4-executing-a-simple-query)
+  - [System Configuration](#system-configuration)
+    - [Environment Variables](#environment-variables)
+    - [Producers](#producers)
 ## Quick Start
 
 Requirements

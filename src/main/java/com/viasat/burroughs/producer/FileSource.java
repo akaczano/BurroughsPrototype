@@ -1,6 +1,5 @@
 package com.viasat.burroughs.producer;
 
-import com.google.gson.JsonObject;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -10,12 +9,34 @@ import java.io.FileNotFoundException;
 import java.util.Date;
 import java.util.Scanner;
 
+/**
+ * A data source that reads from a delimited text file
+ */
 public class FileSource implements IDataSource {
 
+    /**
+     * The file to read from
+     */
     private final File file;
+
+    /**
+     * The schema to use in serializing the data
+     */
     private final Schema schema;
+
+    /**
+     * Scanner object used to read the file
+     */
     private Scanner scanner;
+
+    /**
+     * Whether or not the file has a header which should be skipped
+     */
     private boolean hasHeader = false;
+
+    /**
+     * The delimiter that separates the fields
+     */
     private String delimiter = ",";
 
     public FileSource(File file, Schema schema) {
@@ -23,10 +44,17 @@ public class FileSource implements IDataSource {
         this.schema = schema;
     }
 
+    /**
+     * Checks if the file can be read fromm
+     * @return True if the file exists
+     */
     public boolean checkAvailability() {
         return file != null && file.exists();
     }
 
+    /**
+     * Opens the file and skips the header if necessary
+     */
     public void open() {
         try {
             scanner = new Scanner(this.file);
@@ -38,16 +66,28 @@ public class FileSource implements IDataSource {
         }
     }
 
+    /**
+     * Closes the file
+     */
     public void close() {
         if (scanner != null) {
             scanner.close();
         }
     }
 
+    /**
+     * Checks if there is more data in the file
+     * @return True if there is another line
+     */
     public boolean hasNextRecord() {
         return scanner.hasNextLine();
     }
 
+    /**
+     * Reads the next line in the file, parses it, and formats it according to the
+     * provides schema.
+     * @return
+     */
     public GenericRecord nextRecord() {
         String line = scanner.nextLine();
         String[] values = line.split(delimiter);

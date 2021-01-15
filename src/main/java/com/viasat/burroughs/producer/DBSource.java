@@ -6,24 +6,56 @@ import org.apache.avro.generic.GenericRecord;
 
 import java.sql.*;
 
+/**
+ * A data source that reads data from a PostgreSQL table
+ */
 public class DBSource implements IDataSource {
 
+    /**
+     * The JDBC postgres connection
+     */
     private final Connection connection;
-    private final String table;
-    private ResultSet resultSet;
-    private Schema schema;
 
+    /**
+     * The name of the table to read from
+     */
+    private final String table;
+
+    /**
+     * The result of reading from the table. Populated when the data source
+     * is opened.
+     */
+    private ResultSet resultSet;
+
+    /**
+     * The schema of the messages to build
+     */
+    private final Schema schema;
+
+    /**
+     * Initializes a new DBSource
+     * @param connection The SQL connection to use
+     * @param schema The AVRO schema to use for serialization
+     * @param table The name of the database table to read from
+     */
     public DBSource(Connection connection, Schema schema, String table) {
         this.connection = connection;
         this.table = table;
         this.schema = schema;
     }
 
+    /**
+     * Checks if the connection is valid
+     * @return True if the DB is connected
+     */
     @Override
     public boolean checkAvailability() {
         return connection != null;
     }
 
+    /**
+     * Executes a query to use as a record source
+     */
     @Override
     public void open() {
         try {
@@ -34,6 +66,9 @@ public class DBSource implements IDataSource {
         }
     }
 
+    /**
+     * Closes the connection
+     */
     @Override
     public void close() {
         try {
@@ -43,6 +78,10 @@ public class DBSource implements IDataSource {
         }
     }
 
+    /**
+     * Checks if there is another record to read still
+     * @return True if there is more data
+     */
     @Override
     public boolean hasNextRecord() {
         try {
@@ -52,6 +91,10 @@ public class DBSource implements IDataSource {
         }
     }
 
+    /**
+     * Retrieves the next record from the result set
+     * @return A GenericRecord object containing the next row
+     */
     @Override
     public GenericRecord nextRecord() {
         try {

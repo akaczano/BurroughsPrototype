@@ -7,27 +7,61 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.*;
 
-import javax.print.attribute.standard.PresentationDirection;
 import java.util.Optional;
 import java.util.Properties;
 
 public class Producer extends Thread implements Callback {
 
+    /**
+     * Contains configuration for the producer
+     */
     private final ProducerEntry config;
+
+    /**
+     * The maximum number of records to produce
+     */
     private final int maxRecords;
+
+    /**
+     * The data source to pull from
+     */
     private final IDataSource source;
+
+    /**
+     * The field to use as the record key
+     */
     private final String keyField;
+
+    /**
+     * The topic to produce data to
+     */
     private final String topic;
+
+    /**
+     * The producer object
+     */
     private final KafkaProducer<Object, Object> producer;
 
+    // Various properties that control live producer operation
     private volatile int counter = 0;
     private volatile int failedRecords = 0;
     private volatile boolean stopped = false;
     private volatile boolean paused = false;
     private volatile long resumeTime = 0;
+
+    /**
+     * Current status
+     */
     private String status = "Not started";
 
+    /**
+     * Initializes a producer
+     * @param kafkaHost Hostname and port of the Kafka broker
+     * @param schemaRegistry URL of the AVRO schema registry
+     * @param config Object containing producer configuration
+     */
     public Producer(String kafkaHost, String schemaRegistry, ProducerEntry config) {
+        // Load configuration
         this.maxRecords = config.getMaxRecords();
         this.source = config.getDataSource();
         this.keyField = config.getKeyField();
@@ -43,6 +77,7 @@ public class Producer extends Thread implements Callback {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 KafkaAvroSerializer.class);
 
+        // Determine the key serializer class based on the schema and key field
         if (keyField != null) {
             Optional<Field> potField = schema.getFields().stream()
                     .filter(f -> f.name().equalsIgnoreCase(keyField))
@@ -103,7 +138,7 @@ public class Producer extends Thread implements Callback {
                 GenericRecord record = source.nextRecord();
                 Object key = keyField == null ? record : record.get(keyField);
                 ProducerRecord<Object, Object> item =
-                        new ProducerRecord<Object, Object>(topic, key, record);
+                        new ProducerRecord<>(topic, key, record);
                 producer.send(item, this);
                 int cache = counter;
                 counter = cache + 1;
