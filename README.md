@@ -29,11 +29,20 @@ Give it a couple seconds and then make sure that everything is running by doing 
 
 
 ### 2. Running Burroughs
-To build and run burroughs do the following (from the root directory).
+First, you will need to build Burroughs from source. To do so, run the following (from the root directory).
 ```bash
 ./build.sh
+```
+To run Burroughs on Linux or MacOS run this:
+```bash
 ./run.sh
 ```
+
+To run Burroughs on Windows run this:
+```bash
+./run-windows.bat
+```
+
 If you setup everything successfully, you should see something like the following.
 ![screenshot](images/landing.png)
 
