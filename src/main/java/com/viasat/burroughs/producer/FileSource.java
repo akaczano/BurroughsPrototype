@@ -62,7 +62,7 @@ public class FileSource implements IDataSource {
                 scanner.nextLine();
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            throw new ProducerException("Could not open file " + this.file.getAbsolutePath());
         }
     }
 

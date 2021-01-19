@@ -53,7 +53,7 @@ public class Producer extends Thread implements Callback {
      * Current status
      */
     private String status = "Not started";
-
+    private String errorMessage = "";
     /**
      * Initializes a producer
      * @param kafkaHost Hostname and port of the Kafka broker
@@ -106,6 +106,10 @@ public class Producer extends Thread implements Callback {
         producer = new KafkaProducer<>(props);
     }
 
+    /**
+     * Returns a simple string description of the producer status
+     * @return The producer's status
+     */
     public String getStatus() {
         if (paused || resumeTime > System.currentTimeMillis()) {
             return "Paused";
@@ -113,14 +117,34 @@ public class Producer extends Thread implements Callback {
         return status;
     }
 
+    /**
+     * Returns the last error encountered by the producer if applicable
+     * @return The error message
+     */
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
+    /**
+     * Gets the total number of records produced
+     * @return An integer representing the total number of records produced
+     */
     public int getRecordsProduced() {
         return counter;
     }
 
+    /**
+     * Gets the total of numbers that failed to reach the broker
+     * @return The number of failures
+     */
     public int getFailedRecords() {
         return failedRecords;
     }
 
+    /**
+     * The main run method. Continuously reads records from the data source
+     * and produces them to the kafka topic unless paused.
+     */
     @Override
     public void run() {
         if (!source.checkAvailability()) {
@@ -149,13 +173,19 @@ public class Producer extends Thread implements Callback {
                 }
             }
             source.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (ProducerException e) {
             status = "Error";
+            errorMessage = e.getMessage();
         }
         if (status.equals("Running")) status = "Stopped";
     }
 
+    /**
+     * Producer callback. Increments the number of failed messages
+     * if there was an error
+     * @param recordMetadata Record metadata
+     * @param e Error
+     */
     @Override
     public void onCompletion(RecordMetadata recordMetadata, Exception e) {
         if (e != null) {
@@ -164,18 +194,31 @@ public class Producer extends Thread implements Callback {
         }
     }
 
+    /**
+     * Terminates the producer and exits the thread
+     */
     public void stopProducer() {
         stopped = true;
     }
 
+    /**
+     * Pauses the producer until resumed.
+     */
     public void pauseProducer() {
         paused = true;
     }
 
+    /**
+     * Pauses the producer for the specified amount of time
+     * @param resumeTime The pause duration in milliseconds
+     */
     public void pauseProducer(long resumeTime) {
         this.resumeTime = resumeTime;
     }
 
+    /**
+     * Causes the producer to resume producing
+     */
     public void resumeProducer() {
         this.resumeTime = 0;
         this.paused = false;

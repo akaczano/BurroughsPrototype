@@ -7,23 +7,33 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * This class manages the list of loaded producers and
+ * processes any commands run against it.
+ */
 public class ProducerInterface {
 
-    private HashMap<String, ProducerEntry> producers;
-    private String kafkaHost;
-    private String schemaRegistry;
+    private final HashMap<String, ProducerEntry> producers;
+    private final String kafkaHost;
+    private final String schemaRegistry;
 
+    /**
+     * Initializes the interface and parses the list of producers
+     * to be found in the default producer file location.
+     * @param kafkaHost Kafka hostname
+     * @param schemaRegistry Schema registry URL
+     * @param defaultDB The default database to use
+     */
     public ProducerInterface(String kafkaHost, String schemaRegistry, DBProvider defaultDB) {
         this.kafkaHost = kafkaHost;
         this.schemaRegistry = schemaRegistry;
-
+        producers = new HashMap<>();
         System.out.println("Loading producers...");
         File producerFile = new File("/producer/producers.json");
         if (!producerFile.exists()) {
             System.out.println("No producers found");
         }
         else {
-            producers = new HashMap<>();
             try {
                 List<ProducerEntry> entries = ProducerEntry.parse(producerFile.toPath(), defaultDB);
                 if (entries == null) {
@@ -40,6 +50,10 @@ public class ProducerInterface {
         }
     }
 
+    /**
+     * Handles all producer commands
+     * @param command The command, starting with .producer
+     */
     public void handleCommand(String command) {
         String[] words = command.split("\\s+");
         if (words.length < 3) {
@@ -48,6 +62,7 @@ public class ProducerInterface {
         }
         if (!producers.containsKey(words[1])) {
             System.out.printf("Could not find producer %s\n", words[1]);
+            return;
         }
 
         ProducerEntry entry = producers.get(words[1]);
@@ -107,6 +122,9 @@ public class ProducerInterface {
         }
     }
 
+    /**
+     * Prints a list of producers. Handles the .producers command
+     */
     public void printList() {
         System.out.println("Producers:");
         for (String name : this.producers.keySet()) {
@@ -114,6 +132,10 @@ public class ProducerInterface {
         }
     }
 
+    /**
+     * Called upon application shutdown. Makes sure all of the producer threads
+     * are terminated.
+     */
     public void stopProducers() {
         for (ProducerEntry p : producers.values()) {
             p.terminate();

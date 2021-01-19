@@ -181,10 +181,78 @@ while (true) {
 This simple loop creates a much more professional and user friendly terminal than standard Java utilities.
 
 ### JDBC
+While most of the database interaction is handled from ksqlDB through the use of Kafk Connect, there are a handful of cases where Burroughs needs to able to interface directly with a relational database includeing:
+- Dropping the output table when a query is stopped
+- Creating the `burroughs` database
+- Producing data from a database table
+
+To accomplish this, we make use of the widely used JDBC library. 
+
+To connect to a database you will need a connection string. This takes the following form:
+```
+jdbc:postgresql://hostname/database
+```
+
+You also need a username and password, stored in a java.util.Properties object. The following example establishes connection to a database.
+
+```java
+String conString = "jdbc://postgresql://localhost:5432/burroughs"
+Properties props = new Properties();
+props.put("user", "postgres");
+props.put("password", "password");
+try {
+  Connection conn = DriverManager.getConnection(conString, props);
+}
+catch (SQLException e) {
+  e.printStackTrace();
+}
+```
+
+Pretty much all JDBC operations can throw a SQLException, so be prepared to handle those.
+
+Once you have a connection, you can query the database:
+
+```java
+Statement statement = connection.createStatement();
+ResultSet results = statement.execute("SELECT * FROM things;");
+```
+
+The result set can be iterated over using `next()`, `isLast()` and other methods. The result set also as a variety of getters to extract fields. For instance, if `things` looked like this:
+| Date | Name | Quantity |
+| ---- | ---- | -------- |
+| 2021-01-18 | Aidan | 4 |
+| ... | ... | ... |
+
+I could do the following to extract the fields:
+
+```java
+results.next(); // Navigates to the first row
+Date date = results.getDate(0); // 2021-01-18
+String name = results.getDate(1); // Aidan
+int quantity = results.getInt(2); // 4
+results.next(); // Move on to the next row
+```
+
+
+The JDBC docs, which contain much more detail, can be found [here](https://docs.oracle.com/javase/tutorial/jdbc/basics/index.html).
+
 ### Single Message Transforms
-### Advanced Java Syntax
+Since Burroughs doesn't do any stream processing itself, we mostly have to rely on the existing features provided by KsqlDB. That being said, KsqlDB does provide a mechanism for performing simple manipulations on data flowing throw a connector in the form of Single Message Transforms (SMTs). There is an informative article on these [here](https://www.confluent.io/blog/kafka-connect-single-message-transformation-tutorial-with-examples/) in addition to the full list of transforms which can be found [here](https://docs.confluent.io/platform/current/connect/transforms/overview.html).
+
+Essentially, transformations will come from one of 3 sources:
+- Built in to Kafka connect 
+- Made by confluent
+- Written by you
+
+In the second two cases the default Confluent Kafka Connect image must be modified. To do this:
+1. Start with the cp-kafka-connect-base image.
+2. Use the commmand `confluent-hub install --no-prompt` to install any Confluent transforms you need.
+3. Copy over any custom transformations in the form of a compiled JAR file. 
+
+For an example of this, see the Dockerfile in the Confluent directory.
 
 ## Application Overview
+
 ### Command Handling
 ### Query Validation
 ### Query Execution

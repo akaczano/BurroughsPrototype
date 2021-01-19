@@ -20,6 +20,7 @@ import java.util.Properties;
 
 public class ProducerEntry {
 
+    // Producer config
     private String name;
     private volatile int delay = 0;
     private int maxRecords = Integer.MAX_VALUE;
@@ -28,10 +29,14 @@ public class ProducerEntry {
     private String keyField;
     private IDataSource dataSource;
 
-    private String status = null;
-
     private Producer producer;
 
+    /**
+     * Initializes a producer object and starts the producer tread
+     * @param kafka The kafka hostname/port
+     * @param schemaRegistry The schema registry url
+     * @param maxRecords The maximum number of records to produce
+     */
     public void buildAndStart(String kafka, String schemaRegistry, int maxRecords) {
         if (maxRecords >= 0) {
             this.maxRecords = maxRecords;
@@ -40,6 +45,9 @@ public class ProducerEntry {
         producer.start();
     }
 
+    /**
+     * Pauses producer execution until resumed
+     */
     public void pause() {
         if (producer == null) {
             System.out.println("Producer not started");
@@ -48,6 +56,11 @@ public class ProducerEntry {
         producer.pauseProducer();
     }
 
+
+    /**
+     * Pauses the producer for the specified duration of time or until resumed
+     * @param time Time span in milliseconds
+     */
     public void pause(int time) {
         if (producer == null) {
             System.out.println("Producer not started");
@@ -56,6 +69,9 @@ public class ProducerEntry {
         producer.pauseProducer(System.currentTimeMillis() + time);
     }
 
+    /**
+     * Resumes producer operation or does nothing if not paused
+     */
     public void resume() {
         if (producer == null) {
             System.out.println("Producer not started");
@@ -64,6 +80,9 @@ public class ProducerEntry {
         producer.resumeProducer();
     }
 
+    /**
+     * Terminates the producer
+     */
     public void terminate() {
         if (producer == null) {
             return;
@@ -75,13 +94,18 @@ public class ProducerEntry {
         producer = null;
     }
 
+    /**
+     * Prints some status information regarding the producer
+     */
     public void printStatus() {
-        System.out.printf("Producer %s status\n", this.name);
         if (producer == null) {
             System.out.println("Producer not started");
             return;
         }
         System.out.printf("Producer status: %s\n", producer.getStatus());
+        if (producer.getErrorMessage().length() > 0) {
+            System.out.printf("Error Message: %s\n", producer.getErrorMessage());
+        }
         System.out.printf("Records produced: %d\n", producer.getRecordsProduced());
         System.out.printf("Records lost: %d\n", producer.getFailedRecords());
     }
@@ -116,6 +140,13 @@ public class ProducerEntry {
         return this.topic;
     }
 
+    /**
+     * Takes a JSON file containing an array of producer configurations
+     * and parses it into a list of ProducerEntry objects
+     * @param file The file to parse
+     * @param defaultDB The database to use as the default
+     * @return A list of producer configurations
+     */
     public static List<ProducerEntry> parse(Path file, DBProvider defaultDB) {
         List<ProducerEntry> producers = new ArrayList<>();
         try {
@@ -208,7 +239,11 @@ public class ProducerEntry {
     }
 
 
-
+    /**
+     * Validates the producer json to ensure required properties are there
+     * @param o The Producer json object
+     * @return The validation error message or null if successful
+     */
     private static String validate(JsonObject o) {
         if (!o.has("name"))
             return "Producer must have name property";
