@@ -21,7 +21,7 @@ Requirements
 The first thing you'll need to do is start up the Confluent platform containers (Zookeeper, Kafka, KsqlDB, etc.) and the PostgreSQL database, all of which are contianed in the Confluent directory.
 ```bash
 cd Confluent
-./build-connnect.sh
+./build-connect.sh
 docker-compose up -d
 ```
 
