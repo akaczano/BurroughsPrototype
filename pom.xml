@@ -86,11 +86,6 @@
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <configuration>
-                        <archive>
-                            <manifest>
-                                <mainClass>com.viasat.burroughs.App</mainClass>
-                            </manifest>
-                        </archive>
                         <descriptorRefs>
                             <descriptorRef>jar-with-dependencies</descriptorRef>
                         </descriptorRefs>
