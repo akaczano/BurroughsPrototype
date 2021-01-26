@@ -4,6 +4,7 @@ import com.viasat.burroughs.DBProvider;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
+import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
@@ -89,13 +90,14 @@ public class QueryExecutor {
     /**
      * Prints the status of the query if applicable
      */
-    public void status() {
+    public QueryStatus status() {
         if (currentQuery == null) {
-            System.out.println("There is no active query. Enter some SQL to execute one.");
+            return null;
         }
         else {
-            System.out.printf("Active Query ID: %s\n", currentQuery.getId());
-            currentQuery.printStatus();
+            QueryStatus status = currentQuery.getStatus();
+            status.setQueryId(currentQuery.getId());
+            return status;
         }
     }
 

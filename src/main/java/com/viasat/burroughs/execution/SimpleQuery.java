@@ -2,6 +2,7 @@ package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
 import org.apache.calcite.sql.*;
@@ -171,19 +172,16 @@ public class SimpleQuery extends QueryBase {
      * Print table statistics and connector status
      */
     @Override
-    public void printStatus() {
+    public QueryStatus getStatus() {
+
+        QueryStatus status = new QueryStatus();
         if (table != null) {
-            super.printStatisticsForTable(this.table);
-        }
-        else {
-            System.out.println("Table not created");
+            status.setTableStatus(this.getTableStatus(this.table));
         }
         if (connector != null) {
-            super.checkConnectorStatus(connector);
+            status.setConnectorStatus(this.getConnectorStatus(this.connector));
         }
-        else {
-            System.out.println("Connector not created");
-        }
+        return status;
     }
 
     /**

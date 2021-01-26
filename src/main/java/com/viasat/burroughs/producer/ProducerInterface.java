@@ -1,10 +1,10 @@
 package com.viasat.burroughs.producer;
 
 import com.google.gson.JsonSyntaxException;
-import com.viasat.burroughs.CommandHandler;
 import com.viasat.burroughs.DBProvider;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -57,86 +57,47 @@ public class ProducerInterface {
 
     }
 
-    /**
-     * Handles all producer commands
-     * @param command The command, starting with .producer
-     */
-    public void handleCommand(String command) {
-        String[] words = command.split("\\s+");
-        if (words.length < 3) {
-            System.out.println("Usage: .producer <producer name> <command> [arguments]");
-            return;
-        }
-        if (!producers.containsKey(words[1])) {
-            System.out.printf("Could not find producer %s\n", words[1]);
-            return;
-        }
+    public boolean hasProducer(String producer) {
+        return producers.containsKey(producer);
+    }
 
-        ProducerEntry entry = producers.get(words[1]);
-        String op = words[2];
-        if (op.equalsIgnoreCase("status")) {
-            entry.printStatus();
-        }
-        else if (op.equalsIgnoreCase("pause")) {
-            if (words.length > 3) {
-                try {
-                    int time = Integer.parseInt(words[3]);
-                    entry.pause(time);
-                } catch(NumberFormatException e) {
-                    System.out.printf("Invalid delay %s\n", words[3]);
-                }
-            }
-            else {
-                entry.pause();
-            }
-        }
-        else if (op.equalsIgnoreCase("resume")) {
-            entry.resume();
-        }
-        else if (op.equalsIgnoreCase("kill")) {
-            entry.terminate();
-        }
-        else if (op.equalsIgnoreCase("start")) {
-            if (words.length > 3) {
-                try {
-                    int limit = Integer.parseInt(words[3]);
-                    entry.buildAndStart(kafkaHost, schemaRegistry, limit);
-                } catch(NumberFormatException e) {
-                    System.out.printf("Invalid limit %s\n", words[3]);
-                }
-            }
-            else {
-                entry.buildAndStart(kafkaHost, schemaRegistry, -1);
-            }
-        }
-        else if (op.equalsIgnoreCase("set-delay")) {
-            if (words.length < 4) {
-                System.out.println("Usage: .producer <producer> set-delay delay (ms)");
-            }
-            else {
-                try {
-                    int delay = Integer.parseInt(words[3]);
-                    System.out.printf("Changed delay from %d to %d\n",
-                            entry.getDelay(), delay);
-                    entry.setDelay(delay);
-                } catch(NumberFormatException e) {
-                    System.out.printf("Invalid delay: %s\n", words[3]);
-                }
-            }
-        }
-        else {
-            System.out.printf("Unknown operation: %s\n", op);
-        }
+    public void printProducerStatus(String name) {
+        producers.get(name).printStatus();
+    }
+
+    public void pauseProducer(String name) {
+        producers.get(name).pause();
+    }
+
+    public void pauseProducer(String name, int time) {
+        producers.get(name).pause(time);
+    }
+
+    public void resumeProducer(String name) {
+        producers.get(name).resume();
+    }
+
+    public void terminateProducer(String name) {
+        producers.get(name).terminate();
+    }
+
+    public void startProducer(String name, int limit) {
+        producers.get(name).buildAndStart(kafkaHost, schemaRegistry, limit);
+    }
+
+    public int getProducerDelay(String name) {
+        return producers.get(name).getDelay();
+    }
+
+    public void setProducerDelay(String name, int delay) {
+        producers.get(name).setDelay(delay);
     }
 
     /**
      * Prints a list of producers. Handles the .producers command
      */
-    public void printList() {
-        System.out.println("Producers:");
-        for (String name : this.producers.keySet()) {
-            System.out.println(name);
-        }
+    public List<ProducerEntry> getProducers() {
+        return new ArrayList<>(this.producers.values());
     }
 
     public Set<String> getList() {

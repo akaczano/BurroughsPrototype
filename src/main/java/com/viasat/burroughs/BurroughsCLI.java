@@ -1,0 +1,393 @@
+package com.viasat.burroughs;
+
+import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.producer.ProducerEntry;
+import com.viasat.burroughs.producer.ProducerInterface;
+import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
+import com.viasat.burroughs.service.model.burroughs.TableStatus;
+import com.viasat.burroughs.service.model.description.Field;
+import com.viasat.burroughs.service.model.list.Topic;
+import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import org.jline.reader.Candidate;
+import org.jline.reader.Completer;
+import org.jline.reader.LineReader;
+import org.jline.reader.ParsedLine;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class BurroughsCLI implements Completer {
+
+    // Character sequences used to change text color
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_RESET = "\u001B[0m";
+
+    private final Burroughs burroughs;
+
+    /**
+     * Symbol table that maps commands to the method that handles
+     * them. Only the first word of the command, which always starts
+     * with '.', is used as the key.
+     */
+    private final Map<String, CommandHandler> handlers;
+
+    public BurroughsCLI(Burroughs burroughs) {
+        this.burroughs = burroughs;
+        this.handlers = new HashMap<>();
+        this.handlers.put(".stop", this::handleStop);
+        this.handlers.put(".table", this::handleTable);
+        this.handlers.put(".topics", this::handleTopics);
+        this.handlers.put(".topic", this::handleTopic);
+        this.handlers.put(".help", this::handleHelp);
+        this.handlers.put(".connect", this::handleConnect);
+        this.handlers.put(".connection", this::handleConnection);
+        this.handlers.put(".status", this::handleStatus);
+        this.handlers.put(".quit", this::handleQuit);
+
+        this.handlers.put(".producers", this::handleProducers);
+        this.handlers.put(".producer", this::handleProducer);
+    }
+
+    /**
+     * Method that receives all raw text from the JLine terminal.
+     *
+     * @param command The command to handle.
+     */
+    public void handleCommand(String command) {
+        if (command == null) return;
+        try {
+            command = command.trim(); // We always trim off whitespace
+            BurroughsConnection conn = burroughs.connection();
+
+            // Only the .connect and .connection commands can run without connection
+            // to KsqlDB and PostgreSQL established
+            if ((!conn.isKsqlConnected() || !conn.isDbConnected()) && !command.equals(".connect") &&
+                    !command.equals(".connection")) {
+                System.out.println("Connection not established");
+                System.out.println("Use .connect to re-connect");
+                System.out.println("Use .connection to view connection info");
+                return;
+            }
+            if (command.startsWith(".")) {
+                // Lookup command in handlers and execute the correct one
+                String commandWord = command.split("\\s+")[0];
+                if (this.handlers.containsKey(commandWord)) {
+                    this.handlers.get(commandWord).handle(command);
+                } else {
+                    System.out.println("Unknown command: " + commandWord);
+                }
+            } else {
+                // If it doesn't start with a period, we assume it's a SQL query.
+                burroughs.processQuery(command);
+            }
+        } catch (ExecutionException e) {
+            // Display error
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Prints the schema for the specified topic
+     *
+     * @param command The command string
+     */
+    private void handleTopic(String command) {
+        String[] words = command.split("\\s+");
+        if (words.length != 2) {
+            System.out.println("Usage: .topic <topic>");
+        } else {
+            String topicName = words[1];
+            Field[] fields = burroughs.topic(topicName);
+
+            System.out.println("Field Name: Type");
+            for (Field f : fields) {
+                System.out.printf("%s: %s\n", f.getName(), f.getSchema().getType());
+            }
+        }
+    }
+
+    /**
+     * Prints a list of available topics
+     *
+     * @param command Command string starting with .topics
+     */
+    private void handleTopics(String command) {
+        Topic[] list = burroughs.topics();
+        for (Topic t : list) {
+            System.out.println(t);
+        }
+    }
+
+    /**
+     * Called when the .connection command is executed.
+     * Prints connection status.
+     *
+     * @param command Not used.
+     */
+    private void handleConnection(String command) {
+        BurroughsConnection conn = burroughs.connection();
+        System.out.printf("ksqlDB Hostname: %s, Status: %s%s%s\n",
+                conn.getKsqlHost(),
+                conn.isKsqlConnected() ? ANSI_GREEN : ANSI_RED,
+                conn.isKsqlConnected() ? "Connected" : "Disconnected",
+                ANSI_RESET);
+        System.out.printf("PostgreSQL Hostname: %s, Status: %s%s%s\n",
+                conn.getdBHost(),
+                conn.isDbConnected() ? ANSI_GREEN : ANSI_RED,
+                conn.isDbConnected() ? "Connected" : "Disconnected",
+                ANSI_RESET);
+    }
+
+    private void handleStop(String command) {
+        boolean keepTable = Arrays.stream(command.split(" "))
+                .anyMatch(w -> w.equalsIgnoreCase("keep-table"));
+        burroughs.stop(keepTable);
+    }
+
+    /**
+     * Corresponds to the .table command. Sets the current output table
+     *
+     * @param command Command string
+     */
+    private void handleTable(String command) {
+        String[] words = command.split("\\s+");
+
+        if (words.length == 1) {
+            if (burroughs.getDbTable() == null) {
+                System.out.println("No table selected yet.");
+            } else {
+                System.out.println(burroughs.getDbTable());
+            }
+        } else if (words.length > 2) {
+            System.out.println("Usage: .table <tablename>");
+        } else {
+            burroughs.setDbTable(words[1]);
+            System.out.println("Set output table to " + words[1]);
+        }
+    }
+
+    /**
+     * Called when the .connect command is run. Simply calls the init method again
+     * in an attempt to establish connection.
+     *
+     * @param command Not used.
+     */
+    private void handleConnect(String command) {
+        System.out.println("Connecting...");
+        burroughs.init();
+    }
+
+    /**
+     * Prints the status of the active query
+     *
+     * @param command Command string beginning with .status
+     */
+    private void handleStatus(String command) {
+        QueryStatus status = burroughs.queryStatus();
+        System.out.println("Status:");
+        if (status == null) {
+            System.out.println("There is no active query. Enter some SQL to execute one.");
+            return;
+        }
+        System.out.printf("Active Query ID: %s\n", status.getQueryId());
+        TableStatus tableStatus = status.getTableStatus();
+        if (tableStatus == null) {
+            System.out.println("Table not created");
+            return;
+        }
+        if (!tableStatus.hasStatus()) {
+            System.out.println("Status not available");
+            return;
+        }
+        System.out.printf("Process rate: %f messages/s\n", tableStatus.getProcessRate());
+        System.out.printf("Total messages processed: %d\n", tableStatus.getTotalMessages());
+        for (int i = 0; i < tableStatus.getQueryOffsets().size(); i++) {
+            long current = tableStatus.getQueryOffsets().get(i);
+            long max = tableStatus.getQueryMaxOffsets().get(i);
+            System.out.printf("Query %d: %d%% (%d/%d)\n",
+                    i + 1, (int) ((((double) current) / max) * 100), current, max);
+        }
+        double totalProgress = (((double) tableStatus.getTotalProgress()) /
+                tableStatus.getTotalWork());
+        System.out.printf("Total Progress: %d%% (%d/%d)\n",
+                (int) (totalProgress * 100),
+                tableStatus.getTotalProgress(), tableStatus.getTotalWork());
+        System.out.printf("Total run time: %.1f seconds\n", tableStatus.getTotalRuntime() / 1000.0);
+        System.out.printf("Estimated time remaining: %.1f seconds\n",
+                ((tableStatus.getTotalRuntime() / (totalProgress)) - tableStatus.getTotalRuntime()) / 1000.0);
+        if (status.getConnectorStatus() != null) {
+            if (!status.getConnectorStatus().isConnectorRunning()) {
+                System.out.println(BurroughsCLI.ANSI_YELLOW + "Connector not running" + BurroughsCLI.ANSI_RESET);
+            }
+            else {
+                for (String error : status.getConnectorStatus().getErrors()) {
+                    System.out.println(BurroughsCLI.ANSI_RED + "Connector Error:" + BurroughsCLI.ANSI_RESET);
+                    System.out.println(error);
+                }
+            }
+        }
+    }
+
+    /**
+     * Exits Burroughs
+     *
+     * @param command Command string beginning with .quit
+     */
+    private void handleQuit(String command) {
+        burroughs.dispose();
+        System.out.println("Goodbye!");
+        System.exit(0);
+    }
+
+    private void handleProducers(String command) {
+        List<ProducerEntry> producers = burroughs.producerInterface().getProducers();
+        System.out.println("Producers:");
+        for (ProducerEntry p : producers) {
+            System.out.println(p.getName());
+        }
+    }
+
+    /**
+     * Handles all producer commands
+     * @param command The command, starting with .producer
+     */
+    private void handleProducer(String command) {
+        ProducerInterface producerInterface = burroughs.producerInterface();
+        String[] words = command.split("\\s+");
+        if (words.length < 3) {
+            System.out.println("Usage: .producer <producer name> <command> [arguments]");
+            return;
+        }
+        if (!producerInterface.hasProducer(words[1])) {
+            System.out.printf("Could not find producer %s\n", words[1]);
+            return;
+        }
+
+        String name = words[1];
+        String op = words[2];
+        if (op.equalsIgnoreCase("status")) {
+            producerInterface.printProducerStatus(name);
+        }
+        else if (op.equalsIgnoreCase("pause")) {
+            if (words.length > 3) {
+                try {
+                    int time = Integer.parseInt(words[3]);
+                    producerInterface.pauseProducer(name, time);
+                } catch(NumberFormatException e) {
+                    System.out.printf("Invalid delay %s\n", words[3]);
+                }
+            }
+            else {
+                producerInterface.pauseProducer(name);
+            }
+        }
+        else if (op.equalsIgnoreCase("resume")) {
+            producerInterface.resumeProducer(name);
+        }
+        else if (op.equalsIgnoreCase("kill")) {
+            producerInterface.terminateProducer(name);
+        }
+        else if (op.equalsIgnoreCase("start")) {
+            if (words.length > 3) {
+                try {
+                    int limit = Integer.parseInt(words[3]);
+                    producerInterface.startProducer(name, limit);
+                } catch(NumberFormatException e) {
+                    System.out.printf("Invalid limit %s\n", words[3]);
+                }
+            }
+            else {
+                producerInterface.startProducer(name,-1);
+            }
+        }
+        else if (op.equalsIgnoreCase("set-delay")) {
+            if (words.length < 4) {
+                System.out.println("Usage: .producer <producer> set-delay delay (ms)");
+            }
+            else {
+                try {
+                    int delay = Integer.parseInt(words[3]);
+                    System.out.printf("Changed delay from %d to %d\n",
+                            producerInterface.getProducerDelay(name), delay);
+                    producerInterface.setProducerDelay(name, delay);
+                } catch(NumberFormatException e) {
+                    System.out.printf("Invalid delay: %s\n", words[3]);
+                }
+            }
+        }
+        else {
+            System.out.printf("Unknown operation: %s\n", op);
+        }
+    }
+
+    /**
+     * Prints the instructions
+     *
+     * @param command Not used.
+     */
+    private void handleHelp(String command) {
+        System.out.println("Available Commands");
+        System.out.println(".help");
+        System.out.println("\tPrints a list of commands.");
+        System.out.println(".table");
+        System.out.println("\tPrints the currently selected output table.");
+        System.out.println(".table <tablename>");
+        System.out.println("\tSets the output table to tablename.");
+        System.out.println(".topics");
+        System.out.println("\tPrints a list of available topics.");
+        System.out.println(".topic <topic>:");
+        System.out.println("\tPrints the schema for the specified topic.");
+        System.out.println(".status");
+        System.out.println("\tPrints the status of the currently executing query.");
+        System.out.println(".stop [keep-table]");
+        System.out.println("\tHalts query execution, removes all associated ksqlDB objects and " +
+                "\n\tdrops output table unless keep-table is specified.");
+        System.out.println(".connection");
+        System.out.println("\tDisplays connection information/status.");
+        System.out.println(".connect");
+        System.out.println("\tAttempts to reconnect to ksqlDB and PostgreSQL");
+        System.out.println(".producers");
+        System.out.println("\tDisplays a list of producers");
+        System.out.println(".producer <producer> <operation> [arguments]");
+        System.out.println("\tExecutes the given command for the specified producer.");
+        System.out.println("\tAvailable operations");
+        System.out.println("\tstart [limit]: starts the producer");
+        System.out.println("\tstatus: prints the producer's status");
+        System.out.println("\tpause [delay (ms)]: pauses the producer indefinitely or for a length of time");
+        System.out.println("\tresume: resumes producer operation");
+        System.out.println("\tkill: stops producer operation");
+        System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
+        System.out.println(".quit");
+        System.out.println("\tExits burroughs. Ctrl+D works too.");
+        System.out.println("Any other input will be treated like a SQL query.");
+    }
+
+    @Override
+    public void complete(LineReader lineReader, ParsedLine parsedLine, List<Candidate> list) {
+        for (String command : this.handlers.keySet()) {
+            if (command.startsWith(parsedLine.line())) {
+                list.add(new Candidate(command));
+            }
+        }
+
+        if (parsedLine.words().get(0).equalsIgnoreCase(".producer")) {
+            for (String producer : burroughs.producerInterface().getList()) {
+                if (parsedLine.words().size() == 1 ||
+                        (parsedLine.words().size() == 2 && producer.startsWith(parsedLine.words().get(1)))) {
+                    list.add(new Candidate(producer));
+                }
+                else if (parsedLine.words().size() >= 2 &&
+                        burroughs.producerInterface().getList().contains(parsedLine.words().get(1)))     {
+                    for (String op : ProducerInterface.COMMAND_LIST) {
+                        list.add(new Candidate(op));
+                    }
+                }
+            }
+        }
+    }
+
+}
