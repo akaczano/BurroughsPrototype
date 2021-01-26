@@ -101,6 +101,7 @@ public class App {
         Terminal terminal = TerminalBuilder.terminal();
         LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
+                .completer(burroughs)
                 .build();
         // The prompt that is shown when expecting user input
         String prompt = "sql>";

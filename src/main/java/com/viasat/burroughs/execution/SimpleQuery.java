@@ -54,7 +54,7 @@ public class SimpleQuery extends QueryBase {
      */
     @Override
     public void execute() {
-        // TODO deal with this
+        // TODO: deal with this
         setGroupByDataType(DataType.ARRAY);
 
         // Stores translations as a mapping of text to replacement

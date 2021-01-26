@@ -18,18 +18,15 @@ import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
-import org.jline.reader.EndOfFileException;
+import org.jline.reader.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
-public class Burroughs implements DBProvider {
+public class Burroughs implements DBProvider, Completer {
 
 
     // System configuration
@@ -487,5 +484,29 @@ public class Burroughs implements DBProvider {
 
     public void setSchemaRegistry(String schemaRegistry) {
         this.schemaRegistry = schemaRegistry;
+    }
+
+    @Override
+    public void complete(LineReader lineReader, ParsedLine parsedLine, List<Candidate> list) {
+        for (String command : this.handlers.keySet()) {
+            if (command.startsWith(parsedLine.line())) {
+                list.add(new Candidate(command));
+            }
+        }
+
+        if (parsedLine.words().get(0).equalsIgnoreCase(".producer")) {
+            for (String producer : producerInterface.getList()) {
+                if (parsedLine.words().size() == 1 ||
+                        (parsedLine.words().size() == 2 && producer.startsWith(parsedLine.words().get(1)))) {
+                    list.add(new Candidate(producer));
+                }
+                else if (parsedLine.words().size() >= 2 &&
+                        producerInterface.getList().contains(parsedLine.words().get(1)))     {
+                    for (String op : ProducerInterface.COMMAND_LIST) {
+                        list.add(new Candidate(op));
+                    }
+                }
+            }
+        }
     }
 }

@@ -74,36 +74,6 @@ public class StatementService {
     }
 
     /**
-     * Executes the given statement using the default StreamProperties
-     * @param statement The KSQL statement to execute
-     * @return A StatementResponse object or null if there was an error
-     */
-    public StatementResponse executeStatement(String statement) {
-        return executeStatement(statement, new StreamProperties(true));
-    }
-
-    /**
-     * This method contains the general error handling logic used for statement execution.
-     * It will attempt to execute the statement and cast it to the specified type.
-     * @param statement The KSQL statement to execute
-     * @param message A description of what was being done to be used in the error message
-     * @param <T> The type to cast the response to
-     * @return An object modeling the response
-     */
-    public <T extends StatementResponse> T executeStatement(String statement, String message) {
-        StatementResponse response = executeStatement(statement);
-        if (response == null) {
-            // If the response is null it means we couldn't get to the server
-            throw new ExecutionException(String.format("Failed to %s due to connection error",
-                    message));
-        } else if (response instanceof StatementError) {
-            throw new ExecutionException((StatementError) response);
-        } else {
-            return (T) response;
-        }
-    }
-
-    /**
      * Execute the given statement and deserializes the response to the correct format
      * @param statement The statement to execute
      * @param properties The properties to use
@@ -135,4 +105,35 @@ public class StatementService {
             return null;
         }
     }
+
+    /**
+     * Executes the given statement using the default StreamProperties
+     * @param statement The KSQL statement to execute
+     * @return A StatementResponse object or null if there was an error
+     */
+    public StatementResponse executeStatement(String statement) {
+        return executeStatement(statement, new StreamProperties(true));
+    }
+
+    /**
+     * This method contains the general error handling logic used for statement execution.
+     * It will attempt to execute the statement and cast it to the specified type.
+     * @param statement The KSQL statement to execute
+     * @param message A description of what was being done to be used in the error message
+     * @param <T> The type to cast the response to
+     * @return An object modeling the response
+     */
+    public <T extends StatementResponse> T executeStatement(String statement, String message) {
+        StatementResponse response = executeStatement(statement);
+        if (response == null) {
+            // If the response is null it means we couldn't get to the server
+            throw new ExecutionException(String.format("Failed to %s due to connection error",
+                    message));
+        } else if (response instanceof StatementError) {
+            throw new ExecutionException((StatementError) response);
+        } else {
+            return (T) response;
+        }
+    }
+
 }

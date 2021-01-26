@@ -1,11 +1,13 @@
 package com.viasat.burroughs.producer;
 
 import com.google.gson.JsonSyntaxException;
+import com.viasat.burroughs.CommandHandler;
 import com.viasat.burroughs.DBProvider;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class manages the list of loaded producers and
@@ -16,6 +18,10 @@ public class ProducerInterface {
     private final HashMap<String, ProducerEntry> producers;
     private final String kafkaHost;
     private final String schemaRegistry;
+
+    public static final String[] COMMAND_LIST = {
+            "status", "pause", "resume", "kill", "start", "set-delay"
+    };
 
     /**
      * Initializes the interface and parses the list of producers
@@ -48,6 +54,7 @@ public class ProducerInterface {
                 System.out.printf("Invalid producers.json file: %s\n", e.getMessage());
             }
         }
+
     }
 
     /**
@@ -130,6 +137,10 @@ public class ProducerInterface {
         for (String name : this.producers.keySet()) {
             System.out.println(name);
         }
+    }
+
+    public Set<String> getList() {
+        return this.producers.keySet();
     }
 
     /**
