@@ -23,7 +23,7 @@ public class App {
      * variables and their descriptions.
      * @param burroughs The Burroughs object to load configuration into
      */
-    private static void loadConfiguration(Burroughs burroughs) {
+    public static void loadConfiguration(Burroughs burroughs) {
         String ksqlHost = "http://localhost:8088";
         String dbHost = "localhost:5432";
         String connectorDB = "postgres:5432";

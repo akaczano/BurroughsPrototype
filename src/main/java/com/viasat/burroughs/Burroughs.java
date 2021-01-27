@@ -107,13 +107,15 @@ public class Burroughs implements DBProvider {
      *
      * @param query Raw SQL to execute
      */
-    public void processQuery(String query) {
+    public void processQuery(String query) throws TopicNotFoundException, UnsupportedQueryException, SqlParseException {
         // Surprisingly, Calcite will not tolerate a semicolon at the end of the query
         if (query.endsWith(";")) {
             query = query.substring(0, query.length() - 1);
         }
         // Perform validation (and parsing also)
-        SqlSelect parsedQuery = validateQuery(query);
+        QueryValidator validator = new QueryValidator(this.service);
+
+        SqlSelect parsedQuery = validator.validateQuery(query);
         if (parsedQuery != null) {
             if (this.dbTable == null) {
                 System.out.println("No output table set. Use .table to configure one.");
@@ -240,24 +242,6 @@ public class Burroughs implements DBProvider {
             System.err.printf("Database host: %s\nUser: %s\n Database: %s\n", dbHost, dbUser, database);
         }
         return conn;
-    }
-
-    /**
-     * Performs basic query validation. Checks that the SQL is valid,
-     * the topics reference exist, and that the query is supported by
-     * Burroughs.
-     * @param query The raw query string
-     * @return The parsed query as a SqlSelect object
-     */
-    private SqlSelect validateQuery(String query) {
-        QueryValidator validator = new QueryValidator(this.service);
-        try {
-            return validator.validateQuery(query);
-        } catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
-            System.out.printf("%sValidation error: %s%s\n",
-                    BurroughsCLI.ANSI_RED, e.getMessage(), BurroughsCLI.ANSI_RESET);
-            return null;
-        }
     }
 
 

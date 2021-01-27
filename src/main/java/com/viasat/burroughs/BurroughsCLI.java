@@ -8,6 +8,9 @@ import com.viasat.burroughs.service.model.burroughs.TableStatus;
 import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.validation.TopicNotFoundException;
+import com.viasat.burroughs.validation.UnsupportedQueryException;
+import org.apache.calcite.sql.parser.SqlParseException;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
@@ -82,7 +85,13 @@ public class BurroughsCLI implements Completer {
                 }
             } else {
                 // If it doesn't start with a period, we assume it's a SQL query.
-                burroughs.processQuery(command);
+                try {
+                    burroughs.processQuery(command);
+                }
+                catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
+                    System.out.printf("%sValidation error: %s%s\n",
+                            BurroughsCLI.ANSI_RED, e.getMessage(), BurroughsCLI.ANSI_RESET);
+                }
             }
         } catch (ExecutionException e) {
             // Display error

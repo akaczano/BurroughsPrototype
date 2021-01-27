@@ -3,7 +3,6 @@ package com.viasat.burroughs.service.model.burroughs;
 import java.util.List;
 
 public class TableStatus {
-    private String activeQueryId;
     private boolean hasStatus;
     private double processRate;
     private int totalMessages;
@@ -13,14 +12,6 @@ public class TableStatus {
 
     private List<Long> queryOffsets;
     private List<Long> queryMaxOffsets;
-
-    public String getActiveQueryId() {
-        return activeQueryId;
-    }
-
-    public void setActiveQueryId(String activeQueryId) {
-        this.activeQueryId = activeQueryId;
-    }
 
     public double getProcessRate() {
         return processRate;
