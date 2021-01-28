@@ -5,7 +5,13 @@ import {
     SET_QUERY_EXECUTED,
     SET_QUERY_TERMINATING,
     SET_QUERY_TERMINATED,    
-    SET_CODE
+    SET_CODE,
+    SET_OUTPUT_TABLE,
+    QUERY_ERROR,
+    SET_DATABASE,
+    SET_STATUS,
+    STATUS_RUNNING,
+    SET_KEEP_TABLE
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -14,16 +20,20 @@ const initialState = {
     table: null,
     status: null,
     dbInfo: {
-        hostname: null,
-        username: null,
-        password: null,
-        database: null
+        hostname: '',
+        username: '',
+        password: '',
+        database: '',
+        table: ''
     },
     topics: [],
     topicSchema: null,
     queryActive: false,
     queryExecuting: false,
-    queryTerminating: false
+    queryTerminating: false,
+    queryErrorMessage: null,
+    statusRunning: false,
+    keepTable: false
 };
 
 const reducer = (state = initialState, action) => {
@@ -49,7 +59,8 @@ const reducer = (state = initialState, action) => {
         return {
             ...state,
             queryExecuting: false,
-            queryActive: true
+            queryActive: true,
+            queryErrorMessage: null
         }
     }
     else if (action.type === SET_QUERY_TERMINATING) {
@@ -62,13 +73,62 @@ const reducer = (state = initialState, action) => {
         return {
             ...state,
             queryTerminating: false,
-            queryActive: false
+            queryActive: false,
+            queryErrorMessage: null
+        };
+    }
+    else if (action.type === QUERY_ERROR) {
+        return {
+            ...state,
+            queryExecuting: false,
+            queryTerminating: false,
+            queryActive: false,
+            queryErrorMessage: action.payload
+        };
+    }
+    else if (action.type === SET_DATABASE) {        
+        return {
+            ...state,
+            dbInfo: {
+                ...state.dbInfo,
+                database: action.payload.database,
+                hostname: action.payload.hostname,
+                username: action.payload.username
+            }
+        };
+    }
+    else if (action.type === STATUS_RUNNING) {
+        return {
+            ...state,
+            statusRunning: true
+        };
+    }
+    else if (action.type === SET_STATUS) {
+        return {
+            ...state,
+            status: action.payload,
+            statusRunning: false
         };
     }
     else if (action.type === SET_CODE) {
         return {
             ...state,
             code: action.payload
+        };
+    }
+    else if (action.type === SET_OUTPUT_TABLE) {
+        return {
+            ...state,
+            dbInfo: {
+                ...state.dbInfo,
+                table: action.payload
+            }
+        };
+    }
+    else if (action.type === SET_KEEP_TABLE) {
+        return {
+            ...state,
+            keepTable: !state.keepTable
         };
     }
     return state;

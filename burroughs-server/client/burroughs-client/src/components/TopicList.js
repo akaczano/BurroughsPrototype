@@ -1,31 +1,21 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { getTopics } from '../actions/basicActions';
-import { ListGroup } from 'react-bootstrap';
 
 class TopicList extends React.Component {
     componentDidMount() {
-        this.props.getTopics();
+        setInterval(this.props.getTopics, 500);        
     }
     render() {
         return (
-            <div style={{
-                marginLeft: '6px'
-            }}>                
-                <ListGroup>
-                    <ListGroup.Item disabled style={{fontSize: '14px', padding: '1px'}}>
-                        Topic List
-                    </ListGroup.Item>
+            <div>
+                <div style={{ height: '40vh', overflowY: 'auto' }}>
+                    <span style={{ marginLeft: '18px', fontSize: '14px' }}>
+                        <strong>Topics</strong>
+                    </span>
                     {this.props.topics.map(topic =>
-                        <ListGroup.Item key={topic.name} style={{
-                            fontSize: '10px',
-                            padding: '1px',
-                            overflowX: 'hidden'
-                        }}>
-                            {topic.name}
-                        </ListGroup.Item>
-                    )}
-                </ListGroup>
+                        <p key={topic.name} style={{ margin: '0px', marginLeft: '20px' }}>{topic.name}</p>)}
+                </div>
             </div>
         );
     }

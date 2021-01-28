@@ -62,17 +62,25 @@ public class CommandController {
     }
 
     @CrossOrigin(origins = "http://localhost:5000")
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler({ExecutionException.class})
+    public String handleException(ExecutionException e) {
+        return e.getMessage();
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({TopicNotFoundException.class, SqlParseException.class, UnsupportedQueryException.class})
+    public String handleException(Exception e) {
+        return "Validation Error: " + e.getMessage();
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
     @PostMapping("/execute")
-    public String execute(@RequestBody QueryBody query) {
-        try {
+    public void execute(@RequestBody QueryBody query) throws
+            SqlParseException, TopicNotFoundException,
+            UnsupportedQueryException, ExecutionException {
             burroughs.processQuery(query.getQuery());
-            return "Query Executed";
-        } catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
-            return "Validation Error: " + e.getMessage();
-        }
-        catch (ExecutionException e) {
-            return e.getMessage();
-        }
     }
 
     @CrossOrigin(origins = "http://localhost:5000")
@@ -85,6 +93,20 @@ public class CommandController {
     @PostMapping("/command/stop")
     public void stop(@RequestParam(value = "keepTable", defaultValue = "false") boolean keepTable) {
         burroughs.stop(keepTable);
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @GetMapping("/database")
+    public DatabaseProperties database() {
+        if (!burroughs.connection().isDbConnected()) {
+            return null;
+        }
+        DatabaseProperties props = new DatabaseProperties();
+        props.setDatabase(burroughs.getDatabase());
+        props.setTable(burroughs.getDbTable());
+        props.setHostname(burroughs.getDbHost());
+        props.setUsername(burroughs.getDbUser());
+        return props;
     }
 
 }

@@ -375,6 +375,7 @@ public abstract class QueryBase {
                 "describe connector"
         );
         ConnectorStatus status = description.getStatus();
+        if (status == null) return connectStatus;
         if (status.getTasks().length < 1) {
             connectStatus.setConnectorRunning(false);
             return connectStatus;

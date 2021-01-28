@@ -1,12 +1,11 @@
 import React from 'react';
-import Editor from 'react-simple-code-editor';
-import { highlight, languages} from 'prismjs/components/prism-core';
-import 'prismjs/components/prism-sql';
-import './prism.css'
 import { connect } from 'react-redux';
 
 import { setCode } from '../actions/basicActions';
+import AceEditor from 'react-ace';
 
+import "ace-builds/src-noconflict/mode-mysql";
+import "ace-builds/src-noconflict/theme-xcode";
 
 
 class CodeEditor extends React.Component {
@@ -14,21 +13,15 @@ class CodeEditor extends React.Component {
 
     render() {
         return (
-            <Editor
+            <AceEditor 
+                mode="mysql"
+                theme="xcode"
+                onChange={code => this.props.setCode(code)}
                 value={this.props.code}
-                onValueChange={code => this.props.setCode(code)}
-                highlight={code => highlight(code, languages.sql)}
-                padding={10}
-                style={{
-                    fontFamily: '"Fira code", "Fira Mono", monospace',
-                    fontSize: 12,
-                    backgroundColor: 'sepia',
-                    height: '100%',
-                    border: '0.1px solid black',   
-                    margin: '0px',
-                    width: '100%',
-            
-                }}
+                editorProps={{$blockScrolling: true}}
+                style={{height: '37vh', width: '100%', borderBottom: '0.5px solid gray'}}
+                fontSize="16px"
+                
             />
         );
     }
