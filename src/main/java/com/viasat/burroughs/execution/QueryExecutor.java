@@ -1,6 +1,7 @@
 package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
+import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
@@ -70,8 +71,8 @@ public class QueryExecutor {
             throw new ExecutionException("An error occurred during query processing: " +
                     e.getMessage());
         }
-        System.out.println("Your query is now active. Use .status to check on it.");
-        System.out.println("Use .stop to terminate.");
+        Logger.getLogger().writeLine("Your query is now active. Use .status to check on it.");
+        Logger.getLogger().writeLine("Use .stop to terminate.");
     }
 
     /**
@@ -83,7 +84,7 @@ public class QueryExecutor {
             currentQuery = null;
         }
         else {
-            System.out.println("No active query. Type some SQL to run one.");
+            Logger.getLogger().writeLine("No active query. Type some SQL to run one.");
         }
     }
 

@@ -23,11 +23,7 @@ import java.util.Map;
 
 public class BurroughsCLI implements Completer {
 
-    // Character sequences used to change text color
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_RESET = "\u001B[0m";
+
 
     private final Burroughs burroughs;
 
@@ -90,7 +86,7 @@ public class BurroughsCLI implements Completer {
                 }
                 catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
                     System.out.printf("%sValidation error: %s%s\n",
-                            BurroughsCLI.ANSI_RED, e.getMessage(), BurroughsCLI.ANSI_RESET);
+                            ConsoleLogger.ANSI_RED, e.getMessage(), ConsoleLogger.ANSI_RESET);
                 }
             }
         } catch (ExecutionException e) {
@@ -141,14 +137,14 @@ public class BurroughsCLI implements Completer {
         BurroughsConnection conn = burroughs.connection();
         System.out.printf("ksqlDB Hostname: %s, Status: %s%s%s\n",
                 conn.getKsqlHost(),
-                conn.isKsqlConnected() ? ANSI_GREEN : ANSI_RED,
+                conn.isKsqlConnected() ? ConsoleLogger.ANSI_GREEN : ConsoleLogger.ANSI_RED,
                 conn.isKsqlConnected() ? "Connected" : "Disconnected",
-                ANSI_RESET);
+                ConsoleLogger.ANSI_RESET);
         System.out.printf("PostgreSQL Hostname: %s, Status: %s%s%s\n",
                 conn.getdBHost(),
-                conn.isDbConnected() ? ANSI_GREEN : ANSI_RED,
+                conn.isDbConnected() ? ConsoleLogger.ANSI_GREEN : ConsoleLogger.ANSI_RED,
                 conn.isDbConnected() ? "Connected" : "Disconnected",
-                ANSI_RESET);
+                ConsoleLogger.ANSI_RESET);
     }
 
     private void handleStop(String command) {
@@ -230,11 +226,11 @@ public class BurroughsCLI implements Completer {
                 ((tableStatus.getTotalRuntime() / (totalProgress)) - tableStatus.getTotalRuntime()) / 1000.0);
         if (status.getConnectorStatus() != null) {
             if (!status.getConnectorStatus().isConnectorRunning()) {
-                System.out.println(BurroughsCLI.ANSI_YELLOW + "Connector not running" + BurroughsCLI.ANSI_RESET);
+                System.out.println(ConsoleLogger.ANSI_YELLOW + "Connector not running" + ConsoleLogger.ANSI_RESET);
             }
             else {
                 for (String error : status.getConnectorStatus().getErrors()) {
-                    System.out.println(BurroughsCLI.ANSI_RED + "Connector Error:" + BurroughsCLI.ANSI_RESET);
+                    System.out.println(ConsoleLogger.ANSI_RED + "Connector Error:" + ConsoleLogger.ANSI_RESET);
                     System.out.println(error);
                 }
             }

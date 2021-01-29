@@ -85,6 +85,7 @@ public class App {
             }
         });
         System.out.println("Welcome to Burroughs!");
+        Logger.setLogger(new ConsoleLogger());
         Burroughs burroughs = new Burroughs();
         loadConfiguration(burroughs);
         burroughs.init();

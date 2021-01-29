@@ -118,7 +118,7 @@ public class Burroughs implements DBProvider {
         SqlSelect parsedQuery = validator.validateQuery(query);
         if (parsedQuery != null) {
             if (this.dbTable == null) {
-                System.out.println("No output table set. Use .table to configure one.");
+                Logger.getLogger().writeLine("No output table set. Use .table to configure one.");
             } else {
                 // Execute query
                 executor.executeQuery(parsedQuery);
@@ -146,7 +146,7 @@ public class Burroughs implements DBProvider {
         // If not, drop the table
         if (!keepTable) {
 
-            System.out.print("Dropping output table...");
+            Logger.getLogger().write("Dropping output table...");
             String conString = String.format("jdbc:postgresql://%s/%s",
                     dbHost, database);
             Properties props = new Properties();
@@ -159,7 +159,7 @@ public class Burroughs implements DBProvider {
             } catch (SQLException e) {
                 throw new ExecutionException("Failed to drop table from database");
             }
-            System.out.print("Done\n");
+            Logger.getLogger().writeLine("Done\n");
         }
     }
 
@@ -200,13 +200,13 @@ public class Burroughs implements DBProvider {
         // Send request to /healthcheck endpoint
         HealthStatus status = statusService.checkConnection();
         if (status == null) {
-            System.err.printf("Failed to connect to ksqlDB at %s\n", ksqlHost);
+            Logger.getLogger().writeLineRed("Failed to connect to ksqlDB at + ksqlHost");
             return false;
         } else if (!status.isHealthy()) {
-            System.out.printf("%sksqlDB server is unhealthy%s", BurroughsCLI.ANSI_YELLOW, BurroughsCLI.ANSI_RESET);
+            Logger.getLogger().writeLineYellow("ksqlDB server is unhealthy");
             return false;
         } else {
-            System.out.println("ksqlDB connected successfully");
+            Logger.getLogger().writeLine("ksqlDB connected successfully");
             return true;
         }
     }
@@ -223,7 +223,7 @@ public class Burroughs implements DBProvider {
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(conString, props);
-            System.out.println("Database connected successfully");
+            Logger.getLogger().writeLine("Database connected successfully");
         } catch (SQLException e) {
             // If the exception message says that the database doesn't exist,
             // create the database and then reconnect
@@ -238,8 +238,8 @@ public class Burroughs implements DBProvider {
                     e = ex;
                 }
             }
-            System.err.printf("Failed to connect to database: %s\n", e.getMessage());
-            System.err.printf("Database host: %s\nUser: %s\n Database: %s\n", dbHost, dbUser, database);
+            Logger.getLogger().writeLineRed("Failed to connect to database: " + e.getMessage());
+            Logger.getLogger().writeLineRed(String.format("Database host: %s\nUser: %s\n Database: %s\n", dbHost, dbUser, database));
         }
         return conn;
     }
