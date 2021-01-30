@@ -65,13 +65,6 @@ public class Burroughs implements DBProvider {
     private boolean ksqlConnected = false;
     private boolean dbConnected = false;
 
-
-    /**
-     * Burroughs constructor. Initialize command handlers.
-     */
-    public Burroughs() {
-    }
-
     public ProducerInterface producerInterface() {
         return this.producerInterface;
     }
@@ -126,7 +119,10 @@ public class Burroughs implements DBProvider {
         }
     }
 
-
+    /**
+     * Get connection information
+     * @return An object modeling the current connection status
+     */
     public BurroughsConnection connection() {
         BurroughsConnection conn = new BurroughsConnection();
         conn.setKsqlHost(ksqlHost);
@@ -164,7 +160,11 @@ public class Burroughs implements DBProvider {
     }
 
 
-
+    /**
+     * Get the schema for a given topic
+     * @param topicName The name of the topic
+     * @return
+     */
     public Field[] topic(String topicName) {
         if (!QueryBase.streamExists(service, "BURROUGHS_" + topicName)) {
             QueryBase.createStream(service, "BURROUGHS_" + topicName, topicName,
@@ -176,7 +176,10 @@ public class Burroughs implements DBProvider {
     }
 
 
-
+    /**
+     * Get a list of topics on the connected broker
+     * @return A list of Topic objects
+     */
     public Topic[] topics() {
         ListResponse results = service.executeStatement("SHOW TOPICS;",
                 "list topics");
@@ -184,6 +187,10 @@ public class Burroughs implements DBProvider {
     }
 
 
+    /**
+     * Returns the status of the currently executing qurey
+     * @return
+     */
     public QueryStatus queryStatus() {
         return this.executor.status();
     }
@@ -200,7 +207,7 @@ public class Burroughs implements DBProvider {
         // Send request to /healthcheck endpoint
         HealthStatus status = statusService.checkConnection();
         if (status == null) {
-            Logger.getLogger().writeLineRed("Failed to connect to ksqlDB at + ksqlHost");
+            Logger.getLogger().writeLineRed("Failed to connect to ksqlDB at " + ksqlHost);
             return false;
         } else if (!status.isHealthy()) {
             Logger.getLogger().writeLineYellow("ksqlDB server is unhealthy");

@@ -9,6 +9,8 @@ COPY ./application.properties /
 COPY ./target/burroughs-server-0.0.1-SNAPSHOT.jar /program.jar
 COPY ./client/burroughs-client /client
 COPY ./start-server.sh /start-server.sh
-
+WORKDIR /client
+RUN npm run build
+WORKDIR /
 CMD ["/start-server.sh"]
 

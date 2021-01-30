@@ -13,6 +13,7 @@ export const SET_QUERY_TERMINATED = 'SET_QUERY_TERMINATED';
 export const LOAD_ERROR = 'LOAD_ERROR';
 export const QUERY_ERROR = 'QUERY_ERROR';
 export const SET_DATABASE = 'SET_DATABASE';
+export const SET_DATA = 'SET_DATA';
 
 // UI
 export const QUERY_EXECUTING = 'QUERY_EXECUTING';
@@ -20,3 +21,8 @@ export const QUERY_TERMINATING = 'QUERY_TERMINATING';
 export const SET_CODE = 'SET_CODE';
 export const CLOSE_DESCRIPTION = 'CLOSE_DESCRIPTION';
 export const SET_KEEP_TABLE = 'SET_KEEP_TABLE';
+export const APPEND_MESSAGE = 'APPEND_MESSAGE';
+
+// Producer
+export const PRODUCERS_LOADED = 'PRODUCERS_LOADED';
+export const PRODUCER_ERROR = 'PRODUCER_ERROR';

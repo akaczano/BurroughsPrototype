@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { ProgressBar } from 'react-bootstrap';
 
 import { getStatus } from '../actions/basicActions';
 
@@ -22,12 +23,13 @@ class StatusDisplay extends React.Component {
             const totalProgress = this.props.status.tableStatus.totalProgress / 
                 this.props.status.tableStatus.totalWork;
             const timeRemaining = (tableStatus.totalRuntime / totalProgress - tableStatus.totalRuntime) / 1000.0;
+            const progressLabel = `${Math.floor(totalProgress * 100)}% (${tableStatus.totalProgress}/${tableStatus.totalWork})`
             return (
                 <div className="status-group">
                     <p>Active Query: {this.props.status.queryId}</p>
+                    <ProgressBar now={Math.floor(totalProgress * 100)} label={progressLabel}/>                    
                     <p>Process Rate: {tableStatus.processRate} messages/s</p>
-                    <p>Messages Processed: {tableStatus.totalMessages}</p>
-                    <p>Total Progress: {Math.floor(totalProgress * 100)}% ({tableStatus.totalProgress}/{tableStatus.totalWork})</p>
+                    <p>Messages Processed: {tableStatus.totalMessages}</p>                    
                     <p>Total Run Time: {Math.floor(tableStatus.totalRuntime / 1000)} seconds</p> 
                     <p>Estimated Time Remaing: {Math.floor(timeRemaining)} seconds</p>
                 </div>

@@ -2,14 +2,26 @@ import React from 'react';
 import { Row } from 'react-bootstrap';
 
 import StatusDisplay from './StatusDisplay';
+import Console from './Console';
+import DataView from './DataView';
+import ProducerList from './ProducerList';
 
-const tabs = ['Status', 'Console', 'Data'];
+const tabs = ['Status', 'Console', 'Data', 'Producers'];
 
 class OutputTabs extends React.Component {
     state = { selectedTab: 0 };
     getDisplayedComponent() {
-        if (this.state.selectedTab == 0) {
+        if (this.state.selectedTab === 0) {
             return <StatusDisplay />;
+        }
+        else if (this.state.selectedTab === 1) {
+            return <Console />;
+        }
+        else if (this.state.selectedTab === 2) {
+            return <DataView />
+        }
+        else if (this.state.selectedTab === 3) {
+            return <ProducerList />
         }
     }
     render() {
@@ -29,7 +41,7 @@ class OutputTabs extends React.Component {
                         );
                     })}
                 </Row>
-                <Row style={{margin:'0px', padding: '5px', paddingRight: '15px'}}>                    
+                <Row style={{margin:'0px', padding: '5px', paddingRight: '15px', maxHeight: '45vh', overflowY: 'auto'}}>                    
                     {this.getDisplayedComponent()}
                 </Row>
             </>

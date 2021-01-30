@@ -3,6 +3,7 @@ package com.viasat.burroughs;
 import com.viasat.burroughs.execution.ExecutionException;
 import com.viasat.burroughs.producer.ProducerEntry;
 import com.viasat.burroughs.producer.ProducerInterface;
+import com.viasat.burroughs.producer.ProducerStatus;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.burroughs.TableStatus;
 import com.viasat.burroughs.service.model.description.Field;
@@ -21,9 +22,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Class that handles all CLI commands and prints responses
+ */
 public class BurroughsCLI implements Completer {
-
-
 
     private final Burroughs burroughs;
 
@@ -34,6 +36,10 @@ public class BurroughsCLI implements Completer {
      */
     private final Map<String, CommandHandler> handlers;
 
+    /**
+     * Constructor. Initialize handlers table
+     * @param burroughs
+     */
     public BurroughsCLI(Burroughs burroughs) {
         this.burroughs = burroughs;
         this.handlers = new HashMap<>();
@@ -147,8 +153,12 @@ public class BurroughsCLI implements Completer {
                 ConsoleLogger.ANSI_RESET);
     }
 
+    /**
+     * Handles the .stop command
+     * @param command The command string beginning with .stop
+     */
     private void handleStop(String command) {
-        boolean keepTable = Arrays.stream(command.split(" "))
+        boolean keepTable = Arrays.stream(command.split("\\s+"))
                 .anyMatch(w -> w.equalsIgnoreCase("keep-table"));
         burroughs.stop(keepTable);
     }
@@ -275,7 +285,17 @@ public class BurroughsCLI implements Completer {
         String name = words[1];
         String op = words[2];
         if (op.equalsIgnoreCase("status")) {
-            producerInterface.printProducerStatus(name);
+            ProducerStatus producerStatus = producerInterface.getProducerStatus(name);
+            if (producerStatus.getStatus() == ProducerStatus.NOT_STARTED) {
+                System.out.println("Producer not started");
+                return;
+            }
+            System.out.printf("Producer status: %s\n", producerStatus.toString());
+            if (producerStatus.getErrorMessage() != null) {
+                System.out.printf("Error Message: %s\n", producerStatus.getErrorMessage());
+            }
+            System.out.printf("Records produced: %d\n", producerStatus.getRecordsProduced());
+            System.out.printf("Records lost: %d\n", producerStatus.getRecordsLost());
         }
         else if (op.equalsIgnoreCase("pause")) {
             if (words.length > 3) {
@@ -371,6 +391,12 @@ public class BurroughsCLI implements Completer {
         System.out.println("Any other input will be treated like a SQL query.");
     }
 
+    /**
+     * Computes auto-complete candidates
+     * @param lineReader The associated line reader
+     * @param parsedLine The line of text, already parsed
+     * @param list The list of candidates for completion
+     */
     @Override
     public void complete(LineReader lineReader, ParsedLine parsedLine, List<Candidate> list) {
         for (String command : this.handlers.keySet()) {

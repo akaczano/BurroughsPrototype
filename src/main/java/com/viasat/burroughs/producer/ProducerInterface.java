@@ -61,8 +61,8 @@ public class ProducerInterface {
         return producers.containsKey(producer);
     }
 
-    public void printProducerStatus(String name) {
-        producers.get(name).printStatus();
+    public ProducerStatus getProducerStatus(String name) {
+        return producers.get(name).getStatus();
     }
 
     public void pauseProducer(String name) {

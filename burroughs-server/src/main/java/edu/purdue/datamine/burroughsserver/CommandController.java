@@ -8,19 +8,30 @@ import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
+import edu.purdue.datamine.burroughsserver.model.DatabaseProperties;
+import edu.purdue.datamine.burroughsserver.model.ProducerModel;
+import edu.purdue.datamine.burroughsserver.model.QueryBody;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 @RestController
 public class CommandController {
 
+    private final ListLogger logger;
     private final Burroughs burroughs;
+    private final ConnectionHolder conn;
 
     @Autowired
-    public CommandController(Burroughs burroughs) {
+    public CommandController(ListLogger logger, Burroughs burroughs, ConnectionHolder conn) {
+        this.logger = logger;
         this.burroughs = burroughs;
+        this.conn = conn;
     }
 
     @CrossOrigin(origins = "http://localhost:5000")
@@ -103,10 +114,104 @@ public class CommandController {
         }
         DatabaseProperties props = new DatabaseProperties();
         props.setDatabase(burroughs.getDatabase());
-        props.setTable(burroughs.getDbTable());
+        props.setTable(burroughs.getDbTable() == null ? "" : burroughs.getDbTable());
         props.setHostname(burroughs.getDbHost());
         props.setUsername(burroughs.getDbUser());
         return props;
     }
 
+    @CrossOrigin(origins = "http://localhost:5000")
+    @GetMapping("/console")
+    public Object[] getMessages(@RequestParam long lastQuery) {
+        return logger.getMessages(lastQuery);
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @GetMapping("/producer")
+    public List<ProducerModel> getProducers() {
+        List<ProducerModel> models = new ArrayList<>();
+        Set<String> producerNames = burroughs.producerInterface().getList();
+        for (String name : producerNames) {
+            ProducerModel producer = new ProducerModel(name,
+                    burroughs.producerInterface().getProducerStatus(name));
+            producer.setDelay(burroughs.producerInterface().getProducerDelay(name));
+            models.add(producer);
+        }
+        return models;
+    }
+
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping("/producer/{name}/start")
+    public void startProducer(@PathVariable(value = "name") String name,
+                              @RequestParam(value = "limit", defaultValue = "-1") int limit){
+        if (!burroughs.producerInterface().hasProducer(name)) {
+            throw new CommandException("Producer not found");
+        }
+        burroughs.producerInterface().startProducer(name, limit);
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping("/producer/{name}/setdelay")
+    public int setDelay(@PathVariable(value = "name") String name,
+                        @RequestParam(value = "delay", defaultValue = "0") int delay) {
+        if (!burroughs.producerInterface().hasProducer(name)) {
+            throw new CommandException("Producer not found");
+        }
+        burroughs.producerInterface().setProducerDelay(name, delay);
+        return delay;
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping("/producer/{name}/pause")
+    public void pauseProducer(@PathVariable(value = "name") String name,
+                        @RequestParam(value = "time", defaultValue = "-1") int time) {
+        if (!burroughs.producerInterface().hasProducer(name)) {
+            throw new CommandException("Producer not found");
+        }
+        if (time > 0) {
+            burroughs.producerInterface().pauseProducer(name, time);
+        }
+        else {
+            burroughs.producerInterface().pauseProducer(name);
+        }
+    }
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping("/producer/{name}/kill")
+    public void killProducer(@PathVariable(value = "name") String name) {
+        if (!burroughs.producerInterface().hasProducer(name)) {
+            throw new CommandException("Producer not found");
+        }
+        burroughs.producerInterface().terminateProducer(name);
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping("/producer/{name}/resume")
+    public void resumeProducer(@PathVariable(value = "name") String name) {
+        if (!burroughs.producerInterface().hasProducer(name)) {
+            throw new CommandException("Producer not found");
+        }
+        burroughs.producerInterface().resumeProducer(name);
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @PostMapping("/command/connect")
+    public void connect() {
+        burroughs.init();
+        if (burroughs.connection().isDbConnected()) {
+            conn.init();
+        }
+    }
+
+    @CrossOrigin(origins = "http://localhost:5000")
+    @GetMapping("/data")
+    public List<Object[]> getData() {
+        String table = burroughs.getDbTable();
+        if (table != null && table.length() > 0) {
+            return conn.getSnapshot(table);
+        }
+        else {
+            return null;
+        }
+    }
 }

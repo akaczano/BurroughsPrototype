@@ -94,20 +94,16 @@ public class ProducerEntry {
         producer = null;
     }
 
-    /**
-     * Prints some status information regarding the producer
-     */
-    public void printStatus() {
+    public ProducerStatus getStatus() {
         if (producer == null) {
-            System.out.println("Producer not started");
-            return;
+            return new ProducerStatus(ProducerStatus.NOT_STARTED, 0, 0);
         }
-        System.out.printf("Producer status: %s\n", producer.getStatus());
+        ProducerStatus status = new ProducerStatus(ProducerStatus.valueOf(producer.getStatus()),
+                producer.getRecordsProduced(), producer.getFailedRecords());
         if (producer.getErrorMessage().length() > 0) {
-            System.out.printf("Error Message: %s\n", producer.getErrorMessage());
+            status.setErrorMessage(producer.getErrorMessage());
         }
-        System.out.printf("Records produced: %d\n", producer.getRecordsProduced());
-        System.out.printf("Records lost: %d\n", producer.getFailedRecords());
+        return status;
     }
 
 

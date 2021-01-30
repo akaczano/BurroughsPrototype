@@ -11,7 +11,9 @@ import {
     SET_DATABASE,
     SET_STATUS,
     STATUS_RUNNING,
-    SET_KEEP_TABLE
+    SET_KEEP_TABLE,
+    APPEND_MESSAGE,
+    SET_DATA
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -33,7 +35,10 @@ const initialState = {
     queryTerminating: false,
     queryErrorMessage: null,
     statusRunning: false,
-    keepTable: false
+    keepTable: false,
+    consoleMessages: [],
+    lastConsoleRequest: Date.now(),
+    data: null    
 };
 
 const reducer = (state = initialState, action) => {
@@ -93,7 +98,9 @@ const reducer = (state = initialState, action) => {
                 ...state.dbInfo,
                 database: action.payload.database,
                 hostname: action.payload.hostname,
-                username: action.payload.username
+                username: action.payload.username,
+                table: action.payload.table,
+                data: null
             }
         };
     }
@@ -103,11 +110,12 @@ const reducer = (state = initialState, action) => {
             statusRunning: true
         };
     }
-    else if (action.type === SET_STATUS) {
+    else if (action.type === SET_STATUS) {                        
         return {
             ...state,
             status: action.payload,
-            statusRunning: false
+            statusRunning: false,
+            queryActive: !action.payload ? false : true
         };
     }
     else if (action.type === SET_CODE) {
@@ -129,6 +137,25 @@ const reducer = (state = initialState, action) => {
         return {
             ...state,
             keepTable: !state.keepTable
+        };
+    }
+    else if (action.type === APPEND_MESSAGE) {
+        let newMessages = state.consoleMessages.slice();
+        for (const m of action.payload) {
+            if (!newMessages.find(mes => mes.time === m.time) && m.text.length > 0) {
+                newMessages.push(m);
+            }
+        }
+        return {
+            ...state,
+            consoleMessages: newMessages,
+            lastConsoleRequest: Date.now()
+        };
+    }
+    else if (action.type === SET_DATA) {
+        return {
+            ...state,
+            data: action.payload
         };
     }
     return state;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { executeQuery, terminateQuery, setKeepTable } from '../actions/basicActions';
+import { executeQuery, terminateQuery, setKeepTable, getStatus } from '../actions/basicActions';
 
 import { Row, Button, Spinner } from 'react-bootstrap'; 
 
@@ -13,6 +13,10 @@ const buttonStyle = {
 };
 
 class QueryButtons extends React.Component {    
+
+    componentDidMount() {
+        this.props.getStatus();
+    }
 
     getExecButton() {
         if (this.props.executing) {
@@ -37,7 +41,7 @@ class QueryButtons extends React.Component {
             <Row>
                 <Button 
                     variant="info" 
-                    disabled={this.props.queryActive || this.props.tableName.length < 1} 
+                    disabled={this.props.queryActive || (!this.props.tableName || this.props.tableName.length < 1)} 
                     style={{...buttonStyle, marginLeft: '14px'}}
                     onClick={ () => this.props.executeQuery(this.props.code) }
                 >
@@ -76,4 +80,4 @@ const mapStateToProps = state => {
     };
 };
 
-export default connect(mapStateToProps, { executeQuery, terminateQuery, setKeepTable })(QueryButtons);
+export default connect(mapStateToProps, { executeQuery, terminateQuery, setKeepTable, getStatus })(QueryButtons);

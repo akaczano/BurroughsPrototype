@@ -16,7 +16,9 @@ import {
     CLOSE_DESCRIPTION,
     SET_DATABASE,
     SET_KEEP_TABLE,
-    STATUS_RUNNING
+    STATUS_RUNNING,
+    APPEND_MESSAGE,
+    SET_DATA
 } from './actionTypes';
 
 export const getConnection = () => dispatch => {
@@ -39,7 +41,7 @@ export const getTopics = () => (dispatch, getState) => {
                 return;
             }
             for (let i = 0; i < topics.data.length; i++) {
-                if (getState().core.topics[i].name != topics.data[i].name) {
+                if (getState().core.topics[i].name !== topics.data[i].name) {
                     dispatch(setTopics(topics.data));
                     return;
                 }
@@ -79,7 +81,6 @@ export const getSchema = topic => dispatch => {
 export const executeQuery = query => async (dispatch, getState) => {
     dispatch({ type: SET_QUERY_EXECUTING });
     try {
-        console.log(getState().core.dbInfo.table);
         await client.post('/command/table', null, { params: { tableName: getState().core.dbInfo.table } })
         await client.post('/execute', { query });
         dispatch({ type: SET_QUERY_EXECUTED });
@@ -109,6 +110,47 @@ export const loadDatabase = () => async dispatch => {
     catch (err) {
         dispatch({ type: LOAD_ERROR });
     }
+}
+
+export const loadMessages = () => async (dispatch, getState) => {
+    try {
+        let data = await client.get('/console', {params: {lastQuery: getState().core.lastConsoleRequest}})        
+        dispatch(appendMessages(data.data));        
+    }
+    catch(err) {
+        console.log(err);
+        dispatch({type: LOAD_ERROR});
+    }
+}
+
+export const reconnect = () => async dispatch => {
+    try {
+        await client.post('/command/connect');
+        dispatch(getConnection());
+        dispatch(loadDatabase());
+    }
+    catch(err) {
+        console.log(err);
+        dispatch({type: LOAD_ERROR});
+    }
+};
+
+export const loadSnapshot = () => async dispatch => {
+    try {
+        let response = await client.get('/data');
+        dispatch(setData(response.data));
+    }
+    catch(err) {
+        console.log(err);
+        dispatch({type: LOAD_ERROR});
+    }
+}
+
+export const setData = data => {
+    return {
+        type: SET_DATA,
+        payload: data
+    };
 }
 
 export const setDatabase = database => {
@@ -184,5 +226,12 @@ export const setQueryError = message => {
 export const setKeepTable = () => {
     return {
         type: SET_KEEP_TABLE
+    };
+};
+
+export const appendMessages = messages => {
+    return {
+        type: APPEND_MESSAGE,
+        payload: messages
     };
 };

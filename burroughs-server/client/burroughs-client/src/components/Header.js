@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Row } from 'react-bootstrap';
+import { Row, Button } from 'react-bootstrap';
 
-import { getConnection } from '../actions/basicActions';
+import { getConnection, reconnect } from '../actions/basicActions';
 
 class Header extends React.Component {
 
@@ -11,29 +11,36 @@ class Header extends React.Component {
         setInterval(this.props.getConnection, 5000);
     }
 
+
     getConnectionLabel() {
         if (!this.props.connection) {
-            return <span style={{color: 'lightgray'}}>Getting status...</span>
+            return <span style={{ color: 'lightgray' }}>Getting status...</span>
         }
-        else {            
+        else {
             let connected = this.props.connection.ksqlConnected &&
                 this.props.connection.dbConnected;
             if (connected) {
-                return <span style={{color: '#2ad16d'}}>Connected</span>
+                return <span style={{ color: '#2ad16d' }}>Connected</span>
             }
             else {
-                return <span style={{color: 'red'}}>Disconnected</span>
+                return <span style={{ color: 'red' }}>Disconnected</span>
             }
         }
     }
 
     render() {
-        return (            
-            <Row style={{ padding: '7px', margin: '0px', backgroundColor: '#474a48'}}>                
-                <Row style={{position: 'absolute', right: '0px', marginRight: '20px', color: 'white'}}>
-                    <span>Status: {this.getConnectionLabel()}</span>                    
-                </Row>  
-                <h4 style={{color: 'white', float: 'left'}}>Burroughs</h4> 
+        return (
+            <Row style={{ padding: '7px', margin: '0px', backgroundColor: '#474a48' }}>
+                <Row style={{ position: 'absolute', right: '0px', marginRight: '20px', color: 'white' }}>
+                    <span>Status: {this.getConnectionLabel()}</span>
+                    <Button 
+                        variant="secondary" style={{ marginLeft: '8px' }}                        
+                        onClick={() => this.props.reconnect()}
+                    >
+                        Reconnect
+                    </Button>
+                </Row>
+                <h4 style={{ color: 'white', float: 'left' }}>Burroughs</h4>
             </Row>
         );
     }
@@ -45,4 +52,4 @@ const mapStateToProps = state => {
     };
 };
 
-export default connect(mapStateToProps, { getConnection })(Header);
+export default connect(mapStateToProps, { getConnection, reconnect })(Header);

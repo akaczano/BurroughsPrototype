@@ -1,6 +1,7 @@
 #!/bin/sh
-docker run -d \
+docker run  -d \
 	--name burroughs_server \
+	-v $(pwd)/../producer:/producer \
 	-p 5000:5000 \
 	-p 5002:5002 \
 	--net confluent_default \

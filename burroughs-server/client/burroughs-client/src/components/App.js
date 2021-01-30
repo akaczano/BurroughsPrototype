@@ -8,9 +8,10 @@ import QueryButtons from './QueryButtons';
 import TopicList from './TopicList';
 import Header from './Header';
 import DatabaseInfo from './DatabaseInfo';
+import OutputTabs from './OutputTabs';
 
 import './App.css';
-import OutputTabs from './OutputTabs';
+
 
 const colStyle = {
     margin: '0px',

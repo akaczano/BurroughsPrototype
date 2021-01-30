@@ -85,7 +85,7 @@ public class App {
             }
         });
         System.out.println("Welcome to Burroughs!");
-        Logger.setLogger(new ConsoleLogger());
+        Logger.setLogger(new ConsoleLogger()); // Sets the default logger, which prints to stdout
         Burroughs burroughs = new Burroughs();
         loadConfiguration(burroughs);
         burroughs.init();
