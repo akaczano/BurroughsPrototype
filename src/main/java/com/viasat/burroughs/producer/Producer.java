@@ -148,7 +148,8 @@ public class Producer extends Thread implements Callback {
     @Override
     public void run() {
         if (!source.checkAvailability()) {
-            status = "Failed to read from source";
+            status = "Error";
+            errorMessage = "Failed to read from source";
             return;
         }
         status = "Running";

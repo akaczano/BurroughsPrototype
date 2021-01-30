@@ -1,7 +1,9 @@
 package com.viasat.burroughs.execution;
 
+import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
 import org.apache.calcite.sql.*;
@@ -63,12 +65,12 @@ public class SimpleQuery extends QueryBase {
 
         // Create table and connector
         String queryString = translateQuery(query, replacements);
-        System.out.print("Creating table...");
+        Logger.getLogger().write("Creating table...");
         table = createTable(properties.getId(), queryString);
-        System.out.print("Done\n");
-        System.out.print("Linking to database...");
+        Logger.getLogger().write("Done\n");
+        Logger.getLogger().write("Linking to database...");
         connector = createConnector(properties.getId());
-        System.out.print("Done\n");
+        Logger.getLogger().write("Done\n");
         startTime = System.currentTimeMillis();
     }
 
@@ -99,13 +101,13 @@ public class SimpleQuery extends QueryBase {
             SqlIdentifier identifier = (SqlIdentifier)from;
 
             String streamName = String.format("burroughs_%s", identifier.toString());
-            System.out.printf("Creating stream %s...", streamName);
+            Logger.getLogger().write(String.format("Creating stream %s...", streamName));
             if (!streamExists(streamName)) {
                 streams.add(createStream(streamName, identifier.getSimple().toLowerCase(), Format.AVRO));
-                System.out.print("Done\n");
+                Logger.getLogger().write("Done\n");
             }
             else {
-                System.out.println("\nStream already exists");
+                Logger.getLogger().writeLine("\nStream already exists");
             }
             List<String> names = new ArrayList<>();
             List<SqlParserPos> positions = new ArrayList<>();
@@ -150,20 +152,20 @@ public class SimpleQuery extends QueryBase {
     @Override
     public void destroy() {
         if (connector != null) {
-            System.out.print("Dropping connector " + connector + "...");
+            Logger.getLogger().write("Dropping connector " + connector + "...");
             dropConnector(connector);
-            System.out.print("Done\n");
+            Logger.getLogger().write("Done\n");
         }
         if (table != null) {
-            System.out.print("Dropping table " + table + "...");
+            Logger.getLogger().write("Dropping table " + table + "...");
             dropTable(table);
-            System.out.print("Done\n");
+            Logger.getLogger().write("Done\n");
         }
         Collections.reverse(streams); // Delete streams in the reverse order they were created
         for (String stream : streams) {
-            System.out.print("Dropping stream " + stream + "...");
+            Logger.getLogger().write("Dropping stream " + stream + "...");
             dropStream(stream);
-            System.out.print("Done\n");
+            Logger.getLogger().write("Done\n");
         }
     }
 
@@ -171,19 +173,16 @@ public class SimpleQuery extends QueryBase {
      * Print table statistics and connector status
      */
     @Override
-    public void printStatus() {
+    public QueryStatus getStatus() {
+
+        QueryStatus status = new QueryStatus();
         if (table != null) {
-            super.printStatisticsForTable(this.table);
-        }
-        else {
-            System.out.println("Table not created");
+            status.setTableStatus(this.getTableStatus(this.table));
         }
         if (connector != null) {
-            super.checkConnectorStatus(connector);
+            status.setConnectorStatus(this.getConnectorStatus(this.connector));
         }
-        else {
-            System.out.println("Connector not created");
-        }
+        return status;
     }
 
     /**

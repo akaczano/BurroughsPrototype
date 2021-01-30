@@ -14,13 +14,6 @@ import java.util.Map;
 
 public class App {
 
-    // Character sequences used to change text color
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-    public static final String ANSI_RESET = "\u001B[0m";
-
-
     /**
      * All of the configuration for Burroughs, things like the hostnames
      * of ksqlD and Kafka, database connection info, are loaded from
@@ -30,7 +23,7 @@ public class App {
      * variables and their descriptions.
      * @param burroughs The Burroughs object to load configuration into
      */
-    private static void loadConfiguration(Burroughs burroughs) {
+    public static void loadConfiguration(Burroughs burroughs) {
         String ksqlHost = "http://localhost:8088";
         String dbHost = "localhost:5432";
         String connectorDB = "postgres:5432";
@@ -92,16 +85,19 @@ public class App {
             }
         });
         System.out.println("Welcome to Burroughs!");
+        Logger.setLogger(new ConsoleLogger()); // Sets the default logger, which prints to stdout
         Burroughs burroughs = new Burroughs();
         loadConfiguration(burroughs);
         burroughs.init();
         System.out.println("Not sure what to do now? Enter .help for a list of commands.");
 
+        BurroughsCLI cli = new BurroughsCLI(burroughs);
+
         // Create the JLine terminal
         Terminal terminal = TerminalBuilder.terminal();
         LineReader lineReader = LineReaderBuilder.builder()
                 .terminal(terminal)
-                .completer(burroughs)
+                .completer(cli)
                 .build();
         // The prompt that is shown when expecting user input
         String prompt = "sql>";
@@ -117,7 +113,7 @@ public class App {
                 burroughs.dispose(); // Stop producers
                 return;
             }
-            burroughs.handleCommand(line); // Pass the command to Burroughs
+            cli.handleCommand(line); // Pass the command to Burroughs
         }
     }
 

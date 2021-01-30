@@ -1,18 +1,18 @@
 package com.viasat.burroughs.execution;
 
-import com.viasat.burroughs.App;
 import com.viasat.burroughs.DBProvider;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.burroughs.ConnectStatus;
+import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.service.model.burroughs.TableStatus;
 import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.*;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Base class that provides a large array of useful methods
@@ -49,9 +49,10 @@ public abstract class QueryBase {
 
     /**
      * Initializes new Query given dependencies
-     * @param service Statement service
+     *
+     * @param service      Statement service
      * @param kafkaService Kafka service
-     * @param properties Query properties
+     * @param properties   Query properties
      */
     public QueryBase(StatementService service, KafkaService kafkaService,
                      QueryProperties properties) {
@@ -73,16 +74,18 @@ public abstract class QueryBase {
     /**
      * Print the query status
      */
-    public abstract void printStatus();
+    public abstract QueryStatus getStatus();
 
     /**
      * Set the group by field from which the group by data type can be determined
+     *
      * @param field Field name
      */
     public abstract void setGroupBy(String field);
 
     /**
      * Set the group by data type which is used to determine the Key converter class
+     *
      * @param type Data type
      */
     public void setGroupByDataType(DataType type) {
@@ -109,6 +112,7 @@ public abstract class QueryBase {
 
     /**
      * Gets the query ID
+     *
      * @return The query ID
      */
     public String getId() {
@@ -117,7 +121,8 @@ public abstract class QueryBase {
 
     /**
      * Creates a ksqlDB table
-     * @param id The query ID to be used in the naming of the table
+     *
+     * @param id    The query ID to be used in the naming of the table
      * @param query The query to build the table from
      * @return The table's name
      */
@@ -131,9 +136,10 @@ public abstract class QueryBase {
 
     /**
      * Creates a ksqlDB stream
+     *
      * @param streamName The name of the stream to create
-     * @param topic The topic to create the stream from
-     * @param format The topic serialization format (only AVRO for now)
+     * @param topic      The topic to create the stream from
+     * @param format     The topic serialization format (only AVRO for now)
      * @return The stream name
      */
     protected String createStream(String streamName, String topic, Format format) {
@@ -142,10 +148,11 @@ public abstract class QueryBase {
 
     /**
      * Actually does the work of creating the stream.
-     * @param service The statement service to send the query with
+     *
+     * @param service    The statement service to send the query with
      * @param streamName The name of the stream
-     * @param topic The topic to create the stream from
-     * @param format The value format
+     * @param topic      The topic to create the stream from
+     * @param format     The value format
      * @return The name of the stream
      */
     public static String createStream(StatementService service, String streamName,
@@ -158,6 +165,7 @@ public abstract class QueryBase {
 
     /**
      * Creates a sink connector for a table
+     *
      * @param id The id from which to get the table name
      * @return The name of the connector.
      */
@@ -195,12 +203,13 @@ public abstract class QueryBase {
     /**
      * Gets the schema, as a field name - data type table,
      * for a stream
+     *
      * @param stream The desired stream
      * @return The schema
      */
     protected Map<String, DataType> GetSchema(String stream) {
         DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
-                        "describe stream");
+                "describe stream");
         Map<String, DataType> results = new HashMap<>();
         for (Field f : description.getSourceDescription().getFields()) {
             results.put(f.getName(), f.getSchema().getType());
@@ -210,6 +219,7 @@ public abstract class QueryBase {
 
     /**
      * Checks if a stream exists
+     *
      * @param streamName The name of the stream
      * @return Whether or not the stream exists
      */
@@ -219,7 +229,8 @@ public abstract class QueryBase {
 
     /**
      * Checks if a stream exists
-     * @param service The StatementService object to use
+     *
+     * @param service    The StatementService object to use
      * @param streamName The stream to look for
      * @return Whether or not the stream exists
      */
@@ -233,6 +244,7 @@ public abstract class QueryBase {
 
     /**
      * Utility method for dropping a stream
+     *
      * @param streamName The stream to drop
      */
     protected void dropStream(String streamName) {
@@ -242,6 +254,7 @@ public abstract class QueryBase {
 
     /**
      * Terminates the given query
+     *
      * @param queryId The query to terminate
      */
     private void terminateQuery(String queryId) {
@@ -255,6 +268,7 @@ public abstract class QueryBase {
 
     /**
      * Terminates all queries that depend upon the given object
+     *
      * @param objectName The object to check, usually a table
      */
     private void terminateQueries(String objectName) {
@@ -270,6 +284,7 @@ public abstract class QueryBase {
 
     /**
      * Drops the specified table
+     *
      * @param tableName the table to drop
      */
     protected void dropTable(String tableName) {
@@ -279,6 +294,7 @@ public abstract class QueryBase {
 
     /**
      * Drops the specified connector
+     *
      * @param connectorName The connector to drop
      */
     protected void dropConnector(String connectorName) {
@@ -288,8 +304,9 @@ public abstract class QueryBase {
     /**
      * Generalized drop method which can drop streams, tables, and connectors.
      * It also deletes the underlying topic for any tables.
+     *
      * @param objectType The type of object (stream, table, or connector)
-     * @param name The name of the object
+     * @param name       The name of the object
      */
     protected void drop(String objectType, String name) {
         String command = String.format("DROP %s %s%s",
@@ -300,87 +317,78 @@ public abstract class QueryBase {
     }
 
 
-    /**
-     * Uses both table statistics and consumer group metadata to print
-     * query status
-     * @param tableName The table to investigate
-     */
-    protected void printStatisticsForTable(String tableName) {
-        // 1. Table description/statistics
+    protected TableStatus getTableStatus(String tableName) {
+        TableStatus status = new TableStatus();
 
         DescribeResponse description = service.executeStatement(
                 String.format("DESCRIBE EXTENDED %s;", tableName),
                 "describe table");
-
         if (description.getSourceDescription() == null) {
             throw new ExecutionException("There was an error retrieving query status:" +
                     " source description is null.");
         }
         String statistics = description.getSourceDescription().getStatistics();
         String[] words = statistics.split("\\s+");
-        if (words.length < 4) { // This will execute if there is no data in the topic
-            System.out.println("Status not available.");
-            return;
+        if (words.length < 4) {
+            status.setHasStatus(false);
+            return status;
         }
-        System.out.println("Process rate: " + words[1] + " messages/s");
-        System.out.println("Total messages processed: " + words[3]);
-
-        // 2. Progress from kafka consumer metadata
-
-        int tpCounter = 0;
+        status.setHasStatus(true);
+        status.setProcessRate(Double.parseDouble(words[1]));
+        status.setTotalMessages(Integer.parseInt(words[3]));
         long currentTotal = 0;
         long maxTotal = 0;
-        for (Query query : description.getSourceDescription().getWriteQueries()) {
-            String consumerGroup = String.format("_confluent-ksql-default_query_%s",
-                    query.getId());
-            Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
-            if (queryStatuses != null) {
-                for (TopicPartition tp : queryStatuses.keySet()) {
-                    long current = queryStatuses.get(tp);
-                    long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
-                    System.out.printf("Query %d: %d%% (%d/%d)\n",
-                            tpCounter + 1, (int) ((((double) current) / max) * 100), current, max);
-                    tpCounter++;
-                    currentTotal += current;
-                    maxTotal += max;
-                }
-                double totalProgress = (((double) currentTotal) / maxTotal);
-                double totalRuntime = (System.currentTimeMillis() - startTime);
+        Query[] queries = description.getSourceDescription().getWriteQueries();
+        if (queries.length < 1) return status;
+        Query query = queries[0];
+        String consumerGroup = String.format("_confluent-ksql-default_query_%s",
+                query.getId());
+        List<Long> queryOffsets = new ArrayList<>();
+        List<Long> queryMaxes = new ArrayList<>();
+        status.setQueryOffsets(queryOffsets);
+        status.setQueryMaxOffsets(queryMaxes);
 
-                System.out.printf("Total Progress: %d%% (%d/%d)\n",
-                        (int) (totalProgress * 100),
-                        currentTotal, maxTotal);
-                System.out.printf("Total run time: %.1f seconds\n", totalRuntime / 1000.0);
-                System.out.printf("Estimated time remaining: %.1f seconds\n",
-                        ((totalRuntime / (totalProgress)) - totalRuntime) / 1000.0);
+        Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
+        if (queryStatuses != null) {
+            for (TopicPartition tp : queryStatuses.keySet()) {
+                long current = queryStatuses.get(tp);
+                long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
+                queryOffsets.add(current);
+                queryMaxes.add(max);
+                currentTotal += current;
+                maxTotal += max;
             }
-            else {
-                System.out.println("Kafka not connected. Can't print progress information.");
-            }
+            status.setTotalProgress(currentTotal);
+            status.setTotalWork(maxTotal);
+            status.setTotalRuntime(System.currentTimeMillis() - startTime);
+        } else {
+            status.setHasStatus(false);
         }
+        return status;
     }
 
-    /**
-     * Checks if the connector is still running and, if not, print an error
-     * @param connector The name of the connector
-     */
-    protected void checkConnectorStatus(String connector) {
+
+    protected ConnectStatus getConnectorStatus(String connector) {
+        ConnectStatus connectStatus = new ConnectStatus();
         ConnectorDescription description = service.executeStatement(
                 String.format("DESCRIBE CONNECTOR %s;", connector),
                 "describe connector"
         );
         ConnectorStatus status = description.getStatus();
+        if (status == null) return connectStatus;
         if (status.getTasks().length < 1) {
-            System.out.println(App.ANSI_YELLOW + "Connector not running" + App.ANSI_RESET);
+            connectStatus.setConnectorRunning(false);
+            return connectStatus;
         }
-        else {
-            for (ConnectorTask task : status.getTasks()) {
-                if (!task.getState().equals("RUNNING") && task.getTrace() != null) {
-                    System.out.println(App.ANSI_RED + "Connector Error:" + App.ANSI_RESET);
-                    System.out.println(task.getTrace());
-                }
+        connectStatus.setConnectorRunning(true);
+        List<String> errors = new ArrayList<>();
+        connectStatus.setErrors(errors);
+        for (ConnectorTask task : status.getTasks()) {
+            if (!task.getState().equals("RUNNING") && task.getTrace() != null) {
+                errors.add(task.getTrace());
             }
         }
+        return connectStatus;
     }
 
 }

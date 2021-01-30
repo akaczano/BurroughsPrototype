@@ -46,6 +46,7 @@
             <artifactId>postgresql</artifactId>
             <version>42.2.16.jre7</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-babel</artifactId>
@@ -86,11 +87,6 @@
                 <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <configuration>
-                        <archive>
-                            <manifest>
-                                <mainClass>com.viasat.burroughs.App</mainClass>
-                            </manifest>
-                        </archive>
                         <descriptorRefs>
                             <descriptorRef>jar-with-dependencies</descriptorRef>
                         </descriptorRefs>

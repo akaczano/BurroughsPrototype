@@ -1,9 +1,11 @@
 package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
+import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
+import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
@@ -69,8 +71,8 @@ public class QueryExecutor {
             throw new ExecutionException("An error occurred during query processing: " +
                     e.getMessage());
         }
-        System.out.println("Your query is now active. Use .status to check on it.");
-        System.out.println("Use .stop to terminate.");
+        Logger.getLogger().writeLine("Your query is now active. Use .status to check on it.");
+        Logger.getLogger().writeLine("Use .stop to terminate.");
     }
 
     /**
@@ -82,20 +84,21 @@ public class QueryExecutor {
             currentQuery = null;
         }
         else {
-            System.out.println("No active query. Type some SQL to run one.");
+            Logger.getLogger().writeLine("No active query. Type some SQL to run one.");
         }
     }
 
     /**
      * Prints the status of the query if applicable
      */
-    public void status() {
+    public QueryStatus status() {
         if (currentQuery == null) {
-            System.out.println("There is no active query. Enter some SQL to execute one.");
+            return null;
         }
         else {
-            System.out.printf("Active Query ID: %s\n", currentQuery.getId());
-            currentQuery.printStatus();
+            QueryStatus status = currentQuery.getStatus();
+            status.setQueryId(currentQuery.getId());
+            return status;
         }
     }
 
