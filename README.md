@@ -4,12 +4,13 @@
   - [Table of Contents](#table-of-contents)
   - [Quick Start](#quick-start)
     - [1. Confluent Platform Setup](#1-confluent-platform-setup)
-    - [2. Running Burroughs](#2-running-burroughs)
+    - [2. Running Burroughs](#2-running-burroughs)  
     - [3. Test Data](#3-test-data)
     - [4. Executing a simple query](#4-executing-a-simple-query)
+    - [Running the Burroughs Browser Interface](#Running-the-Burroughs-Browser-Interface)
   - [System Configuration](#system-configuration)
     - [Environment Variables](#environment-variables)
-    - [Producers](#producers)
+    - [Producers](#producers)    
 ## Quick Start
 
 Requirements
@@ -79,6 +80,14 @@ You should now be able to view your results:
 ![screenshot](images/output.png)
 
 When you're done, don't forget to run `.stop` to clean up all of the stream processing infrastructure. `.quit` or Ctrl+D exits the burroughs shell.
+
+### Running the Burroughs Browser Interface
+Burroughs also ships with a browser-based graphical user interface. To use this, do the following:
+
+1. `cd burroughs-server`
+2. `./build.sh`
+3. `./run-client.sh`
+4. Navigate to http://localhost:5000 in the browser.
 
 ## System Configuration
 ### Environment Variables

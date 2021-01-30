@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 docker run  -d \
 	--name burroughs_server \
 	-v $(pwd)/../producer:/producer \
@@ -11,4 +12,6 @@ docker run  -d \
 	-e KAFKA_HOST=broker:29092 \
 	-e SCHEMA_REGISTRY=http://schema-registry:8081 \
 burroughs_server
-	
+echo "The Burroughs server is now running."
+echo "Navigate to http://localhost:5000 to access it."
+echo "Run ./stop-client.sh to terminate"	
