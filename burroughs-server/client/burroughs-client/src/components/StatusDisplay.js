@@ -18,6 +18,9 @@ class StatusDisplay extends React.Component {
         if (this.props.errorMessage) {
             return <p style={{ color: 'red' }}>{this.props.errorMessage}</p>;
         }
+		else if (this.props.queryActive && this.props.status && !this.props.status.tableStatus) {
+			return <div>Status not available</div>
+		}
         else if (this.props.queryActive && this.props.status){            
             const { tableStatus, connectorStatus } = this.props.status;
             const totalProgress = this.props.status.tableStatus.totalProgress / 
