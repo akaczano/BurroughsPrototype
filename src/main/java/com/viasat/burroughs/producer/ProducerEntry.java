@@ -38,6 +38,10 @@ public class ProducerEntry {
      * @param maxRecords The maximum number of records to produce
      */
     public void buildAndStart(String kafka, String schemaRegistry, int maxRecords) {
+        if (producer != null && producer.getStatus().equals("Running")) {
+            System.out.println("producer is already running");
+            return;
+        }
         if (maxRecords >= 0) {
             this.maxRecords = maxRecords;
         }
