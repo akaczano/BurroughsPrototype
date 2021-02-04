@@ -45,3 +45,11 @@ form strong {
 .producers-list p {
     margin: 3px;
 }
+
+.topic-list p {
+    cursor: pointer;
+}
+
+.topic-list p:hover {
+    color: blue;
+}

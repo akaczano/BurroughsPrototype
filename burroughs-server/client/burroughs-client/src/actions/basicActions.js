@@ -66,12 +66,17 @@ export const getStatus = () => dispatch => {
 };
 
 export const getSchema = topic => dispatch => {
+    console.log('hello there');
     client
         .get('/command/topic', { params: { topicName: topic } })
         .then(schema => {
-            dispatch(setSchema(schema.data));
+            dispatch(setSchema({
+                topic: topic,
+                data: schema.data
+            }));
         })
         .catch(err => {
+            console.log(err);
             dispatch({ type: LOAD_ERROR });
         });
 };

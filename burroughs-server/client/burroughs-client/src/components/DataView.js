@@ -4,10 +4,7 @@ import { Table } from 'react-bootstrap';
 
 import { loadSnapshot } from '../actions/basicActions';
 
-class DataView extends React.Component {
-    componentDidMount() {
-        setInterval(this.props.loadSnapshot, 3000);
-    }
+class DataView extends React.Component {    
     render() {
         if (!this.props.data || this.props.data.length < 1) {
             return <div></div>;

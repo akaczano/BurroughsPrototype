@@ -3,10 +3,7 @@ import { connect } from 'react-redux';
 
 import { loadMessages } from '../actions/basicActions';
 
-class Console extends React.Component {    
-    componentDidMount() {
-        setInterval(this.props.loadMessages, 500);
-    }
+class Console extends React.Component {        
     
     displayMessage(message) {          
         const color = message.color === 'NONE' ? 'black' : message.color.toLowerCase();

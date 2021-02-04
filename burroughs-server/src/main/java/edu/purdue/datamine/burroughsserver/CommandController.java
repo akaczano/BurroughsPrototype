@@ -34,59 +34,59 @@ public class CommandController {
         this.conn = conn;
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/command/connection")
     public BurroughsConnection getConnection() {
         return burroughs.connection();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/command/topics")
     public Topic[] getTopics() {
         return burroughs.topics();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/command/topic")
     public Field[] getSchema(@RequestParam(value = "topicName") String topicName) {
         return burroughs.topic(topicName);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/command/table")
     public String getTable(){
         return burroughs.getDbTable();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/command/table")
     public void setTable(@RequestParam(value = "tableName", defaultValue = "") String table) {
         if (table.length() < 1) throw new CommandException("Table name is required.");
         burroughs.setDbTable(table);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ CommandException.class })
     public String handleException(CommandException e){
         return e.getMessage();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler({ExecutionException.class})
     public String handleException(ExecutionException e) {
         return e.getMessage();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({TopicNotFoundException.class, SqlParseException.class, UnsupportedQueryException.class})
     public String handleException(Exception e) {
         return "Validation Error: " + e.getMessage();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/execute")
     public void execute(@RequestBody QueryBody query) throws
             SqlParseException, TopicNotFoundException,
@@ -94,19 +94,19 @@ public class CommandController {
             burroughs.processQuery(query.getQuery());
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/command/status")
     public QueryStatus getStatus() {
         return burroughs.queryStatus();
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/command/stop")
     public void stop(@RequestParam(value = "keepTable", defaultValue = "false") boolean keepTable) {
         burroughs.stop(keepTable);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/database")
     public DatabaseProperties database() {
         if (!burroughs.connection().isDbConnected()) {
@@ -120,13 +120,13 @@ public class CommandController {
         return props;
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/console")
     public Object[] getMessages(@RequestParam long lastQuery) {
         return logger.getMessages(lastQuery);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/producer")
     public List<ProducerModel> getProducers() {
         List<ProducerModel> models = new ArrayList<>();
@@ -141,7 +141,7 @@ public class CommandController {
     }
 
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/producer/{name}/start")
     public void startProducer(@PathVariable(value = "name") String name,
                               @RequestParam(value = "limit", defaultValue = "-1") int limit){
@@ -151,7 +151,7 @@ public class CommandController {
         burroughs.producerInterface().startProducer(name, limit);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/producer/{name}/setdelay")
     public int setDelay(@PathVariable(value = "name") String name,
                         @RequestParam(value = "delay", defaultValue = "0") int delay) {
@@ -162,7 +162,7 @@ public class CommandController {
         return delay;
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/producer/{name}/pause")
     public void pauseProducer(@PathVariable(value = "name") String name,
                         @RequestParam(value = "time", defaultValue = "-1") int time) {
@@ -176,7 +176,7 @@ public class CommandController {
             burroughs.producerInterface().pauseProducer(name);
         }
     }
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/producer/{name}/kill")
     public void killProducer(@PathVariable(value = "name") String name) {
         if (!burroughs.producerInterface().hasProducer(name)) {
@@ -185,7 +185,7 @@ public class CommandController {
         burroughs.producerInterface().terminateProducer(name);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/producer/{name}/resume")
     public void resumeProducer(@PathVariable(value = "name") String name) {
         if (!burroughs.producerInterface().hasProducer(name)) {
@@ -194,7 +194,7 @@ public class CommandController {
         burroughs.producerInterface().resumeProducer(name);
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @PostMapping("/command/connect")
     public void connect() {
         burroughs.init();
@@ -203,7 +203,7 @@ public class CommandController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:5000")
+    @CrossOrigin
     @GetMapping("/data")
     public List<Object[]> getData() {
         String table = burroughs.getDbTable();

@@ -13,7 +13,9 @@ import {
     STATUS_RUNNING,
     SET_KEEP_TABLE,
     APPEND_MESSAGE,
-    SET_DATA
+    SET_DATA,
+    CLOSE_DESCRIPTION,
+    SET_SCHEMA
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -156,6 +158,19 @@ const reducer = (state = initialState, action) => {
         return {
             ...state,
             data: action.payload
+        };
+    }
+    else if (action.type === SET_SCHEMA) {
+        console.log(action.payload);
+        return {
+            ...state,
+            topicSchema: action.payload
+        };
+    }
+    else if (action.type === CLOSE_DESCRIPTION) {
+        return {
+            ...state,
+            topicSchema: null
         };
     }
     return state;

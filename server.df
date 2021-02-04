@@ -1,0 +1,15 @@
+FROM maven:3.6.3-openjdk-15
+COPY . /burroughs-src
+COPY burroughs-server /src
+WORKDIR /burroughs-src
+RUN mvn compile assembly:single && \
+	mvn install:install-file \
+	-Dfile=target/burroughs-0.0.1-jar-with-dependencies.jar \
+	-DgroupId=com.viasat \
+	-DartifactId=burroughs \
+	-Dversion=0.0.1 \
+	-Dpackaging=jar \
+	-DgeneratePom=true
+WORKDIR /src
+RUN mvn clean package
+CMD ["java", "-jar", "target/burroughs-server-0.0.1-SNAPSHOT.jar"]
