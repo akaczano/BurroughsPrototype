@@ -253,6 +253,18 @@ public abstract class QueryBase {
     }
 
     /**
+     *
+     * utility method for dropping a stream along with its underlying topic
+     * its plausible this will be rewritten as protected once I understand what sort of security checks we would want in a
+     * wrapper method
+     * @param streamName
+     */
+
+    protected void dropStreamAndTopic(String streamName) {
+        terminateQueries(streamName);
+        dropWithArguments("STREAM", streamName, true);
+    }
+    /**
      * Terminates the given query
      *
      * @param queryId The query to terminate
@@ -304,17 +316,22 @@ public abstract class QueryBase {
     /**
      * Generalized drop method which can drop streams, tables, and connectors.
      * It also deletes the underlying topic for any tables.
-     *
+     * occasionally we will also delete the underlying topic for a stream
      * @param objectType The type of object (stream, table, or connector)
      * @param name       The name of the object
      */
-    protected void drop(String objectType, String name) {
+    protected void dropWithArguments(String objectType, String name, boolean deleteTopic) {
         String command = String.format("DROP %s %s%s",
                 objectType, name,
-                objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
+                (objectType.equalsIgnoreCase("table") || deleteTopic) ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
     }
+    protected void drop(String objectType, String name) {
+        dropWithArguments(objectType, name, false);
+    }
+
+
 
 
     protected TableStatus getTableStatus(String tableName) {

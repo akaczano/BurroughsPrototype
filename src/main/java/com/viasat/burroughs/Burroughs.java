@@ -175,7 +175,12 @@ public class Burroughs implements DBProvider {
         return description.getSourceDescription().getFields();
     }
 
+    public void dropTop(String topicName) {
+        topic(topicName);
+        QueryBase.dropStreamAndTopic(topicName)
 
+
+    }
     /**
      * Get a list of topics on the connected broker
      * @return A list of Topic objects

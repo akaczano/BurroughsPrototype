@@ -52,6 +52,7 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
+        this.handlers.put(".delete", this::handleDeletion);
 
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
@@ -349,6 +350,23 @@ public class BurroughsCLI implements Completer {
         }
     }
 
+    private void handleDeletion(String command) {
+        String[] words = command.split("\\s+");
+        if (words.length < 2) {
+            System.out.println("Usage: .delete <topic_name>");
+            return;
+        }
+        System.out.println("words[0] is " + words[0]);
+        System.out.println("words[1] is " + words[1]);
+
+        for (Topic t: burroughs.topics()) {
+            if (t.getName().equals(words[1])) {
+
+                return;
+            }
+        }
+        System.out.println("This topic doesn't exist, to see a list of existing topics use .topics");
+    }
     /**
      * Prints the instructions
      *
