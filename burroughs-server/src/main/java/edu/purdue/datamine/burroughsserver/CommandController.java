@@ -8,14 +8,15 @@ import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
-import edu.purdue.datamine.burroughsserver.model.DatabaseProperties;
 import edu.purdue.datamine.burroughsserver.model.ProducerModel;
 import edu.purdue.datamine.burroughsserver.model.QueryBody;
+import edu.purdue.datamine.burroughsserver.model.DatabaseProperties;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -205,13 +206,14 @@ public class CommandController {
 
     @CrossOrigin
     @GetMapping("/data")
-    public List<Object[]> getData() {
-        String table = burroughs.getDbTable();
-        if (table != null && table.length() > 0) {
-            return conn.getSnapshot(table);
+    public List<Object[]> getData(@RequestParam(value = "query", defaultValue = "") String query) {
+        if (query.length() < 1) {
+            throw new CommandException("Please specify a query");
         }
-        else {
-            return null;
+        try {
+            return conn.getSnapshot(query);
+        } catch(SQLException e) {
+            throw new CommandException(e.getMessage());
         }
     }
 }

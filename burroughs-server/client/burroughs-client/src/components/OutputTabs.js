@@ -14,8 +14,7 @@ const tabs = ['Status', 'Console', 'Data', 'Producers'];
 class OutputTabs extends React.Component {
     state = { selectedTab: 0 };
     componentDidMount() {
-        setInterval(this.props.loadMessages, 500);
-        setInterval(this.props.loadSnapshot, 2000);
+        setInterval(this.props.loadMessages, 500);        
         setInterval(this.props.loadProducers, 1000);
     }
     getDisplayedComponent() {

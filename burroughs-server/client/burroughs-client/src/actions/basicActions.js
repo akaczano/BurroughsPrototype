@@ -18,7 +18,9 @@ import {
     SET_KEEP_TABLE,
     STATUS_RUNNING,
     APPEND_MESSAGE,
-    SET_DATA
+    SET_DATA,
+    DATA_LOADING,
+    DATA_ERROR
 } from './actionTypes';
 
 export const getConnection = () => dispatch => {
@@ -140,14 +142,14 @@ export const reconnect = () => async dispatch => {
     }
 };
 
-export const loadSnapshot = () => async dispatch => {
+export const loadSnapshot = query => async dispatch => {
+    dispatch(setDataLoading());
     try {
-        let response = await client.get('/data');
+        let response = await client.get('/data', { params: {query}});
         dispatch(setData(response.data));
     }
-    catch(err) {
-        console.log(err);
-        dispatch({type: LOAD_ERROR});
+    catch(err) {        
+        dispatch(setDataError(err.response.data));
     }
 }
 
@@ -238,5 +240,18 @@ export const appendMessages = messages => {
     return {
         type: APPEND_MESSAGE,
         payload: messages
+    };
+};
+
+export const setDataLoading = () => {
+    return {
+        type: DATA_LOADING
+    };
+};
+
+export const setDataError = msg => {
+    return {
+        type: DATA_ERROR,
+        payload: msg
     };
 };

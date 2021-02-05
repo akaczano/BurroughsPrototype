@@ -15,7 +15,9 @@ import {
     APPEND_MESSAGE,
     SET_DATA,
     CLOSE_DESCRIPTION,
-    SET_SCHEMA
+    SET_SCHEMA,
+    DATA_LOADING,
+    DATA_ERROR
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -40,7 +42,9 @@ const initialState = {
     keepTable: false,
     consoleMessages: [],
     lastConsoleRequest: Date.now(),
-    data: null    
+    data: null,
+    dataLoading: false,
+    dataError: null    
 };
 
 const reducer = (state = initialState, action) => {
@@ -157,11 +161,25 @@ const reducer = (state = initialState, action) => {
     else if (action.type === SET_DATA) {
         return {
             ...state,
-            data: action.payload
+            data: action.payload,
+            dataLoading: false,
+            dataError: null
         };
     }
-    else if (action.type === SET_SCHEMA) {
-        console.log(action.payload);
+    else if (action.type === DATA_LOADING) {
+        return {
+            ...state,
+            dataLoading: true
+        };
+    }
+    else if (action.type === DATA_ERROR) {        
+        return {
+            ...state,
+            dataLoading: false,
+            dataError: action.payload
+        };
+    }
+    else if (action.type === SET_SCHEMA) {        
         return {
             ...state,
             topicSchema: action.payload
@@ -172,7 +190,7 @@ const reducer = (state = initialState, action) => {
             ...state,
             topicSchema: null
         };
-    }
+    }    
     return state;
 };
 
