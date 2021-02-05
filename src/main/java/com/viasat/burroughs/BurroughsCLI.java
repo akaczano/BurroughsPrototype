@@ -340,7 +340,7 @@ public class BurroughsCLI implements Completer {
                     System.out.printf("Changed delay from %d to %d\n",
                             producerInterface.getProducerDelay(name), delay);
                     producerInterface.setProducerDelay(name, delay);
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     System.out.printf("Invalid delay: %s\n", words[3]);
                 }
             }
@@ -393,6 +393,8 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tAttempts to reconnect to ksqlDB and PostgreSQL");
         System.out.println(".producers");
         System.out.println("\tDisplays a list of producers");
+        System.out.println(".delete <topic>");
+        System.out.println("\tDeletes the specified topic from the Kafka stream");
         System.out.println(".producer <producer> <operation> [arguments]");
         System.out.println("\tExecutes the given command for the specified producer.");
         System.out.println("\tAvailable operations");
