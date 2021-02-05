@@ -356,8 +356,6 @@ public class BurroughsCLI implements Completer {
             System.out.println("Usage: .delete <topic_name>");
             return;
         }
-        System.out.println("words[0] is " + words[0]);
-        System.out.println("words[1] is " + words[1]);
 
         for (Topic t: burroughs.topics()) {
             if (t.getName().equals(words[1])) {
@@ -366,7 +364,6 @@ public class BurroughsCLI implements Completer {
                 return;
             }
         }
-        System.out.println("This topic doesn't exist, to see a list of existing topics use .topics");
     }
     /**
      * Prints the instructions
