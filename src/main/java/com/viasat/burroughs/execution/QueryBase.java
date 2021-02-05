@@ -162,6 +162,19 @@ public abstract class QueryBase {
         CommandResponse result = service.executeStatement(query, "create stream");
         return streamName;
     }
+    /**
+     * Version of dropStream that can be done from a static context and takes the underlying topic with it
+     *
+     * @param service    The statement service to send the query with
+     * @param streamName The name of the stream
+     * @return The name of the stream
+     */
+    public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
+        String query = String.format("DROP STREAM %s DELETE TOPIC;",
+                streamName);
+        CommandResponse result = service.executeStatement(query, "stream and topic dropped");
+        return result;
+    }
 
     /**
      * Creates a sink connector for a table
@@ -253,18 +266,6 @@ public abstract class QueryBase {
     }
 
     /**
-     *
-     * utility method for dropping a stream along with its underlying topic
-     * its plausible this will be rewritten as protected once I understand what sort of security checks we would want in a
-     * wrapper method
-     * @param streamName
-     */
-
-    protected void dropStreamAndTopic(String streamName) {
-        terminateQueries(streamName);
-        dropWithArguments("STREAM", streamName, true);
-    }
-    /**
      * Terminates the given query
      *
      * @param queryId The query to terminate
@@ -316,22 +317,17 @@ public abstract class QueryBase {
     /**
      * Generalized drop method which can drop streams, tables, and connectors.
      * It also deletes the underlying topic for any tables.
-     * occasionally we will also delete the underlying topic for a stream
+     *
      * @param objectType The type of object (stream, table, or connector)
      * @param name       The name of the object
      */
-    protected void dropWithArguments(String objectType, String name, boolean deleteTopic) {
+    protected void drop(String objectType, String name) {
         String command = String.format("DROP %s %s%s",
                 objectType, name,
-                (objectType.equalsIgnoreCase("table") || deleteTopic) ? " DELETE TOPIC;" : ";");
+                objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
     }
-    protected void drop(String objectType, String name) {
-        dropWithArguments(objectType, name, false);
-    }
-
-
 
 
     protected TableStatus getTableStatus(String tableName) {

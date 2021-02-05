@@ -361,7 +361,8 @@ public class BurroughsCLI implements Completer {
 
         for (Topic t: burroughs.topics()) {
             if (t.getName().equals(words[1])) {
-
+                System.out.println("Dropping it ");
+                burroughs.dropTopic(t.getName());
                 return;
             }
         }
