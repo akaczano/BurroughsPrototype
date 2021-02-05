@@ -189,8 +189,9 @@ public abstract class QueryBase {
         command += String.format("'key.converter' = '%s',", keyConverter);
         // Tombstone handler to drop null records
         // Only applies when there is a having clause
-        command += "'transforms'='tombstoneHandlerExample',";
+        command += "'transforms'='tombstoneHandlerExample,serializeArray',";
         command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
+        command += "'transforms.serializeArray.type'='com.viasat.burroughs.smt.SerializeArray$Value',";
         command += "'auto.create' = true);";
 
         CommandResponse response = service.executeStatement(command, "create connector");
