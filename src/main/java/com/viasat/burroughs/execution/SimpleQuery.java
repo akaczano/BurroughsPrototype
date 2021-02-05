@@ -154,6 +154,15 @@ public class SimpleQuery extends QueryBase {
                     SqlIdentifier id = call.getOperator().getNameAsId().setName(0, operatorName);
                     SqlOperator op = new SqlUserDefinedFunction(id, null, null, null, new ArrayList<RelDataType>(), null);
                     query.getSelectList().set(i, new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition()));
+                    if (this.transforms.stream().noneMatch(t -> t.name().equals("serializeArray"))) {
+                        Transform arraySerializer = new Transform("serializeArray", "com.viasat.burroughs.smt.SerializeArray$Value");
+                        if (call.getOperandList().size() > 1) {
+                            String separator = call.operand(1).toString();
+                            separator = separator.substring(1, separator.length() - 1);
+                            arraySerializer.addProperty("separator", separator);
+                        }
+                        transforms.add(arraySerializer);
+                    }
                 }
             }
         }

@@ -47,6 +47,9 @@ public abstract class QueryBase {
      */
     private String keyConverter = "org.apache.kafka.connect.storage.StringConverter";
 
+
+    protected List<Transform> transforms;
+
     /**
      * Initializes new Query given dependencies
      *
@@ -59,6 +62,8 @@ public abstract class QueryBase {
         this.service = service;
         this.properties = properties;
         this.kafkaService = kafkaService;
+        transforms = new ArrayList<>();
+        transforms.add(new Transform("tombstoneHandler", "io.confluent.connect.transforms.TombstoneHandler"));
     }
 
     /**
@@ -189,9 +194,13 @@ public abstract class QueryBase {
         command += String.format("'key.converter' = '%s',", keyConverter);
         // Tombstone handler to drop null records
         // Only applies when there is a having clause
-        command += "'transforms'='tombstoneHandlerExample,serializeArray',";
-        command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
-        command += "'transforms.serializeArray.type'='com.viasat.burroughs.smt.SerializeArray$Value',";
+        //command += "'transforms'='tombstoneHandlerExample,serializeArray',";
+        //command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
+        //command += "'transforms.serializeArray.type'='com.viasat.burroughs.smt.SerializeArray$Value',";
+        command += Transform.header(transforms);
+        for (Transform t : this.transforms) {
+            command += t.toString();
+        }
         command += "'auto.create' = true);";
 
         CommandResponse response = service.executeStatement(command, "create connector");

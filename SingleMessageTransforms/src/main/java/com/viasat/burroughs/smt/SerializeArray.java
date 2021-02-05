@@ -14,9 +14,7 @@ import org.apache.kafka.connect.transforms.util.SchemaUtil;
 import org.apache.kafka.connect.transforms.util.SimpleConfig;
 
 import static org.apache.kafka.connect.transforms.util.Requirements.requireStruct;
-import static org.apache.kafka.connect.transforms.util.Requirements.requireMap;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,13 +56,6 @@ public abstract class SerializeArray<R extends ConnectRecord<R>> implements Tran
     }
 
     private R applySchemaless(R record) {
-        /*final Map<String, Object> value = requireMap(operatingValue(record), PURPOSE);
-
-        final Map<String, Object> updatedValue = new HashMap<>(value);
-
-        updatedValue.put(separator, getRandomUuid());
-
-        return newRecord(record, null, updatedValue);*/
         return record;
     }
 
@@ -88,9 +79,7 @@ public abstract class SerializeArray<R extends ConnectRecord<R>> implements Tran
             }
         }
 
-        R newRecord = newRecord(record, updatedSchema, updatedValue);
-        System.out.println(newRecord);
-        return newRecord;
+        return newRecord(record, updatedSchema, updatedValue);
     }
 
     private String arrayToString(List<Object> list) {
