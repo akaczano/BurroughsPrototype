@@ -17,10 +17,8 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 /**
  * Class that handles all CLI commands and prints responses
@@ -52,6 +50,7 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
+        this.handlers.put(".file", this::handleFile);
 
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
@@ -256,6 +255,32 @@ public class BurroughsCLI implements Completer {
         burroughs.dispose();
         System.out.println("Goodbye!");
         System.exit(0);
+    }
+
+    /**
+     * Reads in a sql commands from a file, line by line
+     *
+     * @param command Command string beginning with .file
+     */
+    private void handleFile(String command) {
+        String[] words = command.split("\\s+");
+        if (words.length != 2) {
+            System.out.println("Usage: .file <filename>");
+        } else {
+            String filename = words[1];
+            File file = new File("/commands/" + filename);
+            BufferedReader br;
+            try {
+                br = new BufferedReader(new FileReader(file));
+                String line = br.readLine();
+                while (line != null) {
+                    this.handleCommand(line);
+                    line = br.readLine();
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void handleProducers(String command) {
