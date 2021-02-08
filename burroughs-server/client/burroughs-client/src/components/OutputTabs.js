@@ -1,6 +1,9 @@
 import React from 'react';
 import { Row } from 'react-bootstrap';
+import { connect } from 'react-redux';
 
+import { loadMessages, loadSnapshot } from '../actions/basicActions';
+import { loadProducers } from '../actions/producerActions';
 import StatusDisplay from './StatusDisplay';
 import Console from './Console';
 import DataView from './DataView';
@@ -10,6 +13,10 @@ const tabs = ['Status', 'Console', 'Data', 'Producers'];
 
 class OutputTabs extends React.Component {
     state = { selectedTab: 0 };
+    componentDidMount() {
+        setInterval(this.props.loadMessages, 500);        
+        setInterval(this.props.loadProducers, 1000);
+    }
     getDisplayedComponent() {
         if (this.state.selectedTab === 0) {
             return <StatusDisplay />;
@@ -49,4 +56,5 @@ class OutputTabs extends React.Component {
     }
 }
 
-export default OutputTabs;
+export default connect(state => state, 
+    { loadMessages, loadSnapshot, loadProducers })(OutputTabs);

@@ -9,6 +9,7 @@ import TopicList from './TopicList';
 import Header from './Header';
 import DatabaseInfo from './DatabaseInfo';
 import OutputTabs from './OutputTabs';
+import SchemaDisplay from './SchemaDisplay';
 
 import './App.css';
 
@@ -25,6 +26,7 @@ class App extends React.Component {
     render() {
         return (
             <Provider store={store}>
+                <SchemaDisplay />
                 <div style={{margin: '0px'}}>
                     <Header />
                     <Row>

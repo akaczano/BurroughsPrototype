@@ -1,4 +1,5 @@
 package edu.purdue.datamine.burroughsserver;
+
 import com.viasat.burroughs.DBProvider;
 
 import java.sql.*;
@@ -20,36 +21,32 @@ public class ConnectionHolder {
         props.put("user", dbProvider.getDbUser());
         props.put("password", dbProvider.getDbPassword());
         try {
-            connection =  DriverManager.getConnection(connStr, props);
-        } catch(SQLException e) {
+            connection = DriverManager.getConnection(connStr, props);
+        } catch (SQLException e) {
             connection = null;
         }
     }
 
-    public ArrayList<Object[]> getSnapshot(String tableName) {
+    public ArrayList<Object[]> getSnapshot(String query) throws SQLException {
         ArrayList<Object[]> data = new ArrayList<>();
         if (connection != null) {
-            try {
-                Statement stmt = connection.createStatement();
-                ResultSet results = stmt.executeQuery(String.format("SELECT * FROM %s LIMIT 50;", tableName));
-                int count = results.getMetaData().getColumnCount();
-                Object[] header = new Object[count];
-                for (int i = 1; i <= count; ++i) {
-                    header[i-1] = results.getMetaData().getColumnLabel(i);
-                }
-                data.add(header);
-                while (!results.isLast()) {
-                    results.next();
-                    Object[] row = new Object[count];
-                    for (int i = 1; i <= count; i++) {
-                        row[i-1] = results.getObject(i);
-                    }
-                    data.add(row);
-                }
+            Statement stmt = connection.createStatement();
+            ResultSet results = stmt.executeQuery(query);
+            int count = results.getMetaData().getColumnCount();
+            Object[] header = new Object[count];
+            for (int i = 1; i <= count; ++i) {
+                header[i - 1] = results.getMetaData().getColumnLabel(i);
             }
-            catch (SQLException e) {
-                return null;
+            data.add(header);
+            while (!results.isLast()) {
+                results.next();
+                Object[] row = new Object[count];
+                for (int i = 1; i <= count; i++) {
+                    row[i - 1] = results.getObject(i);
+                }
+                data.add(row);
             }
+
         }
         return data;
     }

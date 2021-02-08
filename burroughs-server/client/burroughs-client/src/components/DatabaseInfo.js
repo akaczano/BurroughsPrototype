@@ -12,7 +12,7 @@ class DatabaseInfo extends React.Component {
 
     render() {
         return (
-            <Form style={{ marginLeft: '18px' }}>
+            <Form style={{ marginLeft: '18px' }} className="db-info">
                 <strong>Database Info</strong>
                 <Form.Group>
                     <Form.Label>
