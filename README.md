@@ -19,10 +19,11 @@ Requirements
 
 ### 1. Confluent Platform Setup
 
-The first thing you'll need to do is start up the Confluent platform containers (Zookeeper, Kafka, KsqlDB, etc.) and the PostgreSQL database, all of which are contianed in the Confluent directory.
+The first thing you'll need to do is start up the Confluent platform containers (Zookeeper, Kafka, KsqlDB, etc.) and the PostgreSQL database, all of which are contianed in the Confluent directory. You'll also need to build the custom Kafka Connect image which contains custom Burroughs single message transforms.
 ```bash
-cd Confluent
-./build-connect.sh
+cd SingleMessageTransforms
+./buil-connect.sh
+cd ../Confluent
 docker-compose up -d
 ```
 
