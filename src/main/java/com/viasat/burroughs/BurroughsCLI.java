@@ -364,6 +364,7 @@ public class BurroughsCLI implements Completer {
                 return;
             }
         }
+        System.out.println("This topic does not seem to exist");
     }
     /**
      * Prints the instructions
