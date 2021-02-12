@@ -264,22 +264,33 @@ public class BurroughsCLI implements Completer {
      */
     private void handleFile(String command) {
         String[] words = command.split("\\s+");
-        if (words.length != 2) {
-            System.out.println("Usage: .file <filename>");
+        if (words.length != 3) {
+            System.out.println("Usage: .file <filename> <delimiter>");
         } else {
             String filename = words[1];
+            String delimiter = words[2];
             File file = new File("/commands/" + filename);
             BufferedReader br;
+            ArrayList<String> commands = new ArrayList<>();
             try {
                 br = new BufferedReader(new FileReader(file));
                 String line = br.readLine();
                 while (line != null) {
-                    this.handleCommand(line);
+                    commands.add(line);
                     line = br.readLine();
                 }
             } catch(IOException e) {
                 e.printStackTrace();
             }
+            StringBuilder sb = new StringBuilder();
+            for(String c : commands){
+                sb.append(c + ' ');
+            }
+            String[] commandList = sb.toString().split(delimiter);
+            for(int i = 0; i < commandList.length - 1; i++){
+                this.handleCommand(commandList[i]);
+            }
+            
         }
     }
 
