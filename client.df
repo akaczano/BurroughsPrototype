@@ -1,0 +1,5 @@
+FROM node
+COPY burroughs-server/client/burroughs-client /client
+WORKDIR /client
+RUN npm install -g serve && npm install && npm run build
+CMD ["serve", "-s", "build"]

@@ -6,8 +6,11 @@ import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -134,6 +137,32 @@ public class SimpleQuery extends QueryBase {
                 int position = ((BigDecimal)literal.getValue()).intValueExact();
                 if (literal.isInteger()) {
                     query.getGroup().set(i, query.getSelectList().get(position - 1));
+                }
+            }
+        }
+
+        for (int i = 0; i < query.getSelectList().size(); i++) {
+            SqlNode item = query.getSelectList().get(i);
+            if (item instanceof SqlBasicCall) {
+                SqlBasicCall call = (SqlBasicCall)item;
+                if (call.getOperator().toString().equalsIgnoreCase("GROUP_CONCAT")) {
+                    String operatorName = "COLLECT_LIST";
+                    if (call.getFunctionQuantifier() != null &&call.getFunctionQuantifier().getValue().toString()
+                            .equalsIgnoreCase("DISTINCT")) {
+                        operatorName = "COLLECT_SET";
+                    }
+                    SqlIdentifier id = call.getOperator().getNameAsId().setName(0, operatorName);
+                    SqlOperator op = new SqlUserDefinedFunction(id, null, null, null, new ArrayList<RelDataType>(), null);
+                    query.getSelectList().set(i, new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition()));
+                    if (this.transforms.stream().noneMatch(t -> t.name().equals("serializeArray"))) {
+                        Transform arraySerializer = new Transform("serializeArray", "com.viasat.burroughs.smt.SerializeArray$Value");
+                        if (call.getOperandList().size() > 1) {
+                            String separator = call.operand(1).toString();
+                            separator = separator.substring(1, separator.length() - 1);
+                            arraySerializer.addProperty("separator", separator);
+                        }
+                        transforms.add(arraySerializer);
+                    }
                 }
             }
         }

@@ -1,0 +1,2 @@
+.producer transactions_producer start 10000
+.table test

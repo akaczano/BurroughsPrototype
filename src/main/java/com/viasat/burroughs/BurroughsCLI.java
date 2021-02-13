@@ -17,10 +17,8 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 /**
  * Class that handles all CLI commands and prints responses
@@ -53,7 +51,7 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
         this.handlers.put(".delete", this::handleDeletion);
-
+        this.handlers.put(".file", this::handleFile);
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
     }
@@ -259,6 +257,43 @@ public class BurroughsCLI implements Completer {
         System.exit(0);
     }
 
+    /**
+     * Reads in a sql commands from a file, line by line
+     *
+     * @param command Command string beginning with .file
+     */
+    private void handleFile(String command) {
+        String[] words = command.split("\\s+");
+        if (words.length != 3) {
+            System.out.println("Usage: .file <filename> <delimiter>");
+        } else {
+            String filename = words[1];
+            String delimiter = words[2];
+            File file = new File("/commands/" + filename);
+            BufferedReader br;
+            ArrayList<String> commands = new ArrayList<>();
+            try {
+                br = new BufferedReader(new FileReader(file));
+                String line = br.readLine();
+                while (line != null) {
+                    commands.add(line);
+                    line = br.readLine();
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+            StringBuilder sb = new StringBuilder();
+            for(String c : commands){
+                sb.append(c).append(' ');
+            }
+            String[] commandList = sb.toString().split(delimiter);
+            for(int i = 0; i < commandList.length - 1; i++){
+                this.handleCommand(commandList[i]);
+            }
+            
+        }
+    }
+
     private void handleProducers(String command) {
         List<ProducerEntry> producers = burroughs.producerInterface().getProducers();
         System.out.println("Producers:");
@@ -405,6 +440,8 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tresume: resumes producer operation");
         System.out.println("\tkill: stops producer operation");
         System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
+        System.out.println(".file <file name> <delimiter>");
+        System.out.println("\tReads and executes commands and/or a query from the specified file.");
         System.out.println(".quit");
         System.out.println("\tExits burroughs. Ctrl+D works too.");
         System.out.println("Any other input will be treated like a SQL query.");
