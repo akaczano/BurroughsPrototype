@@ -284,7 +284,7 @@ public class BurroughsCLI implements Completer {
             }
             StringBuilder sb = new StringBuilder();
             for(String c : commands){
-                sb.append(c + ' ');
+                sb.append(c).append(' ');
             }
             String[] commandList = sb.toString().split(delimiter);
             for(int i = 0; i < commandList.length - 1; i++){
@@ -422,6 +422,8 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tresume: resumes producer operation");
         System.out.println("\tkill: stops producer operation");
         System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
+        System.out.println(".file <file name> <delimiter>");
+        System.out.println("\tReads and executes commands and/or a query from the specified file.");
         System.out.println(".quit");
         System.out.println("\tExits burroughs. Ctrl+D works too.");
         System.out.println("Any other input will be treated like a SQL query.");
