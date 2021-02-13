@@ -2,6 +2,7 @@
 
 docker run --rm -it \
 -v $(pwd)/producer:/producer \
+-v $(pwd)/commands:/commands \
 --link ksqldb-server:ksqldb-server \
 --net confluent_default \
 -e KSQL_HOST=http://ksqldb-server:8088 \
