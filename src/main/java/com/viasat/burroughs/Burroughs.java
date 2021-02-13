@@ -10,6 +10,7 @@ import com.viasat.burroughs.service.StatusService;
 import com.viasat.burroughs.service.model.HealthStatus;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Format;
@@ -175,7 +176,14 @@ public class Burroughs implements DBProvider {
         return description.getSourceDescription().getFields();
     }
 
-
+    /**
+     * drops the topic
+     * @param topicName
+     */
+    public void dropTopic(String topicName) {
+        topic(topicName);
+        CommandResponse cr = QueryBase.dropStreamAndTopic(service, "BURROUGHS_" + topicName);
+    }
     /**
      * Get a list of topics on the connected broker
      * @return A list of Topic objects

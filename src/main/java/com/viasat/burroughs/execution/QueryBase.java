@@ -167,6 +167,19 @@ public abstract class QueryBase {
         CommandResponse result = service.executeStatement(query, "create stream");
         return streamName;
     }
+    /**
+     * Version of dropStream that can be done from a static context and takes the underlying topic with it
+     *
+     * @param service    The statement service to send the query with
+     * @param streamName The name of the stream
+     * @return The name of the stream
+     */
+    public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
+        String query = String.format("DROP STREAM %s DELETE TOPIC;",
+                streamName);
+        CommandResponse result = service.executeStatement(query, "stream and topic dropped");
+        return result;
+    }
 
     /**
      * Creates a sink connector for a table

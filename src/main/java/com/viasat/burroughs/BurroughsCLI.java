@@ -50,8 +50,8 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
+        this.handlers.put(".delete", this::handleDeletion);
         this.handlers.put(".file", this::handleFile);
-
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
     }
@@ -375,7 +375,7 @@ public class BurroughsCLI implements Completer {
                     System.out.printf("Changed delay from %d to %d\n",
                             producerInterface.getProducerDelay(name), delay);
                     producerInterface.setProducerDelay(name, delay);
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     System.out.printf("Invalid delay: %s\n", words[3]);
                 }
             }
@@ -385,6 +385,22 @@ public class BurroughsCLI implements Completer {
         }
     }
 
+    private void handleDeletion(String command) {
+        String[] words = command.split("\\s+");
+        if (words.length < 2) {
+            System.out.println("Usage: .delete <topic_name>");
+            return;
+        }
+
+        for (Topic t: burroughs.topics()) {
+            if (t.getName().equals(words[1])) {
+                System.out.println("Dropping it ");
+                burroughs.dropTopic(t.getName());
+                return;
+            }
+        }
+        System.out.println("This topic does not seem to exist");
+    }
     /**
      * Prints the instructions
      *
@@ -413,6 +429,8 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tAttempts to reconnect to ksqlDB and PostgreSQL");
         System.out.println(".producers");
         System.out.println("\tDisplays a list of producers");
+        System.out.println(".delete <topic>");
+        System.out.println("\tDeletes the specified topic from the Kafka stream");
         System.out.println(".producer <producer> <operation> [arguments]");
         System.out.println("\tExecutes the given command for the specified producer.");
         System.out.println("\tAvailable operations");
