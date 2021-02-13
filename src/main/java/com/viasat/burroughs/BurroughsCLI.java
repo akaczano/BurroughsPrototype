@@ -20,6 +20,8 @@ import org.jline.reader.ParsedLine;
 import java.io.*;
 import java.util.*;
 
+import com.viasat.burroughs.execution.DebugLevels;  //added
+
 /**
  * Class that handles all CLI commands and prints responses
  */
@@ -50,8 +52,14 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
+<<<<<<< Updated upstream
         this.handlers.put(".delete", this::handleDeletion);
         this.handlers.put(".file", this::handleFile);
+=======
+	this.handlers.put(".debug", this::handleDebug);
+
+	this.handlers.put(".file", this::handleFilein);
+>>>>>>> Stashed changes
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
     }
@@ -130,6 +138,25 @@ public class BurroughsCLI implements Completer {
         for (Topic t : list) {
             System.out.println(t);
         }
+    }
+
+    /**
+     * Prints out DebugLevels String
+     *
+     * @param command Command string starting with .debug
+     */
+    private void handleDebug(String command) {
+	System.out.println("Preliminary Traceback:" + "\n" + DebugLevels.debugLevel);
+    }
+
+
+    /**
+     * Takes in files
+     *
+     * @param command Command string starting with .topics
+     */
+    private void handleFilein(String command) {
+	System.out.println("This is the current directory" + System.getProperty("user.dir"));
     }
 
     /**

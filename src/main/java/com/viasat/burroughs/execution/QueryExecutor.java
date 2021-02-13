@@ -45,6 +45,9 @@ public class QueryExecutor {
      * @param query The query, already parsed and validated
      */
     public void executeQuery(SqlSelect query) {
+
+	DebugLevels.debugLevel += query.toString();  //added
+
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.

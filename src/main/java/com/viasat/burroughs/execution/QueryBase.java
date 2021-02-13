@@ -12,6 +12,10 @@ import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
 
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
 import java.util.*;
 
 /**
@@ -165,6 +169,7 @@ public abstract class QueryBase {
         String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
+	DebugLevels.debugLevel += query;  //added
         return streamName;
     }
     /**
