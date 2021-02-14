@@ -1,9 +1,9 @@
 import {
-    PRODUCERS_LOADED
+    PRODUCERS_LOADED, SET_PRODUCER_LIMIT
 } from '../actions/actionTypes';
 
 const initialState = {
-    producers: []
+    producers: [],    
 };
 
 const producerReducer = (state = initialState, action) => {

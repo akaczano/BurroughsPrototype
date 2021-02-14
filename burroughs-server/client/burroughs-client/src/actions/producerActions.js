@@ -1,13 +1,13 @@
 import client from '../api/defaultClient';
 import {
     PRODUCERS_LOADED,
-    PRODUCER_ERROR
+    PRODUCER_ERROR,    
 } from './actionTypes';
 
 export const loadProducers = () => async dispatch => {
     try {
         let producers = (await client.get('/producer')).data;
-        dispatch(setProducers(producers));
+        dispatch(setProducers(producers.map(p => ({...p, limit: -1}))));
     }
     catch (err) {
         dispatch({type: PRODUCER_ERROR})

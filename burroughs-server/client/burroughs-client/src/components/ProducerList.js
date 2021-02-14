@@ -41,11 +41,6 @@ class ProducerList extends React.Component {
                         default:
                             statusString = 'Error';
                     }
-                    if (!(p.name in this.state.limits)) {
-                        let newLimits = {...this.state.limits};
-                        newLimits[p.name] = -1;
-                        this.setState({limits: newLimits});
-                    }
                     let errorDisplay = p.status.errorMessage ?
                         <p style={{ color: 'red' }}>{p.status.errorMessage}</p> : null;
                     return (
@@ -104,7 +99,11 @@ class ProducerList extends React.Component {
                                             </Form.Label>
                                             <Form.Control
                                                 type="number"
-                                                value={this.state.limits[p.name]}
+                                                value={
+                                                    p.name in this.state.limits ?
+                                                     this.state.limits[p.name] :
+                                                     -1
+                                                }
                                                 onChange={e => {
                                                     let newLimits = {...this.state.limits};
                                                     newLimits[p.name] = e.target.value
