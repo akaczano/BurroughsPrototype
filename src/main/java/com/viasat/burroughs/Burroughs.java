@@ -41,6 +41,7 @@ public class Burroughs implements DBProvider {
     private String kafkaHost;
     private String schemaRegistry;
     private String connectorDB;
+    private String producerPath = "/producer";
 
     /**
      * Provides access to ksqlDB
@@ -82,7 +83,7 @@ public class Burroughs implements DBProvider {
         this.kafkaService = new KafkaService(kafkaHost);
         this.executor = new QueryExecutor(service, kafkaService, this);
         if (ksqlConnected) {
-            this.producerInterface = new ProducerInterface(kafkaHost, schemaRegistry, this);
+            this.producerInterface = new ProducerInterface(producerPath, kafkaHost, schemaRegistry, this);
         }
     }
 
@@ -319,4 +320,7 @@ public class Burroughs implements DBProvider {
         this.schemaRegistry = schemaRegistry;
     }
 
+    public void setProducerPath(String producerPath) {
+        this.producerPath = producerPath;
+    }
 }

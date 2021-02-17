@@ -30,12 +30,12 @@ public class ProducerInterface {
      * @param schemaRegistry Schema registry URL
      * @param defaultDB The default database to use
      */
-    public ProducerInterface(String kafkaHost, String schemaRegistry, DBProvider defaultDB) {
+    public ProducerInterface(String producerPath, String kafkaHost, String schemaRegistry, DBProvider defaultDB) {
         this.kafkaHost = kafkaHost;
         this.schemaRegistry = schemaRegistry;
         producers = new HashMap<>();
         System.out.println("Loading producers...");
-        File producerFile = new File("/producer/producers.json");
+        File producerFile = new File(String.format("%s/producers.json", producerPath));
         if (!producerFile.exists()) {
             System.out.println("No producers found");
         }

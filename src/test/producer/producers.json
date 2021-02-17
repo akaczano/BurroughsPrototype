@@ -1,0 +1,16 @@
+[
+  {
+  	"name": "test_producer",
+	"topic": "test_data",
+    "schema": "transaction.avsc",
+    "key_field": "StoreR",
+    "data_source": {
+      "type": "file",
+      "source": {
+        "location": "datafiles/transactions.csv",
+        "header": true,
+        "delimiter": ","
+      }
+    }
+  }
+]

@@ -70,7 +70,7 @@ public class BurroughsCLI implements Completer {
             // Only the .connect and .connection commands can run without connection
             // to KsqlDB and PostgreSQL established
             if ((!conn.isKsqlConnected() || !conn.isDbConnected()) && !command.equals(".connect") &&
-                    !command.equals(".connection")) {
+                    !command.equals(".connection") && !command.equals(".quit")) {
                 System.out.println("Connection not established");
                 System.out.println("Use .connect to re-connect");
                 System.out.println("Use .connection to view connection info");

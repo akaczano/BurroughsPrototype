@@ -58,6 +58,9 @@ public class App {
         if (env.containsKey("SCHEMA_REGISTRY")) {
             schemaRegistry = env.get("SCHEMA_REGISTRY");
         }
+        if (env.containsKey("PRODUCER_PATH")) {
+            burroughs.setProducerPath(env.get("PRODUCER_PATH"));
+        }
         burroughs.setKsqlHost(ksqlHost);
         burroughs.setDbHost(dbHost);
         burroughs.setDatabase(database);

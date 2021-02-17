@@ -9,7 +9,6 @@ import com.viasat.burroughs.service.model.list.Format;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.validate.SqlUserDefinedAggFunction;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import java.math.BigDecimal;
@@ -152,6 +151,7 @@ public class SimpleQuery extends QueryBase {
                         operatorName = "COLLECT_SET";
                     }
                     SqlIdentifier id = call.getOperator().getNameAsId().setName(0, operatorName);
+
                     SqlOperator op = new SqlUserDefinedFunction(id, null, null, null, new ArrayList<RelDataType>(), null);
                     query.getSelectList().set(i, new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition()));
                     if (this.transforms.stream().noneMatch(t -> t.name().equals("serializeArray"))) {
