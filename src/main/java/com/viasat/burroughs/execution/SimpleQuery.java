@@ -4,8 +4,9 @@ import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
-import com.viasat.burroughs.service.model.description.DataType;
+import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.list.Format;
+import com.viasat.burroughs.service.model.description.Field;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
@@ -27,7 +28,7 @@ public class SimpleQuery extends QueryBase {
     // All of the associated streams
     private final List<String> streams = new ArrayList<>();
 
-    // Not currently in use
+    // Stores what the query is grouped by
     private String groupby;
 
     /**
@@ -56,8 +57,7 @@ public class SimpleQuery extends QueryBase {
      */
     @Override
     public void execute() {
-        // TODO: deal with this
-        setGroupByDataType(DataType.ARRAY);
+        setGroupByDataType(determineDataType(groupby, query.getFrom().toString()));
 
         // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();

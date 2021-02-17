@@ -11,6 +11,7 @@ import com.viasat.burroughs.service.model.description.*;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.calcite.sql.*;
 
 import java.util.*;
 
@@ -82,6 +83,47 @@ public abstract class QueryBase {
      * @param field Field name
      */
     public abstract void setGroupBy(String field);
+
+    /**
+     * Determine what data type the group by string is
+     *
+     * @param groupBy A string representing what the query is grouping by
+     * @param topic The topic referenced in the query
+     */
+    public DataType determineDataType(String groupBy, String topic) {
+        if (groupBy == null) {
+            return DataType.STRING;
+        }
+        if (topic.toUpperCase().contains("AS")) {
+            topic = mapAliases(topic).get(groupBy.substring(0 , groupBy.indexOf(".")));
+            groupBy = groupBy.substring(groupBy.indexOf(".")+1);
+        }
+        if (!streamExists(service, "BURROUGHS_" + topic)) {
+            createStream(service, "BURROUGHS_" + topic, topic,
+                    Format.AVRO);
+        }
+        DescribeResponse description = service.executeStatement("DESCRIBE BURROUGHS_" + topic + ";",
+                "retrieve topic metadata");
+        Field[] fields = description.getSourceDescription().getFields();
+        for (Field f : fields) {
+            if (f.getName().equalsIgnoreCase(groupBy.toUpperCase())) {
+                return f.getSchema().getType();
+            }
+        }
+        return DataType.ARRAY;
+    }
+
+    public Map<String, String> mapAliases(String topic) {
+        Map<String, String> aliasMap = new HashMap<>();
+        List<String> topicList = new ArrayList<>(Arrays.asList(topic.split("[ |\\n]")));
+        for (int i = 0; i < topicList.size(); i++) {
+            if (topicList.get(i).toUpperCase().equals("AS")) {
+                aliasMap.put(topicList.get(i + 1).replaceAll("`", ""),
+                            topicList.get(i - 1).replaceAll("`", ""));
+            }
+        }
+        return aliasMap;
+    }
 
     /**
      * Set the group by data type which is used to determine the Key converter class
