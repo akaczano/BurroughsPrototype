@@ -16,6 +16,7 @@ import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import com.viasat.burroughs.service.model.list.Topic;
+import com.viasat.burroughs.validation.ParsedQuery;
 import com.viasat.burroughs.validation.QueryValidator;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
@@ -110,7 +111,7 @@ public class Burroughs implements DBProvider {
         // Perform validation (and parsing also)
         QueryValidator validator = new QueryValidator(this.service);
 
-        SqlSelect parsedQuery = validator.validateQuery(query);
+        ParsedQuery parsedQuery = validator.validateQuery(query);
         if (parsedQuery != null) {
             if (this.dbTable == null) {
                 Logger.getLogger().writeLine("No output table set. Use .table to configure one.");

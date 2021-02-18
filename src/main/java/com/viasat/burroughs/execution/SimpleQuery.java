@@ -6,6 +6,7 @@ import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
+import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -18,7 +19,7 @@ import java.util.*;
 public class SimpleQuery extends QueryBase {
 
     // The parsed query
-    private final SqlSelect query;
+    private final ParsedQuery parsedQuery;
 
     // The ksqlDB table. There can only be one of these per query
     private String table = null;
@@ -44,9 +45,9 @@ public class SimpleQuery extends QueryBase {
      * @param query The SQL query itself
      */
     public SimpleQuery(StatementService service, KafkaService kafkaService,
-                       QueryProperties props, SqlSelect query) {
+                       QueryProperties props, ParsedQuery query) {
         super(service, kafkaService, props);
-        this.query = query;
+        this.parsedQuery = query;
     }
 
     /**
@@ -64,6 +65,19 @@ public class SimpleQuery extends QueryBase {
     public void execute() {
         // TODO: deal with this
         setGroupByDataType(DataType.ARRAY);
+
+        SqlSelect query = parsedQuery.getQuery();
+        SqlNodeList extraStreams = parsedQuery.getWithList();
+
+        for (SqlNode n : extraStreams) {
+            SqlWithItem withItem = (SqlWithItem) n;
+            SqlSelect select = (SqlSelect)withItem.query;
+            Map<String, String> replacements = new HashMap<>();
+            createStreams(replacements, select.getFrom());
+            String queryText = translateQuery(select, replacements);
+            String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
+            streams.add(name);
+        }
 
         // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();
@@ -201,6 +215,9 @@ public class SimpleQuery extends QueryBase {
                     transforms.add(arraySerializer);
                 }
                 return new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition());
+            }
+            else if (call.getOperator().toString().equalsIgnoreCase("CAST")) {
+
             }
         }
         return item;
