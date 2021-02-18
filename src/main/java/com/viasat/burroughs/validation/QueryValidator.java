@@ -2,6 +2,7 @@ package com.viasat.burroughs.validation;
 
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.list.ListResponse;
+import org.apache.calcite.avatica.SqlType;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -37,7 +38,19 @@ public class QueryValidator {
                 .setConformance(SqlConformanceEnum.BABEL)
                 .build();
         SqlNode node = SqlParser.create(query, config).parseQuery();
-        if (node.isA(Collections.singleton(SqlKind.SELECT))) {
+
+        if (node instanceof SqlWith) {
+            SqlWith with = (SqlWith)node;
+            String preprocessed = with.body.toString();
+            for (int i = 0; i < with.withList.size(); i++) {
+                SqlWithItem withItem = (SqlWithItem)with.withList.get(i);
+                preprocessed = preprocessed.replaceAll(String.format("`%s`", withItem.name),
+                        String.format("(%s) as %s", withItem.query.toString(), withItem.name));
+            }
+            node = SqlParser.create(preprocessed.replace("`", ""), config).parseQuery();
+        }
+
+        if (node instanceof SqlSelect) {
             SqlSelect selectNode = (SqlSelect) node;
 
             validateFrom(selectNode.getFrom());
@@ -60,7 +73,7 @@ public class QueryValidator {
      * @param from The from section of the query
      * @throws TopicNotFoundException Exception thrown when non-existent topic is referenced
      */
-    private void validateFrom(SqlNode from) throws TopicNotFoundException {
+    private void validateFrom(SqlNode from) throws TopicNotFoundException, UnsupportedQueryException {
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin) from;
             SqlNode left = join.getLeft();
@@ -74,6 +87,16 @@ public class QueryValidator {
             SqlIdentifier identifier = (SqlIdentifier) from;
             if (!validateTopic(identifier.getSimple())) {
                 throw new TopicNotFoundException(from.toString());
+            }
+        } else if (from instanceof SqlSelect) {
+            SqlSelect select = (SqlSelect)from;
+            if (select.getGroup() != null) {
+                throw new UnsupportedQueryException("Subquery cannot contain group by");
+            }
+            for (SqlNode n : select.getSelectList()) {
+                if (n.isA(SqlKind.AGGREGATE)) {
+                    throw new UnsupportedQueryException("Subquery cannot contain aggregate function.");
+                }
             }
         }
     }

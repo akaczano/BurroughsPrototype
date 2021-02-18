@@ -79,9 +79,9 @@ public class BasicQueryTest extends BurroughsTest {
         }
     }
 
-
     @After
     public void dispose() {
         burroughs.stop(false);
+        burroughs.dropTopic("test_data");
     }
 }

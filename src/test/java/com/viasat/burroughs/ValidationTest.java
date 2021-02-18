@@ -50,5 +50,13 @@ public class ValidationTest extends ServiceTest{
         } catch(SqlParseException | TopicNotFoundException  | UnsupportedQueryException e) {
             fail();
         }
+
+        try {
+            validator.validateQuery("select storer, max(total) from (select storer, basketnum, sum(spend) as total from transactions group by 1,2) group by 1");
+            fail();
+        } catch(SqlParseException | TopicNotFoundException  | UnsupportedQueryException e) {
+            Assert.assertTrue(e instanceof UnsupportedQueryException);
+        }
+
     }
 }
