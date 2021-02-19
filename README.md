@@ -85,7 +85,7 @@ When you're done, don't forget to run `.stop` to clean up all of the stream proc
 ### 5. Reading commands from a file
 Burroughs can read commands from a file, simply by using the .file command. Commands in the file can either be sql or burroughs commands. All files should be put in the /commands folder. 
 ```burroughs
-.file <filename> <delimeter>
+.file <filename> <delimiter>
 ```
 Example file:
 ```input.txt
