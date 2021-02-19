@@ -1,1 +1,1 @@
-.producer transactions_producer start 10000; .table test
+.producer transactions_producer start 10000; .table test;
