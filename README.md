@@ -95,6 +95,7 @@ Example command:
 ```burroughs
 .file input.txt ;
 ```
+![screenshot](images/fileInputExample.png)
 
 ### Running the Burroughs Browser Interface
 Burroughs also ships with a browser-based graphical user interface. To use this, do the following:
