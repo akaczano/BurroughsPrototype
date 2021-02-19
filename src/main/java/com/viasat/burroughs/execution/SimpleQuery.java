@@ -68,15 +68,22 @@ public class SimpleQuery extends QueryBase {
 
         SqlSelect query = parsedQuery.getQuery();
         SqlNodeList extraStreams = parsedQuery.getWithList();
+        if (extraStreams != null) {
+            for (SqlNode n : extraStreams) {
+                SqlWithItem withItem = (SqlWithItem) n;
+                SqlSelect select = (SqlSelect) withItem.query;
+                Map<String, String> replacements = new HashMap<>();
+                createStreams(replacements, select.getFrom());
+                String queryText = translateQuery(select, replacements);
+                String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
+                streams.add(name);
+            }
+        }
 
-        for (SqlNode n : extraStreams) {
-            SqlWithItem withItem = (SqlWithItem) n;
-            SqlSelect select = (SqlSelect)withItem.query;
-            Map<String, String> replacements = new HashMap<>();
-            createStreams(replacements, select.getFrom());
-            String queryText = translateQuery(select, replacements);
-            String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
-            streams.add(name);
+        if (parsedQuery.getLimit() > 0) {
+            Transform limitTransform = new Transform("limit", "com.viasat.burroughs.smt.Limit");
+            limitTransform.addProperty("limit", Integer.toString(parsedQuery.getLimit()));
+            transforms.add(limitTransform);
         }
 
         // Stores translations as a mapping of text to replacement
