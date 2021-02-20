@@ -138,6 +138,8 @@ public class SimpleQuery extends QueryBase {
      * @return The fully translated query string to pass to a create table statement
      */
     private String translateQuery(SqlSelect query, Map<String, String> replacements) {
+        
+        
         for (int i = 0; i < query.getGroup().getList().size(); i++) {
             SqlNode n = query.getGroup().get(i);
             if (n instanceof SqlNumericLiteral) {
@@ -228,7 +230,7 @@ public class SimpleQuery extends QueryBase {
     }
 
     /**
-     * Stores the table name whenever a table is creaated
+     * Stores the table name whenever a table is created
      * @param id The query ID to be used in the naming of the table
      * @param query The query to build the table from
      * @return The table name

@@ -180,10 +180,14 @@ public abstract class QueryBase {
      * @return The name of the stream
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
+        DebugLevels.debugLevel+= "The stream and topic are being dropped";
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
+        DebugLevels.debugLevel+= "The command response is" + result;
+
         return result;
+
     }
 
     /**
@@ -286,13 +290,20 @@ public abstract class QueryBase {
      * @param queryId The query to terminate
      */
     private void terminateQuery(String queryId) {
+        DebugLevels.debugLevel+= "Query is being terminated: ";
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
+        
         if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
         }
-    }
+        else
+        {
+         DebugLevels.debugLevel+="The command response is "+ result;   
+        }
+        }
+    
 
     /**
      * Terminates all queries that depend upon the given object
@@ -300,6 +311,7 @@ public abstract class QueryBase {
      * @param objectName The object to check, usually a table
      */
     private void terminateQueries(String objectName) {
+        DebugLevels.debugLevel+="We are terminating queries for" + objectName;
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
