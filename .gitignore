@@ -3,4 +3,5 @@ target/
 target/*
 producer/target/**/
 producer/target
-
+.idea
+burroughs.iml

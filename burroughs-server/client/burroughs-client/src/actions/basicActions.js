@@ -67,8 +67,7 @@ export const getStatus = () => dispatch => {
         });
 };
 
-export const getSchema = topic => dispatch => {
-    console.log('hello there');
+export const getSchema = topic => dispatch => {    
     client
         .get('/command/topic', { params: { topicName: topic } })
         .then(schema => {

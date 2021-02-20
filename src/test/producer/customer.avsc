@@ -1,0 +1,14 @@
+{
+    "type":"record",
+    "name":"customer",
+    "fields": [
+        {
+            "name": "BasketNum",
+            "type": "int"
+        },
+        {
+            "name": "CustId",
+            "type": "int"
+        }
+    ]
+}

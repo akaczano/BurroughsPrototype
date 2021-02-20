@@ -21,8 +21,8 @@ class StatusDisplay extends React.Component {
 		else if (this.props.queryActive && this.props.status && !this.props.status.tableStatus) {
 			return <div>Status not available</div>
 		}
-        else if (this.props.queryActive && this.props.status){            
-            const { tableStatus, connectorStatus } = this.props.status;
+        else if (this.props.queryActive && this.props.status){                        
+            const { tableStatus, connectorStatus } = this.props.status;            
             const totalProgress = this.props.status.tableStatus.totalProgress / 
                 this.props.status.tableStatus.totalWork;
             const timeRemaining = (tableStatus.totalRuntime / totalProgress - tableStatus.totalRuntime) / 1000.0;
@@ -35,6 +35,9 @@ class StatusDisplay extends React.Component {
                     <p>Messages Processed: {tableStatus.totalMessages}</p>                    
                     <p>Total Run Time: {Math.floor(tableStatus.totalRuntime / 1000)} seconds</p> 
                     <p>Estimated Time Remaing: {Math.floor(timeRemaining)} seconds</p>
+                    {connectorStatus?.errors?.map(e => 
+                     <p style={{color: 'red'}}>Connector error: <br />{e}</p>   
+                    )}
                 </div>
             );
         }

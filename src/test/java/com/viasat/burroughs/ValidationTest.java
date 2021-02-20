@@ -47,10 +47,8 @@ public class ValidationTest extends ServiceTest{
 
         try {
             validator.validateQuery("SELECT SUM(SPEND), STORER FROM transactions LEFT JOIN transactions  GROUP BY STORER");
-            fail();
         } catch(SqlParseException | TopicNotFoundException  | UnsupportedQueryException e) {
-            System.out.println(e.getMessage());
-            Assert.assertTrue(e instanceof UnsupportedQueryException);
+            fail();
         }
     }
 }

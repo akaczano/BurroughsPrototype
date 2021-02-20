@@ -29,7 +29,7 @@ class SchemaDisplay extends React.Component {
                         <tbody>
                             {this.props.schema?.data.map(item => {
                                 return (
-                                    <tr>
+                                    <tr key={item.name}>
                                         <td>{item.name}</td>
                                         <td>{item.schema.type}</td>
                                     </tr>

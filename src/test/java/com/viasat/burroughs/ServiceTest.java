@@ -6,6 +6,10 @@ public abstract class ServiceTest {
     protected StatementService service;
 
     public ServiceTest() {
-        service = new StatementService("http://localhost:8088");
+        String hostname = "http://localhost:8088";
+        if (System.getenv().containsKey("KSQL_HOST")) {
+            hostname = System.getenv("KSQL_HOST");
+        }
+        service = new StatementService(hostname);
     }
 }
