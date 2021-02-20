@@ -11,6 +11,9 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
+//added
+import com.viasat.burroughs.execution.DebugLevels; 
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -83,7 +86,9 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private void createStreams(Map<String, String> replacements, SqlNode from) {
+	DebugLevels.debugLevel += "createStreams inputs: "+ replacements + " and "+ from + '\n';
         if (from instanceof SqlJoin) {
+	    DebugLevels.debugLevel += "createStreams: interpreting " + from + " as SqlJoin." + '\n';
             SqlJoin join = (SqlJoin)from;
             String condition = String.format("%s %s", join.getConditionType().toString(),
                     join.getCondition().toString());
@@ -93,9 +98,13 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, join.getRight());
         }
         else if (from instanceof SqlSelect) {
+	    DebugLevels.debugLevel += "createStreams: interpreting " + from + " as SqlSelect." + '\n';
+
             // TODO somehow deal with subqueries
         }
         else if (from instanceof SqlBasicCall) {
+	    DebugLevels.debugLevel += "createStreams: interpreting " + from + " as SqlBasicCall." + '\n';
+
             SqlBasicCall call = (SqlBasicCall)from;
             createStreams(replacements, call.operand(0));
         }
@@ -139,6 +148,7 @@ public class SimpleQuery extends QueryBase {
                 }
             }
         }
+	DebugLevels.debugLevel += "translateQuery (loop 1) generated " + query + '\n';
 
         for (int i = 0; i < query.getSelectList().size(); i++) {
             SqlNode item = query.getSelectList().get(i);
@@ -166,12 +176,15 @@ public class SimpleQuery extends QueryBase {
                 }
             }
         }
+	DebugLevels.debugLevel += "translateQuery (loop 2) generated " + query + '\n';
 
         String preparedQuery = query.toString();
         for (String key : replacements.keySet()) {
             preparedQuery = preparedQuery.replace(key, replacements.get(key));
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
+	DebugLevels.debugLevel += "translateQuery (loop 3) generated: " + preparedQuery + '\n';
+
         return preparedQuery;
     }
 
