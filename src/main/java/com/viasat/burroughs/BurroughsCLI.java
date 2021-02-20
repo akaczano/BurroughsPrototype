@@ -52,14 +52,12 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
-<<<<<<< Updated upstream
+
         this.handlers.put(".delete", this::handleDeletion);
         this.handlers.put(".file", this::handleFile);
-=======
-	this.handlers.put(".debug", this::handleDebug);
 
+	this.handlers.put(".debug", this::handleDebug);
 	this.handlers.put(".file", this::handleFilein);
->>>>>>> Stashed changes
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
     }
