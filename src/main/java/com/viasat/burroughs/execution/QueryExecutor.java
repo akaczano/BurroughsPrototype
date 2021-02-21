@@ -6,6 +6,7 @@ import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
@@ -44,7 +45,7 @@ public class QueryExecutor {
      * Executes a query
      * @param query The query, already parsed and validated
      */
-    public void executeQuery(SqlSelect query) {
+    public void executeQuery(ParsedQuery query) {
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.
@@ -55,11 +56,11 @@ public class QueryExecutor {
         // each one handling a different kind of query, but I now doubt the sense
         // of that design
         currentQuery = new SimpleQuery(service, kafkaService, props, query);
-        if (query.getGroup().getList().size() == 1) {
+        if (query.getQuery().getGroup().getList().size() == 1) {
             // Set the group by field to correctly configure the connector
             // Currently, this isn't working and all keys are being converted to
             // hex strings
-            String groupByField = query.getGroup().get(0).toString();
+            String groupByField = query.getQuery().getGroup().get(0).toString();
             currentQuery.setGroupBy(groupByField);
         }
         try {

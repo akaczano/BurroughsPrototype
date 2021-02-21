@@ -6,6 +6,7 @@ import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
+import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -18,7 +19,7 @@ import java.util.*;
 public class SimpleQuery extends QueryBase {
 
     // The parsed query
-    private final SqlSelect query;
+    private final ParsedQuery parsedQuery;
 
     // The ksqlDB table. There can only be one of these per query
     private String table = null;
@@ -32,6 +33,10 @@ public class SimpleQuery extends QueryBase {
     // Not currently in use
     private String groupby;
 
+    private Stack<String> names = new Stack<>();
+
+    private int subqueryCounter = 0;
+
     /**
      * Creates a new query object
      * @param service The ksqlDB statement service
@@ -40,9 +45,9 @@ public class SimpleQuery extends QueryBase {
      * @param query The SQL query itself
      */
     public SimpleQuery(StatementService service, KafkaService kafkaService,
-                       QueryProperties props, SqlSelect query) {
+                       QueryProperties props, ParsedQuery query) {
         super(service, kafkaService, props);
-        this.query = query;
+        this.parsedQuery = query;
     }
 
     /**
@@ -60,6 +65,26 @@ public class SimpleQuery extends QueryBase {
     public void execute() {
         // TODO: deal with this
         setGroupByDataType(DataType.ARRAY);
+
+        SqlSelect query = parsedQuery.getQuery();
+        SqlNodeList extraStreams = parsedQuery.getWithList();
+        if (extraStreams != null) {
+            for (SqlNode n : extraStreams) {
+                SqlWithItem withItem = (SqlWithItem) n;
+                SqlSelect select = (SqlSelect) withItem.query;
+                Map<String, String> replacements = new HashMap<>();
+                createStreams(replacements, select.getFrom());
+                String queryText = translateQuery(select, replacements);
+                String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
+                streams.add(name);
+            }
+        }
+
+        if (parsedQuery.getLimit() > 0) {
+            Transform limitTransform = new Transform("limit", "com.viasat.burroughs.smt.Limit");
+            limitTransform.addProperty("limit", Integer.toString(parsedQuery.getLimit()));
+            transforms.add(limitTransform);
+        }
 
         // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();
@@ -93,10 +118,22 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, join.getRight());
         }
         else if (from instanceof SqlSelect) {
-            // TODO somehow deal with subqueries
+            SqlSelect subquery = (SqlSelect)from;
+            Map<String, String> sqReplacements = new HashMap<>();
+            createStreams(sqReplacements, subquery.getFrom());
+            String queryText = translateQuery(subquery, sqReplacements);
+            if (names.isEmpty()) {
+                names.push(getId() + "_" + subqueryCounter++);
+            }
+            String stream = createStream(names.pop(), queryText);
+            replacements.put("(" + subquery.toString() + ")", stream);
+            streams.add(stream);
         }
         else if (from instanceof SqlBasicCall) {
             SqlBasicCall call = (SqlBasicCall)from;
+            if (call.getOperator().toString().equalsIgnoreCase("AS") && call.operand(0) instanceof SqlSelect) {
+                names.push(call.operand(1).toString());
+            }
             createStreams(replacements, call.operand(0));
         }
         else if (from instanceof SqlIdentifier) {
@@ -129,42 +166,26 @@ public class SimpleQuery extends QueryBase {
      * @return The fully translated query string to pass to a create table statement
      */
     private String translateQuery(SqlSelect query, Map<String, String> replacements) {
-        for (int i = 0; i < query.getGroup().getList().size(); i++) {
-            SqlNode n = query.getGroup().get(i);
-            if (n instanceof SqlNumericLiteral) {
-                SqlNumericLiteral literal = (SqlNumericLiteral)n;
-                int position = ((BigDecimal)literal.getValue()).intValueExact();
-                if (literal.isInteger()) {
-                    query.getGroup().set(i, query.getSelectList().get(position - 1));
+        if (query.getGroup() != null) {
+            for (int i = 0; i < query.getGroup().getList().size(); i++) {
+                SqlNode n = query.getGroup().get(i);
+                if (n instanceof SqlNumericLiteral) {
+                    SqlNumericLiteral literal = (SqlNumericLiteral) n;
+                    int position = ((BigDecimal) literal.getValue()).intValueExact();
+                    if (literal.isInteger()) {
+                        SqlNode field = query.getSelectList().get(position - 1);
+                        if (field instanceof SqlBasicCall) {
+                            field = ((SqlBasicCall) field).operand(0);
+                        }
+                        query.getGroup().set(i, field);
+                    }
                 }
             }
         }
 
         for (int i = 0; i < query.getSelectList().size(); i++) {
-            SqlNode item = query.getSelectList().get(i);
-            if (item instanceof SqlBasicCall) {
-                SqlBasicCall call = (SqlBasicCall)item;
-                if (call.getOperator().toString().equalsIgnoreCase("GROUP_CONCAT")) {
-                    String operatorName = "COLLECT_LIST";
-                    if (call.getFunctionQuantifier() != null &&call.getFunctionQuantifier().getValue().toString()
-                            .equalsIgnoreCase("DISTINCT")) {
-                        operatorName = "COLLECT_SET";
-                    }
-                    SqlIdentifier id = call.getOperator().getNameAsId().setName(0, operatorName);
-
-                    SqlOperator op = new SqlUserDefinedFunction(id, null, null, null, new ArrayList<RelDataType>(), null);
-                    query.getSelectList().set(i, new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition()));
-                    if (this.transforms.stream().noneMatch(t -> t.name().equals("serializeArray"))) {
-                        Transform arraySerializer = new Transform("serializeArray", "com.viasat.burroughs.smt.SerializeArray$Value");
-                        if (call.getOperandList().size() > 1) {
-                            String separator = call.operand(1).toString();
-                            separator = separator.substring(1, separator.length() - 1);
-                            arraySerializer.addProperty("separator", separator);
-                        }
-                        transforms.add(arraySerializer);
-                    }
-                }
-            }
+            SqlNode newNode = translateFunction(query.getSelectList().get(i));
+            query.getSelectList().set(i, newNode);
         }
 
         String preparedQuery = query.toString();
@@ -173,6 +194,40 @@ public class SimpleQuery extends QueryBase {
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
         return preparedQuery;
+    }
+
+    private SqlNode translateFunction(SqlNode item) {
+        if (item instanceof SqlBasicCall) {
+            SqlBasicCall call = (SqlBasicCall)item;
+            if (call.getOperator().toString().equalsIgnoreCase("AS")) {
+                call.setOperand(0, translateFunction(call.operand(0)));
+                return call;
+            }
+            else if (call.getOperator().toString().equalsIgnoreCase("GROUP_CONCAT")) {
+                String operatorName = "COLLECT_LIST";
+                if (call.getFunctionQuantifier() != null &&call.getFunctionQuantifier().getValue().toString()
+                        .equalsIgnoreCase("DISTINCT")) {
+                    operatorName = "COLLECT_SET";
+                }
+                SqlIdentifier id = call.getOperator().getNameAsId().setName(0, operatorName);
+
+                SqlOperator op = new SqlUserDefinedFunction(id, null, null, null, new ArrayList<RelDataType>(), null);
+                if (this.transforms.stream().noneMatch(t -> t.name().equals("serializeArray"))) {
+                    Transform arraySerializer = new Transform("serializeArray", "com.viasat.burroughs.smt.SerializeArray$Value");
+                    if (call.getOperandList().size() > 1) {
+                        String separator = call.operand(1).toString();
+                        separator = separator.substring(1, separator.length() - 1);
+                        arraySerializer.addProperty("separator", separator);
+                    }
+                    transforms.add(arraySerializer);
+                }
+                return new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition());
+            }
+            else if (call.getOperator().toString().equalsIgnoreCase("CAST")) {
+
+            }
+        }
+        return item;
     }
 
     /**
@@ -193,7 +248,13 @@ public class SimpleQuery extends QueryBase {
         Collections.reverse(streams); // Delete streams in the reverse order they were created
         for (String stream : streams) {
             Logger.getLogger().write("Dropping stream " + stream + "...");
-            dropStream(stream);
+            if (stream.toUpperCase().startsWith("BURROUGHS")) {
+                dropStream(stream);
+            }
+            else {
+                terminateQueries(stream);
+                dropStreamAndTopic(service, stream);
+            }
             Logger.getLogger().write("Done\n");
         }
     }

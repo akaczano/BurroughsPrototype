@@ -12,5 +12,19 @@
         "delimiter": ","
       }
     }
+  },
+  {
+    "name": "test_customers",
+    "topic": "test_customers",
+    "schema": "customer.avsc",
+    "key_field": "BasketNum",
+    "data_source": {
+      "type": "file",
+      "source": {
+        "location": "datafiles/customers.csv",
+        "header": true,
+        "delimiter": ","
+      }
+    }
   }
 ]

@@ -139,6 +139,12 @@ public abstract class QueryBase {
         return tableName;
     }
 
+    protected String createStream(String name, String query) {
+        String ksql = String.format("CREATE STREAM %s as %s EMIT CHANGES;", name, query);
+        CommandResponse result = service.executeStatement(ksql, "create stream");
+        return name;
+    }
+
     /**
      * Creates a ksqlDB stream
      *
@@ -294,7 +300,7 @@ public abstract class QueryBase {
      *
      * @param objectName The object to check, usually a table
      */
-    private void terminateQueries(String objectName) {
+    protected void terminateQueries(String objectName) {
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
