@@ -8,6 +8,9 @@ import com.viasat.burroughs.service.model.StatementError;
 public class ExecutionException extends RuntimeException {
     public ExecutionException(String message) {
         super(message);
+	
+	//lines added below
+	System.out.println("An error has occured during query processing.  Please type '.debug' in the CLI to view traceback.");
     }
 
     /**
@@ -16,5 +19,7 @@ public class ExecutionException extends RuntimeException {
      */
     public ExecutionException(StatementError e) {
         super(e.getMessage());
+	//lines added below
+	System.out.println("An error has occured during query processing.  Please type '.debug' in the CLI to view traceback.");
     }
 }
