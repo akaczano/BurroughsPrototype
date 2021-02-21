@@ -170,6 +170,7 @@ public abstract class QueryBase {
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
 	DebugLevels.debugLevel += query;  //added
+        DebugLevels.debugLevel2+=streamName+" was created with the format "+format.toString(); 
         return streamName;
     }
     /**
@@ -181,11 +182,13 @@ public abstract class QueryBase {
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
         DebugLevels.debugLevel+= "The stream and topic are being dropped";
+        DebugLevels.debugLevel2+= streamName+" is being dropped along with the topic";
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
         DebugLevels.debugLevel+= "The command response is" + result;
-
+        DebugLevels.debugLevel2+= "The hostname for service "+ service + " is: "+ service+"/ksql";
+        
         return result;
 
     }
@@ -291,6 +294,7 @@ public abstract class QueryBase {
      */
     private void terminateQuery(String queryId) {
         DebugLevels.debugLevel+= "Query is being terminated: ";
+        DebugLevels.debugLevel2+="The id of the query that is being terminated is "+ queryId;
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
@@ -301,6 +305,8 @@ public abstract class QueryBase {
         else
         {
          DebugLevels.debugLevel+="The command response is "+ result;   
+         DebugLevels.debugLevel2+="The statement that is being executed is "+ String.format("TERMINATE %s;", queryId)+ 
+         " with a message: " + " terminate query";
         }
         }
     
@@ -320,6 +326,9 @@ public abstract class QueryBase {
         for (Query query : description.getSourceDescription().getWriteQueries()) {
             terminateQuery(query.getId());
         }
+        DebugLevels.debugLevel2+="A description of the service is "+ description;
+        
+        
     }
 
     /**

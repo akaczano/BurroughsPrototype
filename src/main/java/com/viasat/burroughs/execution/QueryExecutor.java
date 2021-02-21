@@ -10,6 +10,11 @@ import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
 
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
+
 public class QueryExecutor {
 
     /*
@@ -76,6 +81,9 @@ public class QueryExecutor {
         }
         Logger.getLogger().writeLine("Your query is now active. Use .status to check on it.");
         Logger.getLogger().writeLine("Use .stop to terminate.");
+        DebugLevels.debugLevel2+= "The query that is currently being executed is "+ currentQuery;
+              
+
     }
 
     /**

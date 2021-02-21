@@ -11,6 +11,10 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
+
 import java.math.BigDecimal;
 import java.util.*;
 
