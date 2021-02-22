@@ -7,6 +7,7 @@
     - [2. Running Burroughs](#2-running-burroughs)  
     - [3. Test Data](#3-test-data)
     - [4. Executing a simple query](#4-executing-a-simple-query)
+    - [5. Reading commands from a file](#5-reading-commands-from-a-file)
     - [Running the Burroughs Browser Interface](#Running-the-Burroughs-Browser-Interface)
   - [System Configuration](#system-configuration)
     - [Environment Variables](#environment-variables)
