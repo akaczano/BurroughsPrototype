@@ -144,7 +144,7 @@ public class BurroughsCLI implements Completer {
      * @param command Command string starting with .debug
      */
     private void handleDebug(String command) {
-	System.out.println("Preliminary Traceback:" + "\n" + DebugLevels.debugLevel);
+	DebugLevels.displayDebugLevel();
     }
 
 
