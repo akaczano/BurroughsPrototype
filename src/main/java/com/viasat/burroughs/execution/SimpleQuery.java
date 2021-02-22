@@ -86,7 +86,7 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private void createStreams(Map<String, String> replacements, SqlNode from) {
-	DebugLevels.debugLevel += "createStreams inputs: "+ replacements + " and "+ from + '\n';
+	DebugLevels.appendDebugLevels("createStreams inputs: "+ replacements + " and "+ from);
         if (from instanceof SqlJoin) {
 	    DebugLevels.debugLevel += "createStreams: interpreting " + from + " as SqlJoin." + '\n';
             SqlJoin join = (SqlJoin)from;
@@ -98,12 +98,12 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, join.getRight());
         }
         else if (from instanceof SqlSelect) {
-	    DebugLevels.debugLevel += "createStreams: interpreting " + from + " as SqlSelect." + '\n';
+	    DebugLevels.appendDebugLevels("createStreams: interpreting " + from + " as SqlSelect.");
 
             // TODO somehow deal with subqueries
         }
         else if (from instanceof SqlBasicCall) {
-	    DebugLevels.debugLevel += "createStreams: interpreting " + from + " as SqlBasicCall." + '\n';
+	    DebugLevels.appendDebugLevels("createStreams: interpreting " + from + " as SqlBasicCall.");
 
             SqlBasicCall call = (SqlBasicCall)from;
             createStreams(replacements, call.operand(0));
@@ -178,14 +178,14 @@ public class SimpleQuery extends QueryBase {
                 }
             }
         }
-	DebugLevels.debugLevel += "translateQuery (loop 2) generated " + query + '\n';
+	DebugLevels.appendDebugLevel2("translateQuery (loop 2) generated " + query);
 
         String preparedQuery = query.toString();
         for (String key : replacements.keySet()) {
             preparedQuery = preparedQuery.replace(key, replacements.get(key));
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
-	DebugLevels.debugLevel += "translateQuery (loop 3) generated: " + preparedQuery + '\n';
+	DebugLevels.appendDebugLevel2("translateQuery (loop 3) generated: " + preparedQuery);
 
         return preparedQuery;
     }
