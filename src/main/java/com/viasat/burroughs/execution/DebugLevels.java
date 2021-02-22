@@ -1,5 +1,5 @@
+package com.viasat.burroughs.ConsoleLogger;
 package com.viasat.burroughs.execution;
-package com.viasat.burroughs;
 
 
 public class DebugLevels {
@@ -25,6 +25,7 @@ public class DebugLevels {
 
 	public void displayDebugLevel2() {
 		Logger.getLogger().writeLine(debugLevel2);
+	}
 
 
 }

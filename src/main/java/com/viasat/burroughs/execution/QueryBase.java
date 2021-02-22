@@ -180,7 +180,7 @@ public abstract class QueryBase {
      * @return The name of the stream
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
-        DebugLevels.debugLevel.appendDebugLevel("The stream and topic are being dropped");
+        DebugLevels.debugLevel.appendDebugLevel2("The stream " + steamName + " is being dropped. " + service);
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
@@ -227,6 +227,7 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
+	    DebugLevels.debugLevel.appendDebugLevel("Trying to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
         return "burr_connect_" + id;
@@ -246,6 +247,7 @@ public abstract class QueryBase {
         for (Field f : description.getSourceDescription().getFields()) {
             results.put(f.getName(), f.getSchema().getType());
         }
+	DebugLevels.debuglevel.appendDebugLevel2("generated " + results + "from getSchema.");
         return results;
     }
 
@@ -300,9 +302,9 @@ public abstract class QueryBase {
         }
         else
         {
-         DebugLevels.debugLevel+="The command response is "+ result;   
+         DebugLevels.appendDebugLevel("The command response is " + result);
         }
-        }
+    }
     
 
     /**
@@ -311,7 +313,7 @@ public abstract class QueryBase {
      * @param objectName The object to check, usually a table
      */
     private void terminateQueries(String objectName) {
-        DebugLevels.debugLevel+="We are terminating queries for" + objectName;
+        DebugLevels.appendDebugLevel2("We are terminating queries for" + objectName);
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
