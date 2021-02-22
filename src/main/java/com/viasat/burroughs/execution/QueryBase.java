@@ -180,11 +180,11 @@ public abstract class QueryBase {
      * @return The name of the stream
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
-        DebugLevels.debugLevel+= "The stream and topic are being dropped";
+        DebugLevels.debugLevel.appendDebugLevel("The stream and topic are being dropped");
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
-        DebugLevels.debugLevel+= "The command response is" + result;
+        DebugLevels.debugLevel.appendDebugLevel("The command response: " + result);
 
         return result;
 
