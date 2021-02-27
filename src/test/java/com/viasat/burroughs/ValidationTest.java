@@ -1,5 +1,6 @@
 package com.viasat.burroughs;
 
+import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.validation.QueryValidator;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
@@ -50,7 +51,6 @@ public class ValidationTest extends ServiceTest{
             validator.validateQuery("SELECT STORER FROM valid_topic");
             Assert.assertNotNull(null);
         } catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
-            System.out.println(e.getMessage());
             Assert.assertTrue(e instanceof UnsupportedQueryException);
         }
     }
@@ -60,7 +60,6 @@ public class ValidationTest extends ServiceTest{
             validator.validateQuery("SELECT SUM(SPEND) STORER FRoOM valid_topic");
             Assert.assertNotNull(null);
         } catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
-            System.out.println(e.getMessage());
             Assert.assertTrue(e instanceof SqlParseException);
         }
     }
@@ -70,7 +69,6 @@ public class ValidationTest extends ServiceTest{
         try {
             validator.validateQuery("SELECT SUM(SPEND), STORER FROM valid_topic GROUP BY STORER");
         } catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
-            System.out.println(e.getMessage());
             fail();
         }
     }
@@ -103,7 +101,7 @@ public class ValidationTest extends ServiceTest{
                     "    select\n" +
                     "        it1.productnum as source_item,\n" +
                     "        it2.productnum as target_item\n" +
-                    "    from transactions it1\n" +
+                    "    from valid_topic it1\n" +
                     "    inner join transactions2 it2\n" +
                     "        on it1.basketnum = it2.basketnum\n" +
                     "        and it1.productnum != it2.productnum\n" +
@@ -130,8 +128,63 @@ public class ValidationTest extends ServiceTest{
             validator.validateQuery("select storer, sum(spend) from valid_topic group by 1 limit 10");
         }
         catch (UnsupportedQueryException | TopicNotFoundException | SqlParseException e) {
+            e.printStackTrace();
             fail();
         }
     }
 
+    @Test
+    public void testValidateBadSubquery() {
+        try {
+            validator.validateQuery("select store, sum(spend) from (select * from valid_topic limit 10) group by 1");
+            fail();
+        }
+        catch(UnsupportedQueryException | TopicNotFoundException | SqlParseException e) {
+            Assert.assertTrue(e instanceof UnsupportedQueryException);
+        }
+    }
+
+    @Test
+    public void testValidateBadCTE() {
+        try {
+            validator.validateQuery("with things as (select * from valid_topic order by storer desc) select storer, sum(spend) from things");
+            fail();
+        }
+        catch (UnsupportedQueryException | TopicNotFoundException | SqlParseException e) {
+            Assert.assertTrue(e instanceof UnsupportedQueryException);
+        }
+    }
+
+    @Test
+    public void testInvalidTopicCTE() {
+        try {
+            validator.validateQuery("with things as (select * from foo) select storer, sum(spend) from things group by 1");
+            fail();
+        }
+        catch(UnsupportedQueryException | TopicNotFoundException | SqlParseException e) {
+            Assert.assertTrue(e instanceof TopicNotFoundException);
+        }
+    }
+
+    @Test
+    public void testInvalidTopicSubquery() {
+        try {
+            validator.validateQuery("select storer, sum(spend) from (select * from foo) group by 1");
+        } catch(UnsupportedQueryException | TopicNotFoundException | SqlParseException e) {
+            Assert.assertTrue(e instanceof TopicNotFoundException);
+        }
+    }
+
+    @Test
+    public void testForwardReference() {
+        try {
+            String query = "with transactions1 as (select * from valid_topic), " +
+                    "transactions2 as (select * from transactions1) " +
+                    "select storer, sum(spend) from transactions2 group by 1";
+            validator.validateQuery(query);
+        } catch(SqlParseException | UnsupportedQueryException | TopicNotFoundException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
 }

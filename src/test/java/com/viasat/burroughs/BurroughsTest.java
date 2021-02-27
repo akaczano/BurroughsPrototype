@@ -102,7 +102,14 @@ public abstract class BurroughsTest {
             }
             selectList.append(String.format("\"%s\"", field.toUpperCase()));
         }
-        selectList.append(String.format(" from %s order by \"%s\";", table, key.toUpperCase()));
+        String orderby = "";
+        for (String field : key.split(",")) {
+            if (orderby.length() > 0) {
+                orderby += ",";
+            }
+            orderby += "\"" + field.toUpperCase() + "\"";
+        }
+        selectList.append(String.format(" from %s order by %s;", table, orderby));
         ResultSet actual = db.createStatement().executeQuery(selectList.toString());
         while (expected.next()) {
             Assert.assertTrue(actual.next());

@@ -28,7 +28,7 @@ public class SimpleQuery extends QueryBase {
     private String connector = null;
 
     // All of the associated streams
-    private final List<String> streams = new ArrayList<>();
+    private final List<StreamEntry> streams = new ArrayList<>();
 
     // Not currently in use
     private String groupby;
@@ -73,10 +73,11 @@ public class SimpleQuery extends QueryBase {
                 SqlWithItem withItem = (SqlWithItem) n;
                 SqlSelect select = (SqlSelect) withItem.query;
                 Map<String, String> replacements = new HashMap<>();
-                createStreams(replacements, select.getFrom());
-                String queryText = translateQuery(select, replacements);
+                List<SqlBasicCall> extras = new ArrayList<>();
+                createStreams(replacements, select.getFrom(), extras);
+                String queryText = translateQuery(select, replacements, extras);
                 String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
-                streams.add(name);
+                streams.add(new StreamEntry(name, true));
             }
         }
 
@@ -88,10 +89,11 @@ public class SimpleQuery extends QueryBase {
 
         // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();
-        createStreams(replacements, query.getFrom());
+        List<SqlBasicCall> extras = new ArrayList<>();
+        createStreams(replacements, query.getFrom(), extras);
 
         // Create table and connector
-        String queryString = translateQuery(query, replacements);
+        String queryString = translateQuery(query, replacements, extras);
         Logger.getLogger().write("Creating table...");
         table = createTable(properties.getId(), queryString);
         Logger.getLogger().write("Done\n");
@@ -107,34 +109,37 @@ public class SimpleQuery extends QueryBase {
      * @param replacements
      * @param from
      */
-    private void createStreams(Map<String, String> replacements, SqlNode from) {
+    private void createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
+            translateCondition(join.getCondition(), extras);
+
             String condition = String.format("%s %s", join.getConditionType().toString(),
                     join.getCondition().toString());
             replacements.put(condition, String.format("WITHIN %d DAYS %s",
                     Integer.MAX_VALUE, condition));
-            createStreams(replacements, join.getLeft());
-            createStreams(replacements, join.getRight());
+            createStreams(replacements, join.getLeft(), extras);
+            createStreams(replacements, join.getRight(), extras);
         }
         else if (from instanceof SqlSelect) {
             SqlSelect subquery = (SqlSelect)from;
             Map<String, String> sqReplacements = new HashMap<>();
-            createStreams(sqReplacements, subquery.getFrom());
-            String queryText = translateQuery(subquery, sqReplacements);
+            List<SqlBasicCall> sqExtras = new ArrayList<>();
+            createStreams(sqReplacements, subquery.getFrom(), sqExtras);
+            String queryText = translateQuery(subquery, sqReplacements, sqExtras);
             if (names.isEmpty()) {
                 names.push(getId() + "_" + subqueryCounter++);
             }
             String stream = createStream(names.pop(), queryText);
             replacements.put("(" + subquery.toString() + ")", stream);
-            streams.add(stream);
+            streams.add(new StreamEntry(stream, true));
         }
         else if (from instanceof SqlBasicCall) {
             SqlBasicCall call = (SqlBasicCall)from;
             if (call.getOperator().toString().equalsIgnoreCase("AS") && call.operand(0) instanceof SqlSelect) {
                 names.push(call.operand(1).toString());
             }
-            createStreams(replacements, call.operand(0));
+            createStreams(replacements, call.operand(0), extras);
         }
         else if (from instanceof SqlIdentifier) {
             SqlIdentifier identifier = (SqlIdentifier)from;
@@ -142,7 +147,7 @@ public class SimpleQuery extends QueryBase {
             String streamName = String.format("burroughs_%s", identifier.toString());
             Logger.getLogger().write(String.format("Creating stream %s...", streamName));
             if (!streamExists(streamName)) {
-                streams.add(createStream(streamName, identifier.getSimple().toLowerCase(), Format.AVRO));
+                streams.add(new StreamEntry(createStream(streamName, identifier.getSimple().toLowerCase(), Format.AVRO), false));
                 Logger.getLogger().write("Done\n");
             }
             else {
@@ -165,7 +170,7 @@ public class SimpleQuery extends QueryBase {
      * @param replacements The replacements to perform
      * @return The fully translated query string to pass to a create table statement
      */
-    private String translateQuery(SqlSelect query, Map<String, String> replacements) {
+    private String translateQuery(SqlSelect query, Map<String, String> replacements, List<SqlBasicCall> extras) {
         if (query.getGroup() != null) {
             for (int i = 0; i < query.getGroup().getList().size(); i++) {
                 SqlNode n = query.getGroup().get(i);
@@ -182,6 +187,23 @@ public class SimpleQuery extends QueryBase {
                 }
             }
         }
+        if (extras.size() > 0) {
+            SqlBinaryOperator andOperator = new SqlBinaryOperator("AND", SqlKind.AND, 24, false, null, null, null);
+            SqlBasicCall base = extras.get(0);
+            for (int i = 1; i < extras.size(); i++) {
+                base = new SqlBasicCall(andOperator,
+                        new SqlNode[]{base, extras.get(i)}, base.getParserPosition());
+            }
+            if (query.getWhere() == null) {
+                query.setWhere(base);
+            }
+            else {
+                SqlBasicCall where = (SqlBasicCall) query.getWhere();
+                SqlBasicCall compoundWhere = new SqlBasicCall(andOperator,
+                        new SqlNode[]{where, base}, where.getParserPosition());
+                query.setWhere(compoundWhere);
+            }
+        }
 
         for (int i = 0; i < query.getSelectList().size(); i++) {
             SqlNode newNode = translateFunction(query.getSelectList().get(i));
@@ -194,6 +216,21 @@ public class SimpleQuery extends QueryBase {
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
         return preparedQuery;
+    }
+
+    private void translateCondition(SqlNode condition, List<SqlBasicCall> rejects) {
+        if (condition instanceof SqlBasicCall) {
+            SqlBasicCall call = (SqlBasicCall) condition;
+            if (call.getOperator().getName().equalsIgnoreCase("AND")) {
+                SqlBasicCall firstCondition = call.operand(0);
+                SqlBasicCall secondCondition = call.operand(1);
+                call.setOperator(firstCondition.getOperator());
+                call.setOperand(0, firstCondition.operand(0));
+                call.setOperand(1, firstCondition.operand(1));
+                rejects.add(secondCondition);
+                translateCondition(call, rejects);
+            }
+        }
     }
 
     private SqlNode translateFunction(SqlNode item) {
@@ -246,14 +283,14 @@ public class SimpleQuery extends QueryBase {
             Logger.getLogger().write("Done\n");
         }
         Collections.reverse(streams); // Delete streams in the reverse order they were created
-        for (String stream : streams) {
+        for (StreamEntry stream : streams) {
             Logger.getLogger().write("Dropping stream " + stream + "...");
-            if (stream.toUpperCase().startsWith("BURROUGHS")) {
-                dropStream(stream);
+            terminateQueries(stream.getStreamName());
+            if (stream.isDeleteTopic()) {
+                dropStreamAndTopic(service, stream.getStreamName());
             }
             else {
-                terminateQueries(stream);
-                dropStreamAndTopic(service, stream);
+                dropStream(stream.getStreamName());
             }
             Logger.getLogger().write("Done\n");
         }

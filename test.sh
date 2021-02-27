@@ -1,3 +1,10 @@
+if [ $# -lt 1 ]; then
+	echo "Please specify the Confluent cluster to use: either local or scholar"
+	exit
+fi
+
+
+
 if [ $1 = "local" ]; then
 	export KSQL_HOST=http://localhost:8088
 	export DB_HOST=localhost:5432
@@ -27,3 +34,4 @@ fi
 export PRODUCER_PATH=src/test/producer
 mvn -Dtest=com.viasat.burroughs.BasicQueryTest test
 mvn -Dtest=com.viasat.burroughs.ValidationTest test
+mvn -Dtest=com.viasat.burroughs.AdvancedQueryTest test
