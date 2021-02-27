@@ -57,7 +57,7 @@ public class SimpleQuery extends QueryBase {
      */
     @Override
     public void execute() {
-        setGroupByDataType(determineDataType(groupby, query.getFrom().toString()));
+        setGroupByDataType(determineDataType(groupby, query));
 
         // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();

@@ -88,16 +88,28 @@ public abstract class QueryBase {
      * Determine what data type the group by string is
      *
      * @param groupBy A string representing what the query is grouping by
-     * @param topic The topic referenced in the query
+     * @param query The query being passed in
      */
-    public DataType determineDataType(String groupBy, String topic) {
+    public DataType determineDataType(String groupBy, SqlSelect query) {
+        String topic = query.getFrom().toString();
         if (groupBy == null) {
             return DataType.STRING;
         }
-        if (topic.toUpperCase().contains("AS")) {
+        String isIntRegex = "([0-9]+)";
+        if (groupBy.matches(isIntRegex)) {
+            groupBy = query.getSelectList().toArray()[Integer.parseInt(groupBy) - 1].toString();
+            return dataTypeFromTopic(topic, groupBy);
+        }
+        if (topic.toLowerCase().contains("as")) {
             topic = mapAliases(topic).get(groupBy.substring(0 , groupBy.indexOf(".")));
             groupBy = groupBy.substring(groupBy.indexOf(".")+1);
+            return dataTypeFromTopic(topic, groupBy);
         }
+        return dataTypeFromTopic(topic, groupBy);
+    }
+
+    private DataType dataTypeFromTopic(String topic, String groupBy) {
+        topic = topic.toLowerCase();
         if (!streamExists(service, "BURROUGHS_" + topic)) {
             createStream(service, "BURROUGHS_" + topic, topic,
                     Format.AVRO);
