@@ -98,12 +98,39 @@ public abstract class QueryBase {
         String isIntRegex = "([0-9]+)";
         if (groupBy.matches(isIntRegex)) {
             groupBy = query.getSelectList().toArray()[Integer.parseInt(groupBy) - 1].toString();
-            return dataTypeFromTopic(topic, groupBy);
         }
         if (topic.toLowerCase().contains("as")) {
-            topic = mapAliases(topic).get(groupBy.substring(0 , groupBy.indexOf(".")));
-            groupBy = groupBy.substring(groupBy.indexOf(".")+1);
+            if (groupBy.contains(".")) {
+                topic = mapAliases(topic).get(groupBy.substring(0, groupBy.indexOf(".")));
+                groupBy = groupBy.substring(groupBy.indexOf(".") + 1);
+            } else {
+                DataType result = DataType.ARRAY;
+                Map<String, String> topics = mapAliases(topic);
+                for (Map.Entry<String,String> t : topics.entrySet()) {
+                    result = dataTypeFromTopic(t.getValue(), groupBy);
+                    if (result != DataType.ARRAY) return result;
+                }
+                return result;
+            }
             return dataTypeFromTopic(topic, groupBy);
+        }
+        if (topic.toLowerCase().contains("join")) {
+            List<String> topicList = new ArrayList<>();
+            List<String> tempList = new ArrayList<>(Arrays.asList(topic.split("[ |\\n]")));
+            for (int i = 0; i < tempList.size(); i++) {
+                if (i == 0) {
+                    topicList.add(tempList.get(i).replaceAll("`", ""));
+                }
+                else if (tempList.get(i).toLowerCase().equals("join")) {
+                    topicList.add(tempList.get(i+1).replaceAll("`", ""));
+                }
+            }
+            DataType result = DataType.ARRAY;
+            for (String t : topicList) {
+                result = dataTypeFromTopic(t, groupBy);
+                if (result != DataType.ARRAY) return result;
+            }
+            return result;
         }
         return dataTypeFromTopic(topic, groupBy);
     }
@@ -129,9 +156,10 @@ public abstract class QueryBase {
         Map<String, String> aliasMap = new HashMap<>();
         List<String> topicList = new ArrayList<>(Arrays.asList(topic.split("[ |\\n]")));
         for (int i = 0; i < topicList.size(); i++) {
-            if (topicList.get(i).toUpperCase().equals("AS")) {
-                aliasMap.put(topicList.get(i + 1).replaceAll("`", ""),
-                            topicList.get(i - 1).replaceAll("`", ""));
+            if (topicList.get(i).toLowerCase().equals("as")) {
+                aliasMap.put(topicList.get(i + 1).replaceAll("`", "")
+                                .replaceAll(",", ""),
+                        topicList.get(i - 1).replaceAll("`", ""));
             }
         }
         return aliasMap;
