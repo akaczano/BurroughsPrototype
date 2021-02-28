@@ -170,8 +170,9 @@ public abstract class QueryBase {
         String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
-	DebugLevels.appendDebugLevel(query + "and the status is " + result.getCommandStatus());  //added
-        DebugLevels.appendebugLevel2(streamName+" was created with the format "+format.toString()); 
+
+	DebugLevels.appendDebugLevel2(query);  //added
+
         return streamName;
     }
     /**
@@ -182,11 +183,13 @@ public abstract class QueryBase {
      * @return The name of the stream
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
-        DebugLevels.debugLevel.appendDebugLevel2("The stream " + steamName + " is being dropped. " + service);
+        DebugLevels.appendDebugLevel2("The stream " + streamName + " is being dropped. " + service);
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
-        DebugLevels.debugLevel.appendDebugLevel("The command response: " + result + "and the status is " + result.getCommandStatus());
+
+        DebugLevels.appendDebugLevel("The command response: " + result);
+
 
         return result;
 
@@ -229,7 +232,7 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
-	    DebugLevels.debugLevel.appendDebugLevel("Trying to create connector using: " + response);
+	    DebugLevels.appendDebugLevel("Trying to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
         return "burr_connect_" + id;
@@ -252,8 +255,10 @@ public abstract class QueryBase {
         Map<String, DataType> results = new HashMap<>();
         for (Field f : description.getSourceDescription().getFields()) {
             results.put(f.getName(), f.getSchema().getType());
-			
-	DebugLevels.debuglevel.appendDebugLevel2("generated " + results + "from getSchema.");
+
+        }
+	DebugLevels.appendDebugLevel2("generated " + results + "from getSchema.");
+
         return results;
     }
 
@@ -299,7 +304,7 @@ public abstract class QueryBase {
      */
     private void terminateQuery(String queryId) {
         DebugLevels.appendDebugLevel("Query is being terminated: ");
-        DebugLevels.appendDebugLevel2("The id of the query that is being terminated is "+ queryId);
+
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
