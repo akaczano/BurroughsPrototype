@@ -10,7 +10,7 @@ public class ExecutionException extends RuntimeException {
         super(message);
 	
 	//lines added below
-	System.out.println("An error has occured during query processing.  Please type '.debug' in the CLI to view traceback.");
+	System.out.println("An error has occured during query processing.  Please type '.debug <level number>' in the CLI to view traceback. '\n\t'<level number>: 1 = displays general traceback of SQL query transformation. '\n\t' 2 = displays more detailed traceback of SQL query transformation");
     }
 
     /**
@@ -20,6 +20,8 @@ public class ExecutionException extends RuntimeException {
     public ExecutionException(StatementError e) {
         super(e.getMessage());
 	//lines added below
-	System.out.println("An error has occured during query processing.  Please type '.debug' in the CLI to view traceback.");
+    	System.out.println("An error has occured during query processing.  Please type '.debug <level number>' in the CLI to view traceback. '\n\t'<level number>: 1 = displays general traceback of SQL query transformation. '\n\t' 2 = displays more detailed traceback of SQL query transformation");
+
     }
+
 }

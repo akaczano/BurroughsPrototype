@@ -87,6 +87,9 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private void createStreams(Map<String, String> replacements, SqlNode from) {
+
+	DebugLevels.appendDebugLevels("createStreams inputs: "+ replacements + " and "+ from);
+
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
             String condition = String.format("%s %s", join.getConditionType().toString(),
@@ -97,9 +100,15 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, join.getRight());
         }
         else if (from instanceof SqlSelect) {
+
+	    DebugLevels.appendDebugLevels("createStreams: interpreting " + from + " as SqlSelect.");
+
             // TODO somehow deal with subqueries
         }
         else if (from instanceof SqlBasicCall) {
+	    DebugLevels.appendDebugLevels("createStreams: interpreting " + from + " as SqlBasicCall.");
+
+
             SqlBasicCall call = (SqlBasicCall)from;
             createStreams(replacements, call.operand(0));
         }
@@ -173,11 +182,18 @@ public class SimpleQuery extends QueryBase {
             }
         }
 
+	DebugLevels.appendDebugLevel2("translateQuery (loop 2) generated " + query);
+
+
         String preparedQuery = query.toString();
         for (String key : replacements.keySet()) {
             preparedQuery = preparedQuery.replace(key, replacements.get(key));
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
+
+	DebugLevels.appendDebugLevel2("translateQuery (loop 3) generated: " + preparedQuery);
+
+
         return preparedQuery;
     }
 

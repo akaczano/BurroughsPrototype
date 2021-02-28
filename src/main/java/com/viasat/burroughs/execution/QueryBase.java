@@ -37,7 +37,7 @@ public abstract class QueryBase {
 
     /**
      * Kafka service that can access Kafka broker directly. Used to get consumer
-     * group offsets during .status execution
+     * group offsets during .getCommandStatus() execution
      */
     protected final KafkaService kafkaService;
 
@@ -140,7 +140,8 @@ public abstract class QueryBase {
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
-        return tableName;
+        DebugLevels.appendDebugLevel= "The status of the result object is "+ result.getCommandStatus();
+		return tableName;
     }
 
     /**
@@ -169,8 +170,8 @@ public abstract class QueryBase {
         String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
-	DebugLevels.debugLevel += query;  //added
-        DebugLevels.debugLevel2+=streamName+" was created with the format "+format.toString(); 
+	DebugLevels.appendDebugLevel(query + "and the status is " + result.getCommandStatus());  //added
+        DebugLevels.appendebugLevel2(streamName+" was created with the format "+format.toString()); 
         return streamName;
     }
     /**
@@ -181,14 +182,12 @@ public abstract class QueryBase {
      * @return The name of the stream
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
-        DebugLevels.debugLevel+= "The stream and topic are being dropped";
-        DebugLevels.debugLevel2+= streamName+" is being dropped along with the topic";
+        DebugLevels.debugLevel.appendDebugLevel2("The stream " + steamName + " is being dropped. " + service);
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
-        DebugLevels.debugLevel+= "The command response is" + result;
-        DebugLevels.debugLevel2+= "The hostname for service "+ service + " is: "+ service+"/ksql";
-        
+        DebugLevels.debugLevel.appendDebugLevel("The command response: " + result + "and the status is " + result.getCommandStatus());
+
         return result;
 
     }
@@ -230,9 +229,14 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
+	    DebugLevels.debugLevel.appendDebugLevel("Trying to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
         return "burr_connect_" + id;
+		DebugLevels.debugLevel.appendDebugLevel("The status is " + result.getCommandStatus());
+		
+		
+		
     }
 
     /**
@@ -248,7 +252,8 @@ public abstract class QueryBase {
         Map<String, DataType> results = new HashMap<>();
         for (Field f : description.getSourceDescription().getFields()) {
             results.put(f.getName(), f.getSchema().getType());
-        }
+			
+	DebugLevels.debuglevel.appendDebugLevel2("generated " + results + "from getSchema.");
         return results;
     }
 
@@ -293,22 +298,22 @@ public abstract class QueryBase {
      * @param queryId The query to terminate
      */
     private void terminateQuery(String queryId) {
-        DebugLevels.debugLevel+= "Query is being terminated: ";
-        DebugLevels.debugLevel2+="The id of the query that is being terminated is "+ queryId;
+        DebugLevels.appendDebugLevel("Query is being terminated: ");
+        DebugLevels.appendDebugLevel2("The id of the query that is being terminated is "+ queryId);
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
         
-        if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
+        if (!result.getStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
         }
         else
         {
-         DebugLevels.debugLevel+="The command response is "+ result;   
-         DebugLevels.debugLevel2+="The statement that is being executed is "+ String.format("TERMINATE %s;", queryId)+ 
-         " with a message: " + " terminate query";
+
+         DebugLevels.appendDebugLevel("The command response is " + result);
+
         }
-        }
+    }
     
 
     /**
@@ -317,7 +322,7 @@ public abstract class QueryBase {
      * @param objectName The object to check, usually a table
      */
     private void terminateQueries(String objectName) {
-        DebugLevels.debugLevel+="We are terminating queries for" + objectName;
+        DebugLevels.appendDebugLevel2("We are terminating queries for" + objectName);
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
@@ -326,7 +331,7 @@ public abstract class QueryBase {
         for (Query query : description.getSourceDescription().getWriteQueries()) {
             terminateQuery(query.getId());
         }
-        DebugLevels.debugLevel2+="A description of the service is "+ description;
+        DebugLevels.appendDebugLevel2("A description of the service is "+ description);
         
         
     }
@@ -363,7 +368,9 @@ public abstract class QueryBase {
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
-    }
+		DebugLevels.appendDebugLevel("The status of the result object is "+ result.getCommandStatus());
+		
+	}
 
 
     protected TableStatus getTableStatus(String tableName) {

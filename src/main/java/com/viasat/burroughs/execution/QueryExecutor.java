@@ -51,7 +51,7 @@ public class QueryExecutor {
      */
     public void executeQuery(SqlSelect query) {
 
-	DebugLevels.debugLevel += query.toString();  //added
+	DebugLevels.appendDebugLevel("executeQuery input: " + query.toString());  //added
 
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
@@ -93,6 +93,8 @@ public class QueryExecutor {
         if (currentQuery != null) {
             currentQuery.destroy();
             currentQuery = null;
+
+	    DebugLevels.clearDebugLevels();  //added to clear debug traceback
         }
         else {
             Logger.getLogger().writeLine("No active query. Type some SQL to run one.");

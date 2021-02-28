@@ -465,6 +465,10 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tresume: resumes producer operation");
         System.out.println("\tkill: stops producer operation");
         System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
+	
+	System.out.println("\tdebug <debug value>");
+	System.out.println("\tdebug value: 1 = shows the kSQL query(ies) executed;  2 = shows = more in-depth traceback of query transofmration");
+
         System.out.println(".file <file name> <delimiter>");
         System.out.println("\tReads and executes commands and/or a query from the specified file.");
         System.out.println(".quit");
