@@ -46,7 +46,7 @@ public class QueryExecutor {
      */
     public void executeQuery(SqlSelect query) {
 
-	DebugLevels.appendDebugLevel("executeQuery input: " + query.toString());  //added
+	DebugLevels.appendDebugLevel("Executing Query:" + '\n' + query.toString());  //added
 
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
@@ -67,6 +67,7 @@ public class QueryExecutor {
         }
         try {
             // Show time
+	    //DebugLevels.appendDebugLevel(currentQuery.toString());
             currentQuery.execute();
         } catch(ExecutionException e) {
             currentQuery.destroy();

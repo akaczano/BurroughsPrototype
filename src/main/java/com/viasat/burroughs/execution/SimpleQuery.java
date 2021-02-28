@@ -70,6 +70,7 @@ public class SimpleQuery extends QueryBase {
 
         // Create table and connector
         String queryString = translateQuery(query, replacements);
+	DebugLevels.appendDebugLevel(queryString);
         Logger.getLogger().write("Creating table...");
         table = createTable(properties.getId(), queryString);
         Logger.getLogger().write("Done\n");
@@ -86,9 +87,9 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private void createStreams(Map<String, String> replacements, SqlNode from) {
-	DebugLevels.appendDebugLevel("createStreams inputs: "+ replacements + " and "+ from);
+	DebugLevels.appendDebugLevel2("createStreams inputs: "+ replacements + " and "+ from);
         if (from instanceof SqlJoin) {
-	    DebugLevels.appendDebugLevel("createStreams: interpreting " + from + " as SqlJoin.");
+	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlJoin.");
             SqlJoin join = (SqlJoin)from;
             String condition = String.format("%s %s", join.getConditionType().toString(),
                     join.getCondition().toString());
@@ -98,12 +99,12 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, join.getRight());
         }
         else if (from instanceof SqlSelect) {
-	    DebugLevels.appendDebugLevel("createStreams: interpreting " + from + " as SqlSelect.");
+	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlSelect.");
 
             // TODO somehow deal with subqueries
         }
         else if (from instanceof SqlBasicCall) {
-	    DebugLevels.appendDebugLevel("createStreams: interpreting " + from + " as SqlBasicCall.");
+	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlBasicCall.");
 
             SqlBasicCall call = (SqlBasicCall)from;
             createStreams(replacements, call.operand(0));
@@ -150,7 +151,7 @@ public class SimpleQuery extends QueryBase {
                 }
             }
         }
-	DebugLevels.appendDebugLevel("translateQuery (loop 1) generated " + query);
+	DebugLevels.appendDebugLevel2("translateQuery (loop 1) generated " + query);
 
         for (int i = 0; i < query.getSelectList().size(); i++) {
             SqlNode item = query.getSelectList().get(i);
