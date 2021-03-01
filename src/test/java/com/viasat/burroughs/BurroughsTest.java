@@ -63,6 +63,7 @@ public abstract class BurroughsTest {
 
     protected void waitForQuery() throws InterruptedException {
         while (true) {
+            System.out.println("waiting for query to finish");
             if (burroughs.queryStatus().getTableStatus().hasStatus()) {
                 long totalProgress = burroughs.queryStatus().getTableStatus().getTotalProgress();
                 long totalWork = burroughs.queryStatus().getTableStatus().getTotalWork();
@@ -78,6 +79,8 @@ public abstract class BurroughsTest {
     }
 
     protected void compareCount(String query, String table) throws SQLException {
+        System.out.println("table selecting from is " + table);
+
         String countQuery = String.format("with query as (%s) select count(*) from query;",
                 query.replace(";", ""));
         ResultSet expected = db.createStatement().executeQuery(countQuery);

@@ -86,7 +86,10 @@ public class KafkaService {
             properties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000");
             properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
             properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-           consumer = new KafkaConsumer<>(properties);
+            if (consumer != null) {
+                consumer.close();
+            }
+            consumer = new KafkaConsumer<>(properties);
            groupCache = consumerGroup;
            topicCache = tp.topic();
            partitionCache = tp.partition();
@@ -94,7 +97,7 @@ public class KafkaService {
         consumer.assign(Collections.singleton(tp));
         // As far as I know this is the only way to find the max offset
         consumer.seekToEnd(Collections.singleton(tp));
-
+        //consumer.close();
         return consumer.position(tp);
     }
 }
