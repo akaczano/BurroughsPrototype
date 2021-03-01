@@ -146,7 +146,7 @@ public class BurroughsCLI implements Completer {
     private void handleDebug(String command) {
 	
         String[] words = command.split("\\s+");
-	//System.out.println(words[1]);
+	System.out.println("Preliminary Traceback:" + '\n');
 	if (words.length == 1) {
 		System.out.println("Usage: .debug <value>, where value = 1 or 2 ");
 		return;
@@ -158,7 +158,7 @@ public class BurroughsCLI implements Completer {
 		DebugLevels.displayDebugLevel2();
 	}
 	else {
-		System.out.println("Error.  Invalid value. Please use value 1 or 2.");
+		System.out.println("Error.  Invalid value. Please use value = 1 or 2.");
 	}
 	//System.out.println(words);
 	//DebugLevels.displayDebugLevel();

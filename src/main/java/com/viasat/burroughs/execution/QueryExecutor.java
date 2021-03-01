@@ -51,7 +51,7 @@ public class QueryExecutor {
      */
     public void executeQuery(SqlSelect query) {
 
-	DebugLevels.appendDebugLevel("Executing Query:" + '\n' + query.toString());  //added
+	DebugLevels.appendDebugLevel("executeQuery() executing query:" + '\n' + query.toString());  //added
 
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
@@ -82,7 +82,7 @@ public class QueryExecutor {
         }
         Logger.getLogger().writeLine("Your query is now active. Use .status to check on it.");
         Logger.getLogger().writeLine("Use .stop to terminate.");
-        DebugLevels.debugLevel2+= "The query that is currently being executed is "+ currentQuery;
+        //DebugLevels.appendDebugLevel2("executeQuery() executed: "+ currentQuery);
               
 
     }

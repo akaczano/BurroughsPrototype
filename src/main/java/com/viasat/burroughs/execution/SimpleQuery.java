@@ -116,6 +116,7 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, call.operand(0));
         }
         else if (from instanceof SqlIdentifier) {
+	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + "as SqlIdentifier.");
             SqlIdentifier identifier = (SqlIdentifier)from;
 
             String streamName = String.format("burroughs_%s", identifier.toString());
@@ -158,7 +159,7 @@ public class SimpleQuery extends QueryBase {
             }
         }
 
-	DebugLevels.appendDebugLevel2("translateQuery (loop 1) generated " + query);
+//	DebugLevels.appendDebugLevel2("translateQuery (loop 1) generated " + query);
 
         for (int i = 0; i < query.getSelectList().size(); i++) {
             SqlNode item = query.getSelectList().get(i);
@@ -187,7 +188,6 @@ public class SimpleQuery extends QueryBase {
             }
         }
 
-	DebugLevels.appendDebugLevel2("translateQuery (loop 2) generated " + query);
 
 
         String preparedQuery = query.toString();
@@ -196,7 +196,7 @@ public class SimpleQuery extends QueryBase {
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
 
-	DebugLevels.appendDebugLevel2("translateQuery (loop 3) generated: " + preparedQuery);
+	DebugLevels.appendDebugLevel2("translateQuery generated: " + preparedQuery);
 
 
         return preparedQuery;

@@ -140,7 +140,7 @@ public abstract class QueryBase {
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
-        DebugLevels.appendDebugLevel= "The status of the result object is "+ result.getCommandStatus();
+        DebugLevels.appendDebugLevel2("createTable() returning: "+ tableName);
 		return tableName;
     }
 
@@ -171,7 +171,7 @@ public abstract class QueryBase {
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
 
-	DebugLevels.appendDebugLevel2(query);  //added
+	DebugLevels.appendDebugLevel2("createStream: creating stream " + streamName + "from" + query);  //added
 
         return streamName;
     }
@@ -188,7 +188,7 @@ public abstract class QueryBase {
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
 
-        DebugLevels.appendDebugLevel("The command response: " + result);
+        DebugLevels.appendDebugLevel2("dropStreamAndTopic returning: " + result);
 
 
         return result;
@@ -232,14 +232,12 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
-	    DebugLevels.appendDebugLevel("Trying to create connector using: " + response);
+	    DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
+	
+	DebugLevels.appendDebugLevel("The status of " + command + "is " + response.getCommandStatus());
         return "burr_connect_" + id;
-		DebugLevels.debugLevel.appendDebugLevel("The status is " + result.getCommandStatus());
-		
-		
-		
     }
 
     /**
@@ -309,7 +307,7 @@ public abstract class QueryBase {
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
         
-        if (!result.getStatus().equals("SUCCESS")) {
+        if (!result.getCommandStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
         }
         else
