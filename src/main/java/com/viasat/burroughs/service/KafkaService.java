@@ -97,7 +97,6 @@ public class KafkaService {
         consumer.assign(Collections.singleton(tp));
         // As far as I know this is the only way to find the max offset
         consumer.seekToEnd(Collections.singleton(tp));
-        //consumer.close();
         return consumer.position(tp);
     }
 }
