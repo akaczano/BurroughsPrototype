@@ -12,8 +12,8 @@ if [ $1 = "local" ]; then
 	export DB_PASSWORD=password
 	export SCHEMA_REGISTRY=http://localhost:8081
 	export CONNECTOR_DB=postgres:5432
-	docker cp ./producer/datafiles/transactions.csv postgres:/
-	docker cp ./producer/datafiles/customers.csv postgres:/
+	docker cp ./src/test/producer/datafiles/transactions.csv postgres:/
+	docker cp ./src/test/producer/datafiles/customers.csv postgres:/
 	docker exec postgres psql -U postgres -c "create database burroughs;"
 	docker exec postgres psql -U postgres -d burroughs -c "drop table if exists test_data;"
 	docker exec postgres psql -U postgres -d burroughs -c \
@@ -32,6 +32,10 @@ else
 	export SCHEMA_REGISTRY=http://172.18.30.60:32388
 fi
 export PRODUCER_PATH=src/test/producer
+
+if [ $2 = "init" ]; then
+    exit 0
+fi
 mvn -Dtest=com.viasat.burroughs.BasicQueryTest test
 mvn -Dtest=com.viasat.burroughs.ValidationTest test
 mvn -Dtest=com.viasat.burroughs.AdvancedQueryTest test

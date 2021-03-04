@@ -379,6 +379,7 @@ public abstract class QueryBase {
 
         Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
         if (queryStatuses != null) {
+
             for (TopicPartition tp : queryStatuses.keySet()) {
                 long current = queryStatuses.get(tp);
                 long max = kafkaService.getLogMaxOffset(consumerGroup, tp);
