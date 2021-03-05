@@ -84,85 +84,19 @@ public abstract class QueryBase {
      */
     public abstract void setGroupBy(String field);
 
-    /**
-     * Determine what data type the group by string is
-     *
-     * @param groupBy A string representing what the query is grouping by
-     * @param query The query being passed in
-     */
-    public DataType determineDataType(String groupBy, SqlSelect query) {
-        String topic = query.getFrom().toString();
-        if (groupBy == null) {
-            return DataType.STRING;
-        }
-        String isIntRegex = "([0-9]+)";
-        if (groupBy.matches(isIntRegex)) {
-            groupBy = query.getSelectList().toArray()[Integer.parseInt(groupBy) - 1].toString();
-        }
-        if (topic.toLowerCase().contains("as")) {
-            if (groupBy.contains(".")) {
-                topic = mapAliases(topic).get(groupBy.substring(0, groupBy.indexOf(".")));
-                groupBy = groupBy.substring(groupBy.indexOf(".") + 1);
-            } else {
-                DataType result = DataType.ARRAY;
-                Map<String, String> topics = mapAliases(topic);
-                for (Map.Entry<String,String> t : topics.entrySet()) {
-                    result = dataTypeFromTopic(t.getValue(), groupBy);
-                    if (result != DataType.ARRAY) return result;
-                }
-                return result;
-            }
-            return dataTypeFromTopic(topic, groupBy);
-        }
-        if (topic.toLowerCase().contains("join")) {
-            List<String> topicList = new ArrayList<>();
-            List<String> tempList = new ArrayList<>(Arrays.asList(topic.split("[ |\\n]")));
-            for (int i = 0; i < tempList.size(); i++) {
-                if (i == 0) {
-                    topicList.add(tempList.get(i).replaceAll("`", ""));
-                }
-                else if (tempList.get(i).toLowerCase().equals("join")) {
-                    topicList.add(tempList.get(i+1).replaceAll("`", ""));
-                }
-            }
-            DataType result = DataType.ARRAY;
-            for (String t : topicList) {
-                result = dataTypeFromTopic(t, groupBy);
-                if (result != DataType.ARRAY) return result;
-            }
-            return result;
-        }
-        return dataTypeFromTopic(topic, groupBy);
-    }
 
-    private DataType dataTypeFromTopic(String topic, String groupBy) {
-        topic = topic.toLowerCase();
-        if (!streamExists(service, "BURROUGHS_" + topic)) {
-            createStream(service, "BURROUGHS_" + topic, topic,
-                    Format.AVRO);
-        }
-        DescribeResponse description = service.executeStatement("DESCRIBE BURROUGHS_" + topic + ";",
-                "retrieve topic metadata");
-        Field[] fields = description.getSourceDescription().getFields();
+    public DataType determineDataType(String table) {
+        DescribeResponse res =  service.executeStatement("DESCRIBE " + table + ";", "describe table");
+        String key = res.getSourceDescription().getKey();
+        Field[] fields = res.getSourceDescription().getFields();
+        DataType type = DataType.ARRAY;
         for (Field f : fields) {
-            if (f.getName().equalsIgnoreCase(groupBy.toUpperCase())) {
-                return f.getSchema().getType();
+            if (f.getName().equalsIgnoreCase(key)) {
+                type = f.getSchema().getType();
+                break;
             }
         }
-        return DataType.ARRAY;
-    }
-
-    public Map<String, String> mapAliases(String topic) {
-        Map<String, String> aliasMap = new HashMap<>();
-        List<String> topicList = new ArrayList<>(Arrays.asList(topic.split("[ |\\n]")));
-        for (int i = 0; i < topicList.size(); i++) {
-            if (topicList.get(i).toLowerCase().equals("as")) {
-                aliasMap.put(topicList.get(i + 1).replaceAll("`", "")
-                                .replaceAll(",", ""),
-                        topicList.get(i - 1).replaceAll("`", ""));
-            }
-        }
-        return aliasMap;
+        return type;
     }
 
     /**

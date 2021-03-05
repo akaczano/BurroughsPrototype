@@ -3,6 +3,7 @@ package com.viasat.burroughs.execution;
 import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.StatementResponse;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.list.Format;
@@ -57,8 +58,6 @@ public class SimpleQuery extends QueryBase {
      */
     @Override
     public void execute() {
-        setGroupByDataType(determineDataType(groupby, query));
-
         // Stores translations as a mapping of text to replacement
         Map<String, String> replacements = new HashMap<>();
         createStreams(replacements, query.getFrom());
@@ -69,6 +68,7 @@ public class SimpleQuery extends QueryBase {
         table = createTable(properties.getId(), queryString);
         Logger.getLogger().write("Done\n");
         Logger.getLogger().write("Linking to database...");
+        setGroupByDataType(determineDataType(table));
         connector = createConnector(properties.getId());
         Logger.getLogger().write("Done\n");
         startTime = System.currentTimeMillis();
