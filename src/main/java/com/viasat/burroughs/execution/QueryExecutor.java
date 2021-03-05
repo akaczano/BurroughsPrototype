@@ -50,18 +50,8 @@ public class QueryExecutor {
         // Generate an ID for the query.
         props.setId(UUID.randomUUID().toString().replaceAll("-", ""));
 
-        // Create a new SimpleQuery object
-        // Originally, I intended to have a handful of different query classes,
-        // each one handling a different kind of query, but I now doubt the sense
-        // of that design
         currentQuery = new SimpleQuery(service, kafkaService, props, query);
-        if (query.getGroup().getList().size() == 1) {
-            // Set the group by field to correctly configure the connector
-            // Currently, this isn't working and all keys are being converted to
-            // hex strings
-            String groupByField = query.getGroup().get(0).toString();
-            currentQuery.setGroupBy(groupByField);
-        }
+
         try {
             // Show time
             currentQuery.execute();

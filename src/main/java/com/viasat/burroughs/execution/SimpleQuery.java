@@ -29,9 +29,6 @@ public class SimpleQuery extends QueryBase {
     // All of the associated streams
     private final List<String> streams = new ArrayList<>();
 
-    // Stores what the query is grouped by
-    private String groupby;
-
     /**
      * Creates a new query object
      * @param service The ksqlDB statement service
@@ -43,14 +40,6 @@ public class SimpleQuery extends QueryBase {
                        QueryProperties props, SqlSelect query) {
         super(service, kafkaService, props);
         this.query = query;
-    }
-
-    /**
-     * Sets the group by field from which the key converter can be determined
-     * @param field Field name
-     */
-    public void setGroupBy(String field) {
-        groupby = field;
     }
 
     /**

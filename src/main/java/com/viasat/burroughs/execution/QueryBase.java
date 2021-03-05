@@ -11,7 +11,6 @@ import com.viasat.burroughs.service.model.description.*;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.calcite.sql.*;
 
 import java.util.*;
 
@@ -77,19 +76,11 @@ public abstract class QueryBase {
      */
     public abstract QueryStatus getStatus();
 
-    /**
-     * Set the group by field from which the group by data type can be determined
-     *
-     * @param field Field name
-     */
-    public abstract void setGroupBy(String field);
-
-
     public DataType determineDataType(String table) {
         DescribeResponse res =  service.executeStatement("DESCRIBE " + table + ";", "describe table");
         String key = res.getSourceDescription().getKey();
         Field[] fields = res.getSourceDescription().getFields();
-        DataType type = DataType.ARRAY;
+        DataType type = key.length() < 1 ? DataType.STRING : DataType.ARRAY;
         for (Field f : fields) {
             if (f.getName().equalsIgnoreCase(key)) {
                 type = f.getSchema().getType();
@@ -214,23 +205,6 @@ public abstract class QueryBase {
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
         return "burr_connect_" + id;
-    }
-
-    /**
-     * Gets the schema, as a field name - data type table,
-     * for a stream
-     *
-     * @param stream The desired stream
-     * @return The schema
-     */
-    protected Map<String, DataType> GetSchema(String stream) {
-        DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
-                "describe stream");
-        Map<String, DataType> results = new HashMap<>();
-        for (Field f : description.getSourceDescription().getFields()) {
-            results.put(f.getName(), f.getSchema().getType());
-        }
-        return results;
     }
 
     /**
