@@ -3,9 +3,11 @@ package com.viasat.burroughs.execution;
 import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
+import com.viasat.burroughs.service.model.StatementResponse;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
-import com.viasat.burroughs.service.model.description.DataType;
+import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.list.Format;
+import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
@@ -30,9 +32,6 @@ public class SimpleQuery extends QueryBase {
     // All of the associated streams
     private final List<StreamEntry> streams = new ArrayList<>();
 
-    // Not currently in use
-    private String groupby;
-
     private Stack<String> names = new Stack<>();
 
     private int subqueryCounter = 0;
@@ -51,20 +50,10 @@ public class SimpleQuery extends QueryBase {
     }
 
     /**
-     * Sets the group by field from which the key converter can be determined
-     * @param field Field name
-     */
-    public void setGroupBy(String field) {
-        groupby = field;
-    }
-
-    /**
      * Translates and executes the query
      */
     @Override
     public void execute() {
-        // TODO: deal with this
-        setGroupByDataType(DataType.ARRAY);
 
         SqlSelect query = parsedQuery.getQuery();
         SqlNodeList extraStreams = parsedQuery.getWithList();
@@ -98,6 +87,7 @@ public class SimpleQuery extends QueryBase {
         table = createTable(properties.getId(), queryString);
         Logger.getLogger().write("Done\n");
         Logger.getLogger().write("Linking to database...");
+        setGroupByDataType(determineDataType(table));
         connector = createConnector(properties.getId());
         Logger.getLogger().write("Done\n");
         startTime = System.currentTimeMillis();
