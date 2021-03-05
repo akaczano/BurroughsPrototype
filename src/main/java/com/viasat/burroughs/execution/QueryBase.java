@@ -47,6 +47,9 @@ public abstract class QueryBase {
      */
     private String keyConverter = "org.apache.kafka.connect.storage.StringConverter";
 
+
+    protected List<Transform> transforms;
+
     /**
      * Initializes new Query given dependencies
      *
@@ -59,6 +62,8 @@ public abstract class QueryBase {
         this.service = service;
         this.properties = properties;
         this.kafkaService = kafkaService;
+        transforms = new ArrayList<>();
+        transforms.add(new Transform("tombstoneHandler", "io.confluent.connect.transforms.TombstoneHandler"));
     }
 
     /**
@@ -141,6 +146,12 @@ public abstract class QueryBase {
         return tableName;
     }
 
+    protected String createStream(String name, String query) {
+        String ksql = String.format("CREATE STREAM %s as %s EMIT CHANGES;", name, query);
+        CommandResponse result = service.executeStatement(ksql, "create stream");
+        return name;
+    }
+
     /**
      * Creates a ksqlDB stream
      *
@@ -169,6 +180,19 @@ public abstract class QueryBase {
         CommandResponse result = service.executeStatement(query, "create stream");
         return streamName;
     }
+    /**
+     * Version of dropStream that can be done from a static context and takes the underlying topic with it
+     *
+     * @param service    The statement service to send the query with
+     * @param streamName The name of the stream
+     * @return The name of the stream
+     */
+    public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
+        String query = String.format("DROP STREAM %s DELETE TOPIC;",
+                streamName);
+        CommandResponse result = service.executeStatement(query, "stream and topic dropped");
+        return result;
+    }
 
     /**
      * Creates a sink connector for a table
@@ -196,8 +220,13 @@ public abstract class QueryBase {
         command += String.format("'key.converter' = '%s',", keyConverter);
         // Tombstone handler to drop null records
         // Only applies when there is a having clause
-        command += "'transforms'='tombstoneHandlerExample',";
-        command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
+        //command += "'transforms'='tombstoneHandlerExample,serializeArray',";
+        //command += "'transforms.tombstoneHandlerExample.type'='io.confluent.connect.transforms.TombstoneHandler',";
+        //command += "'transforms.serializeArray.type'='com.viasat.burroughs.smt.SerializeArray$Value',";
+        command += Transform.header(transforms);
+        for (Transform t : this.transforms) {
+            command += t.toString();
+        }
         command += "'auto.create' = true);";
 
         CommandResponse response = service.executeStatement(command, "create connector");
@@ -261,7 +290,7 @@ public abstract class QueryBase {
      *
      * @param objectName The object to check, usually a table
      */
-    private void terminateQueries(String objectName) {
+    protected void terminateQueries(String objectName) {
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
@@ -340,6 +369,7 @@ public abstract class QueryBase {
 
         Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
         if (queryStatuses != null) {
+
             for (TopicPartition tp : queryStatuses.keySet()) {
                 long current = queryStatuses.get(tp);
                 long max = kafkaService.getLogMaxOffset(consumerGroup, tp);

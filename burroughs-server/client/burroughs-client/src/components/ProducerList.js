@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { ListGroup, Button, Form } from 'react-bootstrap';
 
-import { loadProducers, executeCommand } from '../actions/producerActions';
+import { executeCommand } from '../actions/producerActions';
 
 const buttonStyle = {
     padding: '2px',
@@ -13,9 +13,7 @@ const buttonStyle = {
 
 class ProducerList extends React.Component {
     state = { limits: {} }
-    componentDidMount() {
-        setInterval(this.props.loadProducers, 1000);
-    }
+
     render() {
         return (
             <ListGroup style={{ width: '100%' }}>
@@ -42,11 +40,6 @@ class ProducerList extends React.Component {
                             break;
                         default:
                             statusString = 'Error';
-                    }
-                    if (!(p.name in this.state.limits)) {
-                        let newLimits = {...this.state.limits};
-                        newLimits[p.name] = -1;
-                        this.setState({limits: newLimits});
                     }
                     let errorDisplay = p.status.errorMessage ?
                         <p style={{ color: 'red' }}>{p.status.errorMessage}</p> : null;
@@ -106,7 +99,11 @@ class ProducerList extends React.Component {
                                             </Form.Label>
                                             <Form.Control
                                                 type="number"
-                                                value={this.state.limits[p.name]}
+                                                value={
+                                                    p.name in this.state.limits ?
+                                                     this.state.limits[p.name] :
+                                                     -1
+                                                }
                                                 onChange={e => {
                                                     let newLimits = {...this.state.limits};
                                                     newLimits[p.name] = e.target.value
@@ -136,4 +133,4 @@ const mapStateToProps = state => {
     };
 };
 
-export default connect(mapStateToProps, { loadProducers, executeCommand })(ProducerList);
+export default connect(mapStateToProps, { executeCommand })(ProducerList);

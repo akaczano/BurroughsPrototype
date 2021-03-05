@@ -10,11 +10,13 @@ import com.viasat.burroughs.service.StatusService;
 import com.viasat.burroughs.service.model.HealthStatus;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import com.viasat.burroughs.service.model.list.Topic;
+import com.viasat.burroughs.validation.ParsedQuery;
 import com.viasat.burroughs.validation.QueryValidator;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
@@ -40,6 +42,7 @@ public class Burroughs implements DBProvider {
     private String kafkaHost;
     private String schemaRegistry;
     private String connectorDB;
+    private String producerPath = "/producer";
 
     /**
      * Provides access to ksqlDB
@@ -81,7 +84,7 @@ public class Burroughs implements DBProvider {
         this.kafkaService = new KafkaService(kafkaHost);
         this.executor = new QueryExecutor(service, kafkaService, this);
         if (ksqlConnected) {
-            this.producerInterface = new ProducerInterface(kafkaHost, schemaRegistry, this);
+            this.producerInterface = new ProducerInterface(producerPath, kafkaHost, schemaRegistry, this);
         }
     }
 
@@ -108,7 +111,7 @@ public class Burroughs implements DBProvider {
         // Perform validation (and parsing also)
         QueryValidator validator = new QueryValidator(this.service);
 
-        SqlSelect parsedQuery = validator.validateQuery(query);
+        ParsedQuery parsedQuery = validator.validateQuery(query);
         if (parsedQuery != null) {
             if (this.dbTable == null) {
                 Logger.getLogger().writeLine("No output table set. Use .table to configure one.");
@@ -175,7 +178,14 @@ public class Burroughs implements DBProvider {
         return description.getSourceDescription().getFields();
     }
 
-
+    /**
+     * drops the topic
+     * @param topicName
+     */
+    public void dropTopic(String topicName) {
+        topic(topicName);
+        CommandResponse cr = QueryBase.dropStreamAndTopic(service, "BURROUGHS_" + topicName);
+    }
     /**
      * Get a list of topics on the connected broker
      * @return A list of Topic objects
@@ -311,4 +321,7 @@ public class Burroughs implements DBProvider {
         this.schemaRegistry = schemaRegistry;
     }
 
+    public void setProducerPath(String producerPath) {
+        this.producerPath = producerPath;
+    }
 }

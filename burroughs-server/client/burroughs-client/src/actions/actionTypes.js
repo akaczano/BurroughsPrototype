@@ -14,6 +14,8 @@ export const LOAD_ERROR = 'LOAD_ERROR';
 export const QUERY_ERROR = 'QUERY_ERROR';
 export const SET_DATABASE = 'SET_DATABASE';
 export const SET_DATA = 'SET_DATA';
+export const DATA_LOADING = 'DATA_LOADING';
+export const DATA_ERROR = 'DATA_ERROR';
 
 // UI
 export const QUERY_EXECUTING = 'QUERY_EXECUTING';

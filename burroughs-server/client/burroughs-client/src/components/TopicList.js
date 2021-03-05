@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getTopics } from '../actions/basicActions';
+import { getTopics , getSchema } from '../actions/basicActions';
 
 class TopicList extends React.Component {
     componentDidMount() {
@@ -8,13 +8,20 @@ class TopicList extends React.Component {
     }
     render() {
         return (
-            <div>
+            <div className="topic-list">
                 <div style={{ height: '40vh', overflowY: 'auto' }}>
                     <span style={{ marginLeft: '18px', fontSize: '14px' }}>
                         <strong>Topics</strong>
                     </span>
                     {this.props.topics.map(topic =>
-                        <p key={topic.name} style={{ margin: '0px', marginLeft: '20px' }}>{topic.name}</p>)}
+                        <p 
+                            key={topic.name} 
+                            style={{ margin: '0px', marginLeft: '20px' }}
+                            onClick={() => this.props.getSchema(topic.name)}
+                        >
+                            {topic.name}
+                        </p>
+                    )}
                 </div>
             </div>
         );
@@ -27,4 +34,4 @@ const mapStateToProps = state => {
     };
 };
 
-export default connect(mapStateToProps, { getTopics })(TopicList);
+export default connect(mapStateToProps, { getTopics, getSchema })(TopicList);

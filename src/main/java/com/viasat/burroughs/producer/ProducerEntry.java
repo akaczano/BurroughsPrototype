@@ -38,6 +38,10 @@ public class ProducerEntry {
      * @param maxRecords The maximum number of records to produce
      */
     public void buildAndStart(String kafka, String schemaRegistry, int maxRecords) {
+        if (producer != null && (producer.getStatus().equals("Running") || producer.getStatus().equals("Paused"))) {
+            System.out.println("producer is already running");
+            return;
+        }
         if (maxRecords >= 0) {
             this.maxRecords = maxRecords;
         }
@@ -165,9 +169,8 @@ public class ProducerEntry {
                 if (o.has("delay")) {
                     producer.delay = o.get("delay").getAsInt();
                 }
-
                 // Schema
-                File schemaFile = new File("/producer/" + o.get("schema").getAsString());
+                File schemaFile = new File(file.getParent() + "/" + o.get("schema").getAsString());
                 if (!schemaFile.exists()) {
                     System.out.printf("Unable to find schema file %s\n", o.get("schema").getAsString());
                     continue;
@@ -182,7 +185,7 @@ public class ProducerEntry {
                 JsonObject source = ds.getAsJsonObject("source");
                 if (ds.get("type").getAsString().equalsIgnoreCase("file")) {
                     FileSource fs = new FileSource(
-                            new File("/producer/" + source.get("location").getAsString()),
+                            new File(file.getParent() + "/" + source.get("location").getAsString()),
                             producer.schema
                     );
                     if (source.has("delimiter")) {

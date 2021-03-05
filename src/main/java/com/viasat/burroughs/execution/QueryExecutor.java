@@ -6,6 +6,7 @@ import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
@@ -44,7 +45,7 @@ public class QueryExecutor {
      * Executes a query
      * @param query The query, already parsed and validated
      */
-    public void executeQuery(SqlSelect query) {
+    public void executeQuery(ParsedQuery query) {
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.

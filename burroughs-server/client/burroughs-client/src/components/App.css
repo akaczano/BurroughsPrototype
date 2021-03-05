@@ -19,21 +19,21 @@ body {
     background-color: #ccc;
 }
 
-form strong {
+.db-info strong {
     font-size: 14px;
 }
 
-.form-label {
+.db-info .form-label {
     font-size: 14px;
 }
 
-.form-control {
+.db-info .form-control {
     font-size: 14px;
     width: 90%;   
     height: 30px; 
 }
 
-.form-group {
+.db-info .form-group {
     margin: 0px;
     margin-bottom: 5px;
 }
@@ -44,4 +44,12 @@ form strong {
 
 .producers-list p {
     margin: 3px;
+}
+
+.topic-list p {
+    cursor: pointer;
+}
+
+.topic-list p:hover {
+    color: blue;
 }
