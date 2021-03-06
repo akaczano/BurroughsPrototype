@@ -146,22 +146,21 @@ public class BurroughsCLI implements Completer {
     private void handleDebug(String command) {
 	
         String[] words = command.split("\\s+");
-	System.out.println("Preliminary Traceback:" + '\n');
 	if (words.length == 1) {
 		System.out.println("Usage: .debug <value>, where value = 1 or 2 ");
 		return;
 	}
 	else if (Integer.parseInt(words[1]) == 1) {
+		System.out.println("Preliminary Traceback:" + '\n');
 		DebugLevels.displayDebugLevel();
 	}
 	else if (Integer.parseInt(words[1]) == 2) {
+		System.out.println("Preliminary Traceback:" + '\n');
 		DebugLevels.displayDebugLevel2();
 	}
 	else {
 		System.out.println("Error.  Invalid value. Please use value = 1 or 2.");
 	}
-	//System.out.println(words);
-	//DebugLevels.displayDebugLevel();
     
     }
 
@@ -484,8 +483,8 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tkill: stops producer operation");
         System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
 	
-	System.out.println("debug <debug value>");
-	System.out.println("\tdebug value: 1 = shows the kSQL query(ies) executed;  2 = shows = more in-depth traceback of query transofmration");
+	System.out.println(".debug <debug value>");
+	System.out.println("\tdebug value: \n\t1 = shows the kSQL query(ies) executed;  2 = shows more in-depth traceback of query transformation");
 
         System.out.println(".file <file name> <delimiter>");
         System.out.println("\tReads and executes commands and/or a query from the specified file.");
