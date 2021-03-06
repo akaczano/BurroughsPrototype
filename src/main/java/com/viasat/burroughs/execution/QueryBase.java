@@ -171,7 +171,7 @@ public abstract class QueryBase {
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
 
-	DebugLevels.appendDebugLevel2("createStream: creating stream " + streamName + "from" + query);  //added
+		DebugLevels.appendDebugLevel2("createStream: creating stream " + streamName + "from" + query);  //added
 
         return streamName;
     }
