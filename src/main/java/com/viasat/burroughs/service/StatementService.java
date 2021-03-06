@@ -81,7 +81,7 @@ public class StatementService {
      */
     public StatementResponse executeStatement(String statement, StreamProperties properties) {
         try {
-            DebugLevels.appendDebugLevel2('\n\t' + "executeStatement: executing " + '\n\t' + statement);
+            DebugLevels.appendDebugLevel2("\n\t" + "executeStatement: executing " + "\n\t" + statement);
             statement = statement.trim();
             String up = statement.toUpperCase();
             Class<? extends StatementResponse> format;
