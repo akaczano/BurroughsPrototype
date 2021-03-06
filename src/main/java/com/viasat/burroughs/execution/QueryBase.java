@@ -171,7 +171,7 @@ public abstract class QueryBase {
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
 
-	DebugLevels.appendDebugLevel2("createStream: creating stream " + streamName + "from" + query);  //added
+	DebugLevels.appendDebugLevel2("createStream:" + '\n\t' + "creating stream " + streamName + "from" + query);  //added
 
         return streamName;
     }
@@ -236,7 +236,7 @@ public abstract class QueryBase {
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
 	
-	DebugLevels.appendDebugLevel("The status of " + command + "is " + response.getCommandStatus());
+	DebugLevels.appendDebugLevel2("The status of " + command + "is " + response.getCommandStatus());
         return "burr_connect_" + id;
     }
 
@@ -255,7 +255,7 @@ public abstract class QueryBase {
             results.put(f.getName(), f.getSchema().getType());
 
         }
-	DebugLevels.appendDebugLevel2("generated " + results + "from getSchema.");
+	DebugLevels.appendDebugLevel2("generated " + results + " from getSchema.");
 
         return results;
     }
@@ -313,7 +313,7 @@ public abstract class QueryBase {
         else
         {
 
-         DebugLevels.appendDebugLevel("The command response is " + result);
+         DebugLevels.appendDebugLevel2("The command response is " + result);
 
         }
     }
@@ -371,7 +371,7 @@ public abstract class QueryBase {
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
-		DebugLevels.appendDebugLevel("The status of the result object is "+ result.getCommandStatus());
+		DebugLevels.appendDebugLevel2("The status of the result object is "+ result.getCommandStatus());
 		
 	}
 
