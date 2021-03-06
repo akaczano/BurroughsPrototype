@@ -140,7 +140,7 @@ public abstract class QueryBase {
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
-        DebugLevels.appendDebugLevel2("createTable() returning: "+ tableName);
+        DebugLevels.appendDebugLevel2('\n\t' + "createTable: " + statement);
 		return tableName;
     }
 
@@ -171,7 +171,7 @@ public abstract class QueryBase {
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
 
-	DebugLevels.appendDebugLevel2("createStream:" + '\n\t' + "creating stream " + streamName + "from" + query);  //added
+	DebugLevels.appendDebugLevel2('\n\t' + "createStream: Creating stream from " + query);  //added
 
         return streamName;
     }
@@ -188,7 +188,7 @@ public abstract class QueryBase {
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
 
-        DebugLevels.appendDebugLevel2("dropStreamAndTopic returning: " + result);
+        DebugLevels.appendDebugLevel2('\n\t' + "dropStreamAndTopic from: " + query);
 
 
         return result;
@@ -255,7 +255,7 @@ public abstract class QueryBase {
             results.put(f.getName(), f.getSchema().getType());
 
         }
-	DebugLevels.appendDebugLevel2("generated " + results + " from getSchema.");
+	DebugLevels.appendDebugLevel2("GetSchema:" + '\n\t' + "generated " + results);
 
         return results;
     }
@@ -313,7 +313,7 @@ public abstract class QueryBase {
         else
         {
 
-         DebugLevels.appendDebugLevel2("The command response is " + result);
+         DebugLevels.appendDebugLevel2("The command response is " + result.getCommandStatus().getMessage());
 
         }
     }
