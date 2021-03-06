@@ -4,12 +4,17 @@ import com.viasat.burroughs.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
+import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.parser.impl.SqlParserImpl;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import java.math.BigDecimal;
@@ -75,6 +80,27 @@ public class SimpleQuery extends QueryBase {
                 Map<String, String> replacements = new HashMap<>();
                 List<SqlBasicCall> extras = new ArrayList<>();
                 createStreams(replacements, select.getFrom(), extras);
+                /*
+                if (select.getFrom() instanceof SqlJoin) {
+                    SqlJoin join = (SqlJoin)select.getFrom();
+                    String l = ((SqlBasicCall)(join.getLeft())).operand(0).toString();
+                    if (((SqlBasicCall)(join.getLeft())).operand(0).toString().equals(((SqlBasicCall)(join.getRight())).operand(0).toString())) {
+                        System.out.println("self join code executing");
+                        String copy = createStream(l+"_dup",String.format("select * from %s",l));
+                        SqlParser.Config config = SqlParser.configBuilder()
+                                .setParserFactory(SqlParserImpl.FACTORY)
+                                .setConformance(SqlConformanceEnum.BABEL)
+                                .build();
+                        SqlNode cpNode = null;
+                        try {
+                            cpNode = SqlParser.create(copy, config).parseQuery(copy);
+                        } catch (SqlParseException e) {
+                            e.printStackTrace();
+                        }
+                        ((SqlBasicCall)join.getRight()).setOperand(0,cpNode);
+                    }
+                }
+                */
                 String queryText = translateQuery(select, replacements, extras);
                 String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
                 streams.add(new StreamEntry(name, true));
@@ -109,7 +135,8 @@ public class SimpleQuery extends QueryBase {
      * @param replacements
      * @param from
      */
-    private void createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
+    private String createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
+        System.out.println("Called");
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
             translateCondition(join.getCondition(), extras);
@@ -118,8 +145,33 @@ public class SimpleQuery extends QueryBase {
                     join.getCondition().toString());
             replacements.put(condition, String.format("WITHIN %d DAYS %s",
                     Integer.MAX_VALUE, condition));
-            createStreams(replacements, join.getLeft(), extras);
-            createStreams(replacements, join.getRight(), extras);
+
+            String l = ((SqlBasicCall)(join.getLeft())).operand(0).toString();
+            String r = ((SqlBasicCall)(join.getRight())).operand(0).toString();
+            /*
+                Handling self join case not done recursively to avoid generating a novel sqlNode object also the input has deterministic complexity
+             */
+            if (((SqlBasicCall)(join.getLeft())).operand(0).toString().equals(((SqlBasicCall)(join.getRight())).operand(0).toString())) {
+                String left = createStreams(replacements, join.getLeft(), extras);
+                System.out.println("self join code executing");
+
+                String duplicated_stream = "duplicated_"+left;
+                if (!streamExists(duplicated_stream)) {
+                    duplicated_stream = createStream(duplicated_stream, "select * from " + left);
+                    streams.add(new StreamEntry(duplicated_stream, true));
+                }
+                SqlBasicCall right = ((SqlBasicCall)(join.getRight()));
+                SqlIdentifier sqi = (SqlIdentifier)(right.operand(0));
+                List<String> names = new ArrayList<>();
+                List<SqlParserPos> positions = new ArrayList<>();
+                names.add(duplicated_stream);
+                positions.add(new SqlParserPos(0, 0));
+                sqi.setNames(names, positions);
+                System.out.println("Self Join finished");
+            } else {
+                createStreams(replacements, join.getLeft(), extras);
+                createStreams(replacements, join.getRight(), extras);
+            }
         }
         else if (from instanceof SqlSelect) {
             SqlSelect subquery = (SqlSelect)from;
@@ -133,19 +185,21 @@ public class SimpleQuery extends QueryBase {
             String stream = createStream(names.pop(), queryText);
             replacements.put("(" + subquery.toString() + ")", stream);
             streams.add(new StreamEntry(stream, true));
+            return stream;
         }
         else if (from instanceof SqlBasicCall) {
             SqlBasicCall call = (SqlBasicCall)from;
             if (call.getOperator().toString().equalsIgnoreCase("AS") && call.operand(0) instanceof SqlSelect) {
                 names.push(call.operand(1).toString());
             }
-            createStreams(replacements, call.operand(0), extras);
+            return createStreams(replacements, call.operand(0), extras);
         }
         else if (from instanceof SqlIdentifier) {
             SqlIdentifier identifier = (SqlIdentifier)from;
 
             String streamName = String.format("burroughs_%s", identifier.toString());
             Logger.getLogger().write(String.format("Creating stream %s...", streamName));
+            //
             if (!streamExists(streamName)) {
                 streams.add(new StreamEntry(createStream(streamName, identifier.getSimple().toLowerCase(), Format.AVRO), false));
                 Logger.getLogger().write("Done\n");
@@ -158,7 +212,9 @@ public class SimpleQuery extends QueryBase {
             names.add(streamName);
             positions.add(new SqlParserPos(0, 0));
             identifier.setNames(names, positions);
+            return streamName;
         }
+        return "";
     }
 
     /**
@@ -171,6 +227,7 @@ public class SimpleQuery extends QueryBase {
      * @return The fully translated query string to pass to a create table statement
      */
     private String translateQuery(SqlSelect query, Map<String, String> replacements, List<SqlBasicCall> extras) {
+        //
         if (query.getGroup() != null) {
             for (int i = 0; i < query.getGroup().getList().size(); i++) {
                 SqlNode n = query.getGroup().get(i);
@@ -284,14 +341,16 @@ public class SimpleQuery extends QueryBase {
         }
         Collections.reverse(streams); // Delete streams in the reverse order they were created
         for (StreamEntry stream : streams) {
-            Logger.getLogger().write("Dropping stream " + stream + "...");
+            Logger.getLogger().write("Dropping stream " + stream.getStreamName() + "...");
+            CommandResponse cr;
             terminateQueries(stream.getStreamName());
             if (stream.isDeleteTopic()) {
-                dropStreamAndTopic(service, stream.getStreamName());
+                cr = dropStreamAndTopic(service, stream.getStreamName());
             }
             else {
-                dropStream(stream.getStreamName());
+                cr = dropStream(stream.getStreamName());
             }
+            Logger.getLogger().write(cr.toString());
             Logger.getLogger().write("Done\n");
         }
     }

@@ -33,4 +33,8 @@ public class CommandResponse extends StatementResponse {
     public void setCommandSequenceNumber(int commandSequenceNumber) {
         this.commandSequenceNumber = commandSequenceNumber;
     }
+
+    public String toString() {
+        return String.format("%s id has status %s\n",getCommandId(),getCommandStatus().getMessage() + " : " + getCommandStatus().getStatus());
+    }
 }
