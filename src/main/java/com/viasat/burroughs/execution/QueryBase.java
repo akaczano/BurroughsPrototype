@@ -238,7 +238,7 @@ public abstract class QueryBase {
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
 	
-	DebugLevels.appendDebugLevel2("The status of " + command + "is " + response.getCommandStatus());
+	DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
         return "burr_connect_" + id;
     }
 
