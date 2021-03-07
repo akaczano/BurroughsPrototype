@@ -36,6 +36,9 @@ As the Peer Mentor for the Viasat team, it is my job to both lead the developmen
 
 ### Wyatt Klueber
 ### Mihira Krishnaswamy
+**Purdue Email**: krish134@purdue.edu <br />
+As a part of the Viasat team, it is my job to help improve upon Aidan's initial version of Burroughs. So far, I have contributed to  the where clause date-field issue (#3), which deals with a necessary string to date conversion and where clause recursion so that the sql to ksql translation of queries containing dates works as expected and dates aren't compared lexographically.
+
 ### Andrew Riordan
 ### Ainesh Sootha
 
