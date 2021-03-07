@@ -27,6 +27,8 @@
 **Purdue Email**:  chakra55@purdue.edu <br />
 My role in the Burroughs project is to fix issues and help improve the code in the initial version of Burroughs made by Aidan. So far, my contribution on the team is issue #14, which was to add debugLevels for more output. This is seen as necessary to help the user get more information regarding the processes being done and the variables that were being used. 
 ### Vandana Chari
+**Purdue Email**: chariv@purdue.edu <br />
+As part of the Viasat team, my task is to further develop and improve Aidan's initial version of Burroughs. So far, I have contributed to the self-join issue (#26), along with Andrew. To implement this functionality, I have rewritten self joins to join with a duplicated version of the topic. Ultimately, Burroughs should be able to support it because it is crucial to reference data within a table in order to make comparisons. 
 ### Erika Ergart
 ### Aidan Kaczanowski
 **Purdue Email**: akaczano@purdue.edu <br />
@@ -35,8 +37,6 @@ As the Peer Mentor for the Viasat team, it is my job to both lead the developmen
 ### Wyatt Klueber
 ### Mihira Krishnaswamy
 ### Andrew Riordan
-**Purdue Email**: riordana@purdue.edu <br />
-I worked on issue numbers  2,9,15,26. My contributions to Burroughs included adding some non-query functionality to Burroughs, (topic deletion) and dealing with complexities arising from join statement(s). These make Burroughs more useful to an end user.
 ### Ainesh Sootha
 
 
