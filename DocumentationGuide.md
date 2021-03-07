@@ -20,6 +20,8 @@
 - [The Burroughs Codebase](#the-burroughs-codebase)
 
 ## Our Mentors
+- Mark Rapo (Mark.Rapo@viasat.com)
+- Gideon Shalev (Gidon.Shalev@viasat.com)
 
 ## Student Biographies
 ### Jason Cao
@@ -40,6 +42,8 @@ As the Peer Mentor for the Viasat team, it is my job to both lead the developmen
 As a part of the Viasat team, it is my job to help improve upon Aidan's initial version of Burroughs. So far, I have contributed to  the where clause date-field issue (#3), which deals with a necessary string to date conversion and where clause recursion so that the sql to ksql translation of queries containing dates works as expected and dates aren't compared lexographically.
 
 ### Andrew Riordan
+**Purdue Email**: riordana@purdue.edu <br />
+I worked on issue numbers 2,9,15,26. My contributions to Burroughs included adding some non-query functionality to Burroughs, (topic deletion) and dealing with complexities arising from join statement(s). These make Burroughs more useful to an end user.  
 ### Ainesh Sootha
 
 
@@ -49,5 +53,6 @@ As a part of the Viasat team, it is my job to help improve upon Aidan's initial 
 ## Summary
 
 ## Resources
+
 
 ## The Burroughs Codebase
