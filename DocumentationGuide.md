@@ -35,6 +35,8 @@ As the Peer Mentor for the Viasat team, it is my job to both lead the developmen
 ### Wyatt Klueber
 ### Mihira Krishnaswamy
 ### Andrew Riordan
+**Purdue Email**: riordana@purdue.edu <br />
+I worked on issue numbers  2,9,15,26. My contributions to Burroughs included adding some non-query functionality to Burroughs, (topic deletion) and dealing with complexities arising from join statement(s). These make Burroughs more useful to an end user.
 ### Ainesh Sootha
 
 
