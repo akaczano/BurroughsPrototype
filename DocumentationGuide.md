@@ -44,8 +44,10 @@ As a part of the Viasat team, it is my job to help improve upon Aidan's initial 
 ### Andrew Riordan
 **Purdue Email**: riordana@purdue.edu <br />
 I worked on issue numbers 2,9,15,26. My contributions to Burroughs included adding some non-query functionality to Burroughs, (topic deletion) and dealing with complexities arising from join statement(s). These make Burroughs more useful to an end user.  
-### Ainesh Sootha
 
+### Ainesh Sootha
+**Purdue Email**: asootha@purdue.edu <br />
+I worked on issue (#5), which dealt with reading Burroughs commands and SQL queries from files, which made running the first set of commands easier and quicker for the end user. I also worked on (#10) - determining the data type of the group by field in the query, and (am currently working on) (#16) - adding support for multiple group by’s (Cascading aggregations).  
 
 ## Project Statement
 
