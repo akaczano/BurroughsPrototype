@@ -83,11 +83,11 @@ public abstract class QueryBase {
 
     public DataType determineDataType(String table) {
         DescribeResponse res =  service.executeStatement("DESCRIBE " + table + ";", "describe table");
-        String key = res.getSourceDescription().getKey();
+        //String key = res.getSourceDescription().getKey();
         Field[] fields = res.getSourceDescription().getFields();
-        DataType type = key.length() < 1 ? DataType.STRING : DataType.ARRAY;
+        DataType type = DataType.ARRAY;
         for (Field f : fields) {
-            if (f.getName().equalsIgnoreCase(key)) {
+            if (f.getType() != null && f.getType().equalsIgnoreCase("KEY")) {
                 type = f.getSchema().getType();
                 break;
             }

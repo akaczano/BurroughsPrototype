@@ -88,6 +88,10 @@ public class SimpleQuery extends QueryBase {
         Logger.getLogger().write("Done\n");
         Logger.getLogger().write("Linking to database...");
         setGroupByDataType(determineDataType(table));
+        Transform keyTransform = new Transform("IncludeKey", "com.viasat.burroughs.smt.IncludeKey");
+        keyTransform.addProperty("field_name", query.getGroup().toString().replace("`", ""));
+        keyTransform.addProperty("multiple", Boolean.toString(query.getGroup().size() > 1));
+        transforms.add(keyTransform);
         connector = createConnector(properties.getId());
         Logger.getLogger().write("Done\n");
         startTime = System.currentTimeMillis();
