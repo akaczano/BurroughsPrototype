@@ -44,7 +44,7 @@ As the Peer Mentor for the Viasat team, it is my job to both lead the developmen
 
 ### Wyatt Klueber
 **Purdue Email**: wklueber@purdue.edu <br />
-As a member of the team, I worked on issue (#5), which allowed the user to read Burroughs and SQL commands from files through burroughs. Secondly, I worked on issue (#10), which enabled Burroughs to always know the data type of a query's group by. Currently I am working on issue (#16), which will allow the use of cascading aggregations in Burroughs.
+As a member of the team, I worked on issue (#16), which allowed the user to read Burroughs and SQL commands from files through burroughs. Secondly, I worked on issue (#10), which enabled Burroughs to always know the data type of a query's group by. Currently I am working on issue (#5), which will allow the use of cascading aggregations in Burroughs.
 
 ### Mihira Krishnaswamy
 **Purdue Email**: krish134@purdue.edu <br />
@@ -56,7 +56,7 @@ I worked on issue numbers 2,9,15,26. My contributions to Burroughs included addi
 
 ### Ainesh Sootha
 **Purdue Email**: asootha@purdue.edu <br />
-I worked on issue (#5), which dealt with reading Burroughs commands and SQL queries from files, which made running the first set of commands easier and quicker for the end user. I also worked on (#10) - determining the data type of the group by field in the query, and (am currently working on) (#16) - adding support for multiple group by’s (Cascading aggregations).  
+I worked on issue (#16), which dealt with reading Burroughs commands and SQL queries from files, which made running the first set of commands easier and quicker for the end user. I also worked on (#10) - determining the data type of the group by field in the query, and (am currently working on) (#5) - adding support for multiple group by’s (Cascading aggregations).  
 
 ## Project Statement
 
