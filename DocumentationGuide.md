@@ -25,6 +25,8 @@
 
 ## Student Biographies
 ### Jason Cao
+**Purdue Email**: cao216@purdue.edu <br />
+My responsibility as part of the Viasat team on the Burroughs Project is to add new features and implement improvements in Aidan's initial version of Burroughs.  As the time of writing, I have mostly completed the code for issue #14, which is to add Debug Levels to allow users to view information about how the SQL query is being  processed.  The other issue that I am working on is issue #7, which is to support windowing functions to allow users to read data from specific rows. 
 ### Aneesh Chakravarthula
 **Purdue Email**:  chakra55@purdue.edu <br />
 My role in the Burroughs project is to fix issues and help improve the code in the initial version of Burroughs made by Aidan. So far, my contribution on the team is issue #14, which was to add debugLevels for more output. This is seen as necessary to help the user get more information regarding the processes being done and the variables that were being used. 
