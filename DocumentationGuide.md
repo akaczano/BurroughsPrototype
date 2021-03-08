@@ -31,7 +31,11 @@ My role in the Burroughs project is to fix issues and help improve the code in t
 ### Vandana Chari
 **Purdue Email**: chariv@purdue.edu <br />
 As part of the Viasat team, my task is to further develop and improve Aidan's initial version of Burroughs. So far, I have contributed to the self-join issue (#26). To implement this functionality, I have rewritten self joins to join with a duplicated version of the topic. Ultimately, Burroughs should be able to support it because it is crucial to reference data within a table in order to make comparisons. 
+
 ### Erika Ergart
+**Purdue Email**: eergart@purdue.edu <br />
+As a part of the Viasat team, my job is to facilitate improvement of the Burrough's initial version. The issue that I worked on (#3) deals with the select and where clause of date-field conversion from a string representation of a SQL's to kSQL's languages. 
+
 ### Aidan Kaczanowski
 **Purdue Email**: akaczano@purdue.edu <br />
 As the Peer Mentor for the Viasat team, it is my job to both lead the development work and assist the students in anyway I can. I wrote the initial version of Burroughs including all of the base functionality for the CLI, producers, and processing of basic queries. I have worked on many issues since then, some of which include the addition of common table expressions (#12), support for the `group_concat` function (#8), and the creation of the Burroughs Web UI (#6). 
