@@ -37,6 +37,8 @@ As part of the Viasat team, my task is to further develop and improve Aidan's in
 As the Peer Mentor for the Viasat team, it is my job to both lead the development work and assist the students in anyway I can. I wrote the initial version of Burroughs including all of the base functionality for the CLI, producers, and processing of basic queries. I have worked on many issues since then, some of which include the addition of common table expressions (#12), support for the `group_concat` function (#8), and the creation of the Burroughs Web UI (#6). 
 
 ### Wyatt Klueber
+As a member of the team, I worked on issue (#5), which allowed the user to read Burroughs and SQL commands from files through burroughs. Secondly, I worked on issue (#10), which enabled Burroughs to always know the data type of a query's group by. Currently I am working on issue (#16), which will allow the use of cascading aggregations in Burroughs.
+
 ### Mihira Krishnaswamy
 **Purdue Email**: krish134@purdue.edu <br />
 As a part of the Viasat team, it is my job to help improve upon Aidan's initial version of Burroughs. So far, I have contributed to  the where clause date-field issue (#3), which deals with a necessary string to date conversion and where clause recursion so that the sql to ksql translation of queries containing dates works as expected and dates aren't compared lexographically.
