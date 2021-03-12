@@ -147,6 +147,67 @@ public class BasicQueryTest extends BurroughsTest {
         }
     }
 
+    @Test
+    public void testGroupByDifferentTypes() {
+        try {
+            checkConditions();
+            String table = "test_multi_group_type1";
+            String query = "select storer, basketnum, avg(units) as AvgUnits from test_data group by 1,2";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+            Map<String, Class> fields = new HashMap<>();
+            fields.put("basketnum", Integer.class);
+            compareFields(query, table, fields, "storer,basketnum");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testGroupByDifferentTypes2() {
+        try {
+            checkConditions();
+            String table = "test_multi_group_type2";
+            String query = "select t.storer, c.basketnum, avg(units) as AvgUnits " +
+                    "from test_data t inner join test_customers c on t.basketnum = c.basketnum " +
+                    "group by 1,2";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+            Map<String, Class> fields = new HashMap<>();
+            fields.put("basketnum", Integer.class);
+            compareFields(query, table, fields, "storer,basketnum");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testGroupByDifferentTypes3() {
+        try {
+            checkConditions();
+            String table = "test_multi_group_type3";
+            String query = "select t.storer, custid, avg(units) as AvgUnits " +
+                    "from test_data t inner join test_customers c on t.basketnum = c.basketnum " +
+                    "group by 1,2";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+            Map<String, Class> fields = new HashMap<>();
+            fields.put("custid", Integer.class);
+            compareFields(query, table, fields, "storer,custid");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
     @After
     public void dispose() {
         burroughs.stop(false);

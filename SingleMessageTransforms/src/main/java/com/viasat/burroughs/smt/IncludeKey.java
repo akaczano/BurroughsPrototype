@@ -53,7 +53,21 @@ public class IncludeKey<R extends ConnectRecord<R>> implements Transformation<R>
         else {
             String[] fields = fieldName.split(",");
             for (String fname : fields) {
-                builder.field(fname.trim(), Schema.STRING_SCHEMA);
+                Schema schema = Schema.STRING_SCHEMA;
+                if (fname.contains(":")) {
+                    String[] pair = fname.split(":");
+                    fname = pair[0];
+                    if (pair[1].equalsIgnoreCase("INT")) {
+                        schema = Schema.INT32_SCHEMA;
+                    }
+                    else if (pair[1].equalsIgnoreCase("DOUBLE")) {
+                        schema = Schema.FLOAT64_SCHEMA;
+                    }
+                    else if (pair[1].equalsIgnoreCase("BOOLEAN")) {
+                        schema = Schema.BOOLEAN_SCHEMA;
+                    }
+                }
+                builder.field(fname.trim(), schema);
             }
         }
         Schema newSchema = builder.build();
@@ -69,7 +83,22 @@ public class IncludeKey<R extends ConnectRecord<R>> implements Transformation<R>
             String[] fields = fieldName.split(",");
             String[] values = keyStr.split("\\|\\+\\|");
             for (int i = 0; i < fields.length; i++) {
-                updatedValue.put(fields[i].trim(), values[i]);
+                fields[i] = fields[i].trim();
+                if (fields[i].contains(":")) {
+                    String[] pair = fields[i].split(":");
+                    if (pair[1].equalsIgnoreCase("INT")) {
+                        updatedValue.put(pair[0], Integer.parseInt(values[i]));
+                    }
+                    else if (pair[1].equalsIgnoreCase("DOUBLE")) {
+                        updatedValue.put(pair[0], Double.parseDouble(values[i]));
+                    }
+                    else {
+                        updatedValue.put(pair[0], values[i]);
+                    }
+                }
+                else {
+                    updatedValue.put(fields[i], values[i]);
+                }
             }
         }
 

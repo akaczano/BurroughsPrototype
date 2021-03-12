@@ -123,6 +123,23 @@ public abstract class QueryBase {
     }
 
     /**
+     * Gets the schema, as a field name - data type table,
+     * for a stream
+     *
+     * @param stream The desired stream
+     * @return The schema
+     */
+    protected Map<String, DataType> GetSchema(String stream) {
+        DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
+                "describe stream");
+        Map<String, DataType> results = new HashMap<>();
+        for (Field f : description.getSourceDescription().getFields()) {
+            results.put(f.getName(), f.getSchema().getType());
+        }
+        return results;
+    }
+
+    /**
      * Gets the query ID
      *
      * @return The query ID

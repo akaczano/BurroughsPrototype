@@ -5,6 +5,7 @@ import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.StatementResponse;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.service.model.description.DataType;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.description.Field;
@@ -88,10 +89,7 @@ public class SimpleQuery extends QueryBase {
         Logger.getLogger().write("Done\n");
         Logger.getLogger().write("Linking to database...");
         setGroupByDataType(determineDataType(table));
-        Transform keyTransform = new Transform("IncludeKey", "com.viasat.burroughs.smt.IncludeKey");
-        keyTransform.addProperty("field_name", query.getGroup().toString().replace("`", ""));
-        keyTransform.addProperty("multiple", Boolean.toString(query.getGroup().size() > 1));
-        transforms.add(keyTransform);
+        addKeyTransforms(query);
         connector = createConnector(properties.getId());
         Logger.getLogger().write("Done\n");
         startTime = System.currentTimeMillis();
@@ -204,7 +202,13 @@ public class SimpleQuery extends QueryBase {
             query.getSelectList().set(i, newNode);
         }
 
+
         String preparedQuery = query.toString();
+
+        if (query.getFrom() instanceof SqlJoin && query.getGroup() == null) {
+            preparedQuery += " PARTITION BY NULL";
+        }
+
         for (String key : replacements.keySet()) {
             preparedQuery = preparedQuery.replace(key, replacements.get(key));
         }
@@ -261,6 +265,76 @@ public class SimpleQuery extends QueryBase {
         return item;
     }
 
+    private void addKeyTransforms(SqlSelect query) {
+        Transform keyTransform = new Transform("IncludeKey", "com.viasat.burroughs.smt.IncludeKey");
+        transforms.add(keyTransform);
+        if (query.getGroup().size() < 2) {
+            keyTransform.addProperty("field_name", query.getGroup()
+                    .toString().replace("`", ""));
+            keyTransform.addProperty("multiple", "false");
+            return;
+        }
+        keyTransform.addProperty("multiple", "true");
+
+        StringBuilder groupParam = new StringBuilder();
+
+        for (SqlNode n : query.getGroup()) {
+            if (n instanceof SqlIdentifier) {
+                if (groupParam.length() > 0) {
+                    groupParam.append(",");
+                }
+                SqlIdentifier id = (SqlIdentifier)n;
+                String type = getDataType(id, query.getFrom());
+                groupParam.append(id.names.get(id.names.size() - 1));
+                groupParam.append(":");
+                groupParam.append(type);
+            }
+            else {
+                // Function call
+            }
+        }
+        keyTransform.addProperty("field_name", groupParam.toString());
+    }
+
+    private String getDataType(SqlIdentifier id, SqlNode from) {
+        if (from instanceof SqlIdentifier) {
+            SqlIdentifier identifier = (SqlIdentifier) from;
+            return getDataTypeFromStream(identifier.getSimple(), id.names.get(id.names.size()-1));
+        }
+        else if (from instanceof SqlBasicCall) {
+            SqlBasicCall call = (SqlBasicCall)from;
+            if (id.names.size() < 2 || id.names.get(0).equalsIgnoreCase(call.operand(1).toString())) {
+                return getDataType(id, call.operand(0));
+            }
+        }
+        else if (from instanceof SqlJoin) {
+            String result1 = getDataType(id, ((SqlJoin) from).getLeft());
+            if (result1 != null) return result1;
+            return getDataType(id, ((SqlJoin) from).getRight());
+        }
+        else if (from instanceof SqlSelect) {
+            return null;
+        }
+        return null;
+    }
+
+    private String getDataTypeFromStream(String stream, String field) {
+        Map<String, DataType> schema = GetSchema(stream);
+        if (schema.containsKey(field)) {
+            DataType type = schema.get(field);
+            if (type == DataType.INTEGER) {
+                return "INT";
+            }
+            else if (type == DataType.DOUBLE) {
+                return "DOUBLE";
+            }
+            else {
+                return "STRING";
+            }
+        }
+        return null;
+    }
+
     /**
      * Removes all associated ksqlDB objects.
      */
@@ -278,7 +352,7 @@ public class SimpleQuery extends QueryBase {
         }
         Collections.reverse(streams); // Delete streams in the reverse order they were created
         for (StreamEntry stream : streams) {
-            Logger.getLogger().write("Dropping stream " + stream + "...");
+            Logger.getLogger().write("Dropping stream " + stream.getStreamName() + "...");
             terminateQueries(stream.getStreamName());
             if (stream.isDeleteTopic()) {
                 dropStreamAndTopic(service, stream.getStreamName());
