@@ -39,7 +39,7 @@ public class SimpleQuery extends QueryBase {
     private String groupby;
 
     private Stack<String> names = new Stack<>();
-
+    private Stack<SqlNode> nodes = new Stack<>();
     private int subqueryCounter = 0;
 
     /**
@@ -80,27 +80,7 @@ public class SimpleQuery extends QueryBase {
                 Map<String, String> replacements = new HashMap<>();
                 List<SqlBasicCall> extras = new ArrayList<>();
                 createStreams(replacements, select.getFrom(), extras);
-                /*
-                if (select.getFrom() instanceof SqlJoin) {
-                    SqlJoin join = (SqlJoin)select.getFrom();
-                    String l = ((SqlBasicCall)(join.getLeft())).operand(0).toString();
-                    if (((SqlBasicCall)(join.getLeft())).operand(0).toString().equals(((SqlBasicCall)(join.getRight())).operand(0).toString())) {
-                        System.out.println("self join code executing");
-                        String copy = createStream(l+"_dup",String.format("select * from %s",l));
-                        SqlParser.Config config = SqlParser.configBuilder()
-                                .setParserFactory(SqlParserImpl.FACTORY)
-                                .setConformance(SqlConformanceEnum.BABEL)
-                                .build();
-                        SqlNode cpNode = null;
-                        try {
-                            cpNode = SqlParser.create(copy, config).parseQuery(copy);
-                        } catch (SqlParseException e) {
-                            e.printStackTrace();
-                        }
-                        ((SqlBasicCall)join.getRight()).setOperand(0,cpNode);
-                    }
-                }
-                */
+
                 String queryText = translateQuery(select, replacements, extras);
                 String name = createStream("burroughs_" + withItem.name.getSimple(), queryText);
                 streams.add(new StreamEntry(name, true));
@@ -136,6 +116,7 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private String createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
+        nodes.push(from);
         System.out.println("Called");
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
@@ -146,18 +127,16 @@ public class SimpleQuery extends QueryBase {
             replacements.put(condition, String.format("WITHIN %d DAYS %s",
                     Integer.MAX_VALUE, condition));
 
-            String l = ((SqlBasicCall)(join.getLeft())).operand(0).toString();
-            String r = ((SqlBasicCall)(join.getRight())).operand(0).toString();
-            /*
-                Handling self join case not done recursively to avoid generating a novel sqlNode object also the input has deterministic complexity
-             */
-            if (((SqlBasicCall)(join.getLeft())).operand(0).toString().equals(((SqlBasicCall)(join.getRight())).operand(0).toString())) {
-                String left = createStreams(replacements, join.getLeft(), extras);
+            //String l = ((SqlBasicCall)(join.getLeft())).operand(0).toString();
+            //String r = ((SqlBasicCall)(join.getRight())).operand(0).toString();
+            String l = createStreams(replacements, join.getLeft(), extras);
+            String r = createStreams(replacements, join.getRight(), extras);
+            SqlNode k = nodes.peek();
+            if (l.equals(r)) {
                 System.out.println("self join code executing");
-
-                String duplicated_stream = "duplicated_"+left;
+                String duplicated_stream = "duplicated_"+l;
                 if (!streamExists(duplicated_stream)) {
-                    duplicated_stream = createStream(duplicated_stream, "select * from " + left);
+                    duplicated_stream = createStream(duplicated_stream, "select * from " + l);
                     streams.add(new StreamEntry(duplicated_stream, true));
                 }
                 SqlBasicCall right = ((SqlBasicCall)(join.getRight()));
@@ -168,9 +147,6 @@ public class SimpleQuery extends QueryBase {
                 positions.add(new SqlParserPos(0, 0));
                 sqi.setNames(names, positions);
                 System.out.println("Self Join finished");
-            } else {
-                createStreams(replacements, join.getLeft(), extras);
-                createStreams(replacements, join.getRight(), extras);
             }
         }
         else if (from instanceof SqlSelect) {
@@ -182,8 +158,14 @@ public class SimpleQuery extends QueryBase {
             if (names.isEmpty()) {
                 names.push(getId() + "_" + subqueryCounter++);
             }
+
             String stream = createStream(names.pop(), queryText);
             replacements.put("(" + subquery.toString() + ")", stream);
+            nodes.pop();
+            //SqlBasicCall sn = ((SqlBasicCall)nodes.peek());
+            //(sn).setOperator(null);
+           // sn.setOperand(0,sn.getOperands()[1]);
+           // sn.setOperand(1,null);
             streams.add(new StreamEntry(stream, true));
             return stream;
         }
@@ -212,6 +194,7 @@ public class SimpleQuery extends QueryBase {
             names.add(streamName);
             positions.add(new SqlParserPos(0, 0));
             identifier.setNames(names, positions);
+            nodes.pop();
             return streamName;
         }
         return "";
@@ -342,16 +325,13 @@ public class SimpleQuery extends QueryBase {
         Collections.reverse(streams); // Delete streams in the reverse order they were created
         for (StreamEntry stream : streams) {
             Logger.getLogger().write("Dropping stream " + stream.getStreamName() + "...");
-            CommandResponse cr;
             terminateQueries(stream.getStreamName());
             if (stream.isDeleteTopic()) {
-                cr = dropStreamAndTopic(service, stream.getStreamName());
+                dropStreamAndTopic(service, stream.getStreamName());
             }
             else {
-                cr = dropStream(stream.getStreamName());
+                dropStream(stream.getStreamName());
             }
-            Logger.getLogger().write(cr.toString());
-            Logger.getLogger().write("Done\n");
         }
     }
 
