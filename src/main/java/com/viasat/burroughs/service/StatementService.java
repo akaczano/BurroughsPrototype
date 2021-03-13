@@ -18,6 +18,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
 /**
  * Service class that provides utilities for executing Ksql statements
  */

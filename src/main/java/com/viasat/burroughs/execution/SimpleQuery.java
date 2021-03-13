@@ -116,7 +116,7 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, call.operand(0));
         }
         else if (from instanceof SqlIdentifier) {
-	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + "as SqlIdentifier.");
+	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlIdentifier.");
             SqlIdentifier identifier = (SqlIdentifier)from;
 
             String streamName = String.format("burroughs_%s", identifier.toString());
