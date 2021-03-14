@@ -116,8 +116,6 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private String createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
-        nodes.push(from);
-        System.out.println("Called");
         if (from instanceof SqlJoin) {
             SqlJoin join = (SqlJoin)from;
             translateCondition(join.getCondition(), extras);
@@ -127,17 +125,14 @@ public class SimpleQuery extends QueryBase {
             replacements.put(condition, String.format("WITHIN %d DAYS %s",
                     Integer.MAX_VALUE, condition));
 
-            //String l = ((SqlBasicCall)(join.getLeft())).operand(0).toString();
-            //String r = ((SqlBasicCall)(join.getRight())).operand(0).toString();
             String l = createStreams(replacements, join.getLeft(), extras);
             String r = createStreams(replacements, join.getRight(), extras);
-            SqlNode k = nodes.peek();
             if (l.equals(r)) {
                 System.out.println("self join code executing");
                 String duplicated_stream = "duplicated_"+l;
                 if (!streamExists(duplicated_stream)) {
                     duplicated_stream = createStream(duplicated_stream, "select * from " + l);
-                    streams.add(new StreamEntry(duplicated_stream, true));
+                    streams.add(new StreamEntry(duplicated_stream, false));
                 }
                 SqlBasicCall right = ((SqlBasicCall)(join.getRight()));
                 SqlIdentifier sqi = (SqlIdentifier)(right.operand(0));
@@ -161,11 +156,6 @@ public class SimpleQuery extends QueryBase {
 
             String stream = createStream(names.pop(), queryText);
             replacements.put("(" + subquery.toString() + ")", stream);
-            nodes.pop();
-            //SqlBasicCall sn = ((SqlBasicCall)nodes.peek());
-            //(sn).setOperator(null);
-           // sn.setOperand(0,sn.getOperands()[1]);
-           // sn.setOperand(1,null);
             streams.add(new StreamEntry(stream, true));
             return stream;
         }
@@ -194,7 +184,6 @@ public class SimpleQuery extends QueryBase {
             names.add(streamName);
             positions.add(new SqlParserPos(0, 0));
             identifier.setNames(names, positions);
-            nodes.pop();
             return streamName;
         }
         return "";
