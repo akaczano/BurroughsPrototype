@@ -74,7 +74,7 @@ public abstract class BurroughsTest {
         }
         BurroughsCLI cli = new BurroughsCLI(burroughs);
         cli.handleCommand(".status");
-        Thread.sleep(3000);
+        Thread.sleep(10000);
     }
 
     protected void compareCount(String query, String table) throws SQLException {

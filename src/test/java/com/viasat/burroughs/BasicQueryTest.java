@@ -1,6 +1,5 @@
 package com.viasat.burroughs;
 
-import com.google.common.hash.HashingInputStream;
 import org.junit.After;
 import org.junit.Test;
 
@@ -203,6 +202,44 @@ public class BasicQueryTest extends BurroughsTest {
             fields.put("custid", Integer.class);
             compareFields(query, table, fields, "storer,custid");
         } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testJoinHaving() {
+        try {
+            checkConditions();
+            String table = "test_join_having";
+            String query = "select custid, sum(spend) as TotalSpend, count(*) as TotalTransactions " +
+                    "from test_data t left join test_customers c on t.basketnum = c.basketnum " +
+                    "group by 1 having count(*) > 2;";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testFullAlias() {
+        try {
+            checkConditions();
+            String table = "test_full_alias";
+            String query = "select test_customers.custid, avg(units) from test_data " +
+                    "inner join test_customers on test_data.basketnum = test_customers.basketnum " +
+                    "group by 1";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+        }
+        catch (Exception e) {
             e.printStackTrace();
             fail();
         }

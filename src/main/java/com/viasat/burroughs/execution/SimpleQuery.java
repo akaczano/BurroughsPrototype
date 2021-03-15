@@ -106,10 +106,6 @@ public class SimpleQuery extends QueryBase {
             SqlJoin join = (SqlJoin)from;
             translateCondition(join.getCondition(), extras);
 
-            String condition = String.format("%s %s", join.getConditionType().toString(),
-                    join.getCondition().toString());
-            replacements.put(condition, String.format("WITHIN %d DAYS %s",
-                    Integer.MAX_VALUE, condition));
             createStreams(replacements, join.getLeft(), extras);
             createStreams(replacements, join.getRight(), extras);
         }
@@ -139,7 +135,10 @@ public class SimpleQuery extends QueryBase {
             String streamName = String.format("burroughs_%s", identifier.toString());
             Logger.getLogger().write(String.format("Creating stream %s...", streamName));
             if (!streamExists(streamName)) {
-                streams.add(new StreamEntry(createStream(streamName, identifier.getSimple().toLowerCase(), Format.AVRO), false));
+                StreamEntry ent = new StreamEntry(createStream(streamName, identifier.getSimple()
+                        .toLowerCase(), Format.AVRO), false);
+                ent.setTopicName(identifier.toString());
+                streams.add(ent);
                 Logger.getLogger().write("Done\n");
             }
             else {
@@ -163,6 +162,7 @@ public class SimpleQuery extends QueryBase {
      * @return The fully translated query string to pass to a create table statement
      */
     private String translateQuery(SqlSelect query, Map<String, String> replacements, List<SqlBasicCall> extras) {
+        translateIdentifiers(query);
         if (query.getGroup() != null) {
             for (int i = 0; i < query.getGroup().getList().size(); i++) {
                 SqlNode n = query.getGroup().get(i);
@@ -202,6 +202,7 @@ public class SimpleQuery extends QueryBase {
             query.getSelectList().set(i, newNode);
         }
 
+        translateJoins(query.getFrom(), replacements);
 
         String preparedQuery = query.toString();
 
@@ -214,6 +215,67 @@ public class SimpleQuery extends QueryBase {
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
         return preparedQuery;
+    }
+
+    private void translateJoins(SqlNode from, Map<String, String> replacements) {
+        if (from instanceof SqlJoin) {
+            SqlJoin join = (SqlJoin) from;
+            translateJoins(join.getLeft(), replacements);
+            translateJoins(join.getRight(), replacements);
+            String condition = String.format("%s %s", join.getConditionType().toString(),
+                    join.getCondition().toString());
+            replacements.put(condition, String.format("WITHIN %d DAYS %s",
+                    Integer.MAX_VALUE, condition));
+        }
+    }
+
+    private void translateIdentifiers(SqlNode n) {
+        if (n == null) return;
+
+        if (n instanceof SqlSelect) {
+            SqlSelect select = (SqlSelect) n;
+            for (SqlNode node : select.getSelectList()) {
+                translateIdentifiers(node);
+            }
+            translateIdentifiers(select.getFrom());
+            translateIdentifiers(select.getWhere());
+            for (SqlNode node : select.getGroup()) {
+                translateIdentifiers(node);
+            }
+        }
+        else if (n instanceof SqlJoin) {
+            SqlJoin join = (SqlJoin)n;
+            translateIdentifiers(join.getLeft());
+            translateIdentifiers(join.getRight());
+            translateIdentifiers(join.getCondition());
+        }
+        else if (n instanceof SqlBasicCall) {
+            SqlBasicCall call = (SqlBasicCall)n;
+            for (SqlNode node : call.operands) {
+                translateIdentifiers(node);
+            }
+        }
+        else if (n instanceof SqlIdentifier) {
+            SqlIdentifier id = (SqlIdentifier) n;
+            if (id.names.size() == 2) {
+                String source = id.names.get(0);
+                streams
+                    .stream()
+                    .filter(s -> s.getTopicName() != null)
+                    .filter(s -> s.getTopicName().equalsIgnoreCase(source))
+                    .map(StreamEntry::getStreamName)
+                    .findFirst()
+                    .ifPresent(name -> {
+                        List<String> names = new ArrayList<>();
+                        names.add(name);
+                        names.add(id.names.get(1));
+                        List<SqlParserPos> positions = new ArrayList<>();
+                        positions.add(new SqlParserPos(0, 0 ));
+                        positions.add(new SqlParserPos(0, 0 ));
+                        id.setNames(names, positions);
+                    });
+            }
+        }
     }
 
     private void translateCondition(SqlNode condition, List<SqlBasicCall> rejects) {
@@ -269,8 +331,8 @@ public class SimpleQuery extends QueryBase {
         Transform keyTransform = new Transform("IncludeKey", "com.viasat.burroughs.smt.IncludeKey");
         transforms.add(keyTransform);
         if (query.getGroup().size() < 2) {
-            keyTransform.addProperty("field_name", query.getGroup()
-                    .toString().replace("`", ""));
+            keyTransform.addProperty("field_name", evaluateGroupField(query,
+                    (SqlIdentifier) query.getGroup().get(0)));
             keyTransform.addProperty("multiple", "false");
             return;
         }
@@ -285,7 +347,7 @@ public class SimpleQuery extends QueryBase {
                 }
                 SqlIdentifier id = (SqlIdentifier)n;
                 String type = getDataType(id, query.getFrom());
-                groupParam.append(id.names.get(id.names.size() - 1));
+                groupParam.append(evaluateGroupField(query, id));
                 groupParam.append(":");
                 groupParam.append(type);
             }
@@ -294,6 +356,20 @@ public class SimpleQuery extends QueryBase {
             }
         }
         keyTransform.addProperty("field_name", groupParam.toString());
+    }
+
+    private String evaluateGroupField(SqlSelect query, SqlIdentifier group) {
+        for (SqlNode n : query.getSelectList()) {
+            if (n instanceof SqlBasicCall) {
+                SqlBasicCall call = (SqlBasicCall)n;
+                if (call.getOperator().getName().equalsIgnoreCase("AS")) {
+                    if (call.operand(0).toString().equalsIgnoreCase(group.toString())) {
+                        return call.operand(1).toString();
+                    }
+                }
+            }
+        }
+        return group.names.get(group.names.size()-1);
     }
 
     private String getDataType(SqlIdentifier id, SqlNode from) {

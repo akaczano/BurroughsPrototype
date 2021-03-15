@@ -12,7 +12,9 @@ import org.apache.kafka.connect.transforms.util.SimpleConfig;
 
 import static org.apache.kafka.connect.transforms.util.Requirements.requireStruct;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class IncludeKey<R extends ConnectRecord<R>> implements Transformation<R> {
     private interface ConfigName {
@@ -53,6 +55,7 @@ public class IncludeKey<R extends ConnectRecord<R>> implements Transformation<R>
         else {
             String[] fields = fieldName.split(",");
             for (String fname : fields) {
+                fname = fname.trim();
                 Schema schema = Schema.STRING_SCHEMA;
                 if (fname.contains(":")) {
                     String[] pair = fname.split(":");
@@ -67,7 +70,8 @@ public class IncludeKey<R extends ConnectRecord<R>> implements Transformation<R>
                         schema = Schema.BOOLEAN_SCHEMA;
                     }
                 }
-                builder.field(fname.trim(), schema);
+
+                builder.field(fname, schema);
             }
         }
         Schema newSchema = builder.build();
