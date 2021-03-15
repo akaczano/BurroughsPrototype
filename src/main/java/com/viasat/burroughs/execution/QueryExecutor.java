@@ -11,6 +11,10 @@ import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
 
+
+import com.viasat.burroughs.execution.DebugLevels;
+
+
 public class QueryExecutor {
 
     /*
@@ -45,7 +49,8 @@ public class QueryExecutor {
      * Executes a query
      * @param query The query, already parsed and validated
      */
-    public void executeQuery(ParsedQuery query) {
+    public void executeQuery(SqlSelect query) {
+	      DebugLevels.appendDebugLevel("executeQuery() executing query:" + '\n' + query.toString());  //added
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.
@@ -54,7 +59,6 @@ public class QueryExecutor {
         currentQuery = new SimpleQuery(service, kafkaService, props, query);
 
         try {
-            // Show time
             currentQuery.execute();
         } catch(ExecutionException e) {
             currentQuery.destroy();
@@ -73,6 +77,8 @@ public class QueryExecutor {
         if (currentQuery != null) {
             currentQuery.destroy();
             currentQuery = null;
+
+	    DebugLevels.clearDebugLevels();  //added to clear debug traceback
         }
         else {
             Logger.getLogger().writeLine("No active query. Type some SQL to run one.");

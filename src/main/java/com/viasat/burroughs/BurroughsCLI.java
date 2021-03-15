@@ -20,6 +20,8 @@ import org.jline.reader.ParsedLine;
 import java.io.*;
 import java.util.*;
 
+import com.viasat.burroughs.execution.DebugLevels;  //added
+
 /**
  * Class that handles all CLI commands and prints responses
  */
@@ -50,8 +52,12 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
+
         this.handlers.put(".delete", this::handleDeletion);
         this.handlers.put(".file", this::handleFile);
+
+	this.handlers.put(".debug", this::handleDebug);
+	this.handlers.put(".file", this::handleFilein);
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
     }
@@ -97,6 +103,7 @@ public class BurroughsCLI implements Completer {
         } catch (ExecutionException e) {
             // Display error
             System.out.println(e.getMessage());
+            System.out.println("Use .debug for more info.");
         }
     }
 
@@ -130,6 +137,42 @@ public class BurroughsCLI implements Completer {
         for (Topic t : list) {
             System.out.println(t);
         }
+    }
+
+    /**
+     * Prints out DebugLevels String
+     *
+     * @param command Command string starting with .debug
+     */
+    private void handleDebug(String command) {
+	
+        String[] words = command.split("\\s+");
+	if (words.length == 1) {
+		System.out.println("Usage: .debug <value>, where value = 1 or 2 ");
+		return;
+	}
+	else if (Integer.parseInt(words[1]) == 1) {
+		System.out.println("Preliminary Traceback:" + '\n');
+		DebugLevels.displayDebugLevel();
+	}
+	else if (Integer.parseInt(words[1]) == 2) {
+		System.out.println("Preliminary Traceback:" + '\n');
+		DebugLevels.displayDebugLevel2();
+	}
+	else {
+		System.out.println("Error.  Invalid value. Please use value = 1 or 2.");
+	}
+    
+    }
+
+
+    /**
+     * Takes in files
+     *
+     * @param command Command string starting with .topics
+     */
+    private void handleFilein(String command) {
+	System.out.println("This is the current directory" + System.getProperty("user.dir"));
     }
 
     /**
@@ -440,6 +483,10 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tresume: resumes producer operation");
         System.out.println("\tkill: stops producer operation");
         System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
+	
+	System.out.println(".debug <debug value>");
+	System.out.println("\tdebug value: \n\t1 = shows the kSQL query(ies) executed;  2 = shows more in-depth traceback of query transformation");
+
         System.out.println(".file <file name> <delimiter>");
         System.out.println("\tReads and executes commands and/or a query from the specified file.");
         System.out.println(".quit");

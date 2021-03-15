@@ -18,6 +18,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
 /**
  * Service class that provides utilities for executing Ksql statements
  */
@@ -81,6 +85,7 @@ public class StatementService {
      */
     public StatementResponse executeStatement(String statement, StreamProperties properties) {
         try {
+            DebugLevels.appendDebugLevel2("\n\t" + "executeStatement: executing " + "\n\t" + statement);
             statement = statement.trim();
             String up = statement.toUpperCase();
             Class<? extends StatementResponse> format;

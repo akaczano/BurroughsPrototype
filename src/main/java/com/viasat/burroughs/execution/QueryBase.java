@@ -12,6 +12,10 @@ import com.viasat.burroughs.service.model.list.Format;
 import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
 
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
 import java.util.*;
 
 /**
@@ -33,7 +37,7 @@ public abstract class QueryBase {
 
     /**
      * Kafka service that can access Kafka broker directly. Used to get consumer
-     * group offsets during .status execution
+     * group offsets during .getCommandStatus() execution
      */
     protected final KafkaService kafkaService;
 
@@ -143,7 +147,8 @@ public abstract class QueryBase {
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
-        return tableName;
+        DebugLevels.appendDebugLevel2("\n\t" + "createTable: " + statement);
+		return tableName;
     }
 
     protected String createStream(String name, String query) {
@@ -178,6 +183,11 @@ public abstract class QueryBase {
         String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
                 streamName, topic, format.toString());
         CommandResponse result = service.executeStatement(query, "create stream");
+
+
+	DebugLevels.appendDebugLevel2("\n\t" + "createStream: Creating stream from " + query);  //added
+
+
         return streamName;
     }
     /**
@@ -188,10 +198,16 @@ public abstract class QueryBase {
      * @return The name of the stream
      */
     public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
+        DebugLevels.appendDebugLevel2("The stream " + streamName + " is being dropped. " + service);
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "stream and topic dropped");
+
+        DebugLevels.appendDebugLevel2("\n\t" + "dropStreamAndTopic from: " + query);
+
+
         return result;
+
     }
 
     /**
@@ -231,8 +247,11 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
+	    DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
+	
+	DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
         return "burr_connect_" + id;
     }
 
@@ -277,20 +296,32 @@ public abstract class QueryBase {
      * @param queryId The query to terminate
      */
     private void terminateQuery(String queryId) {
+        DebugLevels.appendDebugLevel("Query is being terminated: ");
+
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
-        if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
+        
+        if (!result.getCommandStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
         }
+        else
+        {
+
+         DebugLevels.appendDebugLevel2("The command response is " + result.getCommandStatus().getMessage());
+
+        }
     }
+    
 
     /**
      * Terminates all queries that depend upon the given object
      *
      * @param objectName The object to check, usually a table
      */
-    protected void terminateQueries(String objectName) {
+    private void terminateQueries(String objectName) {
+        DebugLevels.appendDebugLevel2("We are terminating queries for " + objectName);
+
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
@@ -299,6 +330,9 @@ public abstract class QueryBase {
         for (Query query : description.getSourceDescription().getWriteQueries()) {
             terminateQuery(query.getId());
         }
+        DebugLevels.appendDebugLevel2("A description of the service is "+ description);
+        
+        
     }
 
     /**
@@ -333,7 +367,9 @@ public abstract class QueryBase {
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
-    }
+		DebugLevels.appendDebugLevel2("The status of the result object is "+ result.getCommandStatus());
+		
+	}
 
 
     protected TableStatus getTableStatus(String tableName) {
