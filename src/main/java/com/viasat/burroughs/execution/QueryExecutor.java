@@ -6,12 +6,12 @@ import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
+import com.viasat.burroughs.validation.ParsedQuery;
 import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
 
 
-//added
 import com.viasat.burroughs.execution.DebugLevels;
 
 
@@ -50,26 +50,14 @@ public class QueryExecutor {
      * @param query The query, already parsed and validated
      */
     public void executeQuery(SqlSelect query) {
-
-	DebugLevels.appendDebugLevel("executeQuery() executing query:" + '\n' + query.toString());  //added
-
+	      DebugLevels.appendDebugLevel("executeQuery() executing query:" + '\n' + query.toString());  //added
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.
         props.setId(UUID.randomUUID().toString().replaceAll("-", ""));
 
-        // Create a new SimpleQuery object
-        // Originally, I intended to have a handful of different query classes,
-        // each one handling a different kind of query, but I now doubt the sense
-        // of that design
         currentQuery = new SimpleQuery(service, kafkaService, props, query);
-        if (query.getGroup().getList().size() == 1) {
-            // Set the group by field to correctly configure the connector
-            // Currently, this isn't working and all keys are being converted to
-            // hex strings
-            String groupByField = query.getGroup().get(0).toString();
-            currentQuery.setGroupBy(groupByField);
-        }
+
         try {
             currentQuery.execute();
         } catch(ExecutionException e) {

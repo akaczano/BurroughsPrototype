@@ -85,12 +85,19 @@ public abstract class QueryBase {
      */
     public abstract QueryStatus getStatus();
 
-    /**
-     * Set the group by field from which the group by data type can be determined
-     *
-     * @param field Field name
-     */
-    public abstract void setGroupBy(String field);
+    public DataType determineDataType(String table) {
+        DescribeResponse res =  service.executeStatement("DESCRIBE " + table + ";", "describe table");
+        String key = res.getSourceDescription().getKey();
+        Field[] fields = res.getSourceDescription().getFields();
+        DataType type = key.length() < 1 ? DataType.STRING : DataType.ARRAY;
+        for (Field f : fields) {
+            if (f.getName().equalsIgnoreCase(key)) {
+                type = f.getSchema().getType();
+                break;
+            }
+        }
+        return type;
+    }
 
     /**
      * Set the group by data type which is used to determine the Key converter class
@@ -142,6 +149,12 @@ public abstract class QueryBase {
         CommandResponse response = service.executeStatement(statement, "create table");
         DebugLevels.appendDebugLevel2("\n\t" + "createTable: " + statement);
 		return tableName;
+    }
+
+    protected String createStream(String name, String query) {
+        String ksql = String.format("CREATE STREAM %s as %s EMIT CHANGES;", name, query);
+        CommandResponse result = service.executeStatement(ksql, "create stream");
+        return name;
     }
 
     /**
@@ -243,26 +256,6 @@ public abstract class QueryBase {
     }
 
     /**
-     * Gets the schema, as a field name - data type table,
-     * for a stream
-     *
-     * @param stream The desired stream
-     * @return The schema
-     */
-    protected Map<String, DataType> GetSchema(String stream) {
-        DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
-                "describe stream");
-        Map<String, DataType> results = new HashMap<>();
-        for (Field f : description.getSourceDescription().getFields()) {
-            results.put(f.getName(), f.getSchema().getType());
-
-        }
-	DebugLevels.appendDebugLevel2("GetSchema:" + "\n\t" + "generated " + results);
-
-        return results;
-    }
-
-    /**
      * Checks if a stream exists
      *
      * @param streamName The name of the stream
@@ -327,7 +320,8 @@ public abstract class QueryBase {
      * @param objectName The object to check, usually a table
      */
     private void terminateQueries(String objectName) {
-        DebugLevels.appendDebugLevel2("We are terminating queries for" + objectName);
+        DebugLevels.appendDebugLevel2("We are terminating queries for " + objectName);
+
         DescribeResponse description = service.
                 executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
         for (Query query : description.getSourceDescription().getReadQueries()) {
@@ -411,6 +405,7 @@ public abstract class QueryBase {
 
         Map<TopicPartition, Long> queryStatuses = kafkaService.getCurrentOffset(consumerGroup);
         if (queryStatuses != null) {
+
             for (TopicPartition tp : queryStatuses.keySet()) {
                 long current = queryStatuses.get(tp);
                 long max = kafkaService.getLogMaxOffset(consumerGroup, tp);

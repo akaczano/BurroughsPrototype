@@ -7,6 +7,7 @@
     - [2. Running Burroughs](#2-running-burroughs)  
     - [3. Test Data](#3-test-data)
     - [4. Executing a simple query](#4-executing-a-simple-query)
+    - [5. Reading commands from a file](#5-reading-commands-from-a-file)
     - [Running the Burroughs Browser Interface](#Running-the-Burroughs-Browser-Interface)
   - [System Configuration](#system-configuration)
     - [Environment Variables](#environment-variables)
@@ -81,6 +82,21 @@ You should now be able to view your results:
 ![screenshot](images/output.png)
 
 When you're done, don't forget to run `.stop` to clean up all of the stream processing infrastructure. `.quit` or Ctrl+D exits the burroughs shell.
+
+### 5. Reading commands from a file
+Burroughs can read commands from a file, simply by using the .file command. Commands in the file can either be sql or burroughs commands. All files should be put in the /commands folder. 
+```burroughs
+.file <filename> <delimiter>
+```
+Example file:
+```input.txt
+.producer transactions_producer start 10000; .producer customers_producer start 10000; .table test; select t.basketnum, count(c.CustId) from transactions as t left join customers as c on c.basketnum = t.basketnum group by t.basketnum;
+```
+Example command:
+```burroughs
+.file input.txt ;
+```
+![screenshot](images/fileInputExample.png)
 
 ### Running the Burroughs Browser Interface
 Burroughs also ships with a browser-based graphical user interface. To use this, do the following:
