@@ -86,7 +86,7 @@ public abstract class QueryBase {
     public abstract QueryStatus getStatus();
 
     public DataType determineDataType(String table) {
-        DescribeResponse res =  service.executeStatement("DESCRIBE " + table + ";", "describe table");
+        DescribeResponse res = service.executeStatement("DESCRIBE " + table + ";", "describe table");
         String key = res.getSourceDescription().getKey();
         Field[] fields = res.getSourceDescription().getFields();
         DataType type = key.length() < 1 ? DataType.STRING : DataType.ARRAY;
@@ -148,7 +148,7 @@ public abstract class QueryBase {
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
         DebugLevels.appendDebugLevel2("\n\t" + "createTable: " + statement);
-		return tableName;
+        return tableName;
     }
 
     protected String createStream(String name, String query) {
@@ -185,11 +185,12 @@ public abstract class QueryBase {
         CommandResponse result = service.executeStatement(query, "create stream");
 
 
-	DebugLevels.appendDebugLevel2("\n\t" + "createStream: Creating stream from " + query);  //added
+        DebugLevels.appendDebugLevel2("\n\t" + "createStream: Creating stream from " + query);  //added
 
 
         return streamName;
     }
+
     /**
      * Version of dropStream that can be done from a static context and takes the underlying topic with it
      *
@@ -247,11 +248,11 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
-	    DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
+            DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
-	
-	DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
+
+        DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
         return "burr_connect_" + id;
     }
 
@@ -301,25 +302,21 @@ public abstract class QueryBase {
         CommandResponse result = service.executeStatement(
                 String.format("TERMINATE %s;", queryId),
                 "terminate query");
-        
-        if (!result.getCommandStatus().equals("SUCCESS")) {
+
+        if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
-        }
-        else
-        {
-
-         DebugLevels.appendDebugLevel2("The command response is " + result.getCommandStatus().getMessage());
-
+        } else {
+            DebugLevels.appendDebugLevel2("The command response is " + result.getCommandStatus().getMessage());
         }
     }
-    
+
 
     /**
      * Terminates all queries that depend upon the given object
      *
      * @param objectName The object to check, usually a table
      */
-    private void terminateQueries(String objectName) {
+    protected void terminateQueries(String objectName) {
         DebugLevels.appendDebugLevel2("We are terminating queries for " + objectName);
 
         DescribeResponse description = service.
@@ -330,9 +327,9 @@ public abstract class QueryBase {
         for (Query query : description.getSourceDescription().getWriteQueries()) {
             terminateQuery(query.getId());
         }
-        DebugLevels.appendDebugLevel2("A description of the service is "+ description);
-        
-        
+        DebugLevels.appendDebugLevel2("A description of the service is " + description);
+
+
     }
 
     /**
@@ -367,9 +364,9 @@ public abstract class QueryBase {
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
-		DebugLevels.appendDebugLevel2("The status of the result object is "+ result.getCommandStatus());
-		
-	}
+        DebugLevels.appendDebugLevel2("The status of the result object is " + result.getCommandStatus());
+
+    }
 
 
     protected TableStatus getTableStatus(String tableName) {

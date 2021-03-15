@@ -86,8 +86,8 @@ public class SimpleQuery extends QueryBase {
         createStreams(replacements, query.getFrom(), extras);
 
         // Create table and connector
-        String queryString = translateQuery(query, replacements);
-	      DebugLevels.appendDebugLevel(queryString);
+        String queryString = translateQuery(query, replacements, extras);
+        DebugLevels.appendDebugLevel(queryString);
         Logger.getLogger().write("Creating table...");
         table = createTable(properties.getId(), queryString);
         Logger.getLogger().write("Done\n");
@@ -104,7 +104,7 @@ public class SimpleQuery extends QueryBase {
      * @param replacements
      * @param from
      */
-    private void createStreams(Map<String, String> replacements, SqlNode from) {
+    private void createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
 	      DebugLevels.appendDebugLevel2("createStreams inputs: "+ replacements + " and "+ from);
         if (from instanceof SqlJoin) {
 	        DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlJoin.");
