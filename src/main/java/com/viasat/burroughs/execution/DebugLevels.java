@@ -7,11 +7,6 @@ public class DebugLevels {
 
 	private static String debugLevel = "";
 	private static String debugLevel2 = "";
-	/*
-	public DebugLevels() {
-		debugLevel = "";
-		debugLevel2 = "";
-	}*/
 
 	public static void clearDebugLevels() {
 		DebugLevels.debugLevel = "";

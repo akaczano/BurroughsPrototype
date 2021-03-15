@@ -71,8 +71,6 @@ public class QueryExecutor {
             currentQuery.setGroupBy(groupByField);
         }
         try {
-            // Show time
-	    //DebugLevels.appendDebugLevel(currentQuery.toString());
             currentQuery.execute();
         } catch(ExecutionException e) {
             currentQuery.destroy();
@@ -82,9 +80,6 @@ public class QueryExecutor {
         }
         Logger.getLogger().writeLine("Your query is now active. Use .status to check on it.");
         Logger.getLogger().writeLine("Use .stop to terminate.");
-        //DebugLevels.appendDebugLevel2("executeQuery() executed: "+ currentQuery);
-              
-
     }
 
     /**

@@ -103,6 +103,7 @@ public class BurroughsCLI implements Completer {
         } catch (ExecutionException e) {
             // Display error
             System.out.println(e.getMessage());
+            System.out.println("Use .debug for more info.");
         }
     }
 
