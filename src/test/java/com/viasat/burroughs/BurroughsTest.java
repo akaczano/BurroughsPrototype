@@ -1,6 +1,10 @@
 package com.viasat.burroughs;
 
+import com.viasat.burroughs.client.App;
+import com.viasat.burroughs.client.BurroughsCLI;
 import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.logging.ConsoleLogger;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.list.Topic;
 import org.junit.Assert;
@@ -61,6 +65,7 @@ public abstract class BurroughsTest {
                 t.getName().equalsIgnoreCase("test_data")));
     }
 
+
     protected void waitForQuery() throws InterruptedException {
         while (true) {
             if (burroughs.queryStatus().getTableStatus().hasStatus()) {
@@ -74,7 +79,7 @@ public abstract class BurroughsTest {
         }
         BurroughsCLI cli = new BurroughsCLI(burroughs);
         cli.handleCommand(".status");
-        Thread.sleep(3000);
+        Thread.sleep(10000);
     }
 
     protected void compareCount(String query, String table) throws SQLException {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getTopics , getSchema } from '../actions/basicActions';
+import { getTopics , getSchema } from '../actions/topicActions';
 
 class TopicList extends React.Component {
     componentDidMount() {
@@ -30,7 +30,7 @@ class TopicList extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        topics: state.core.topics
+        topics: state.topic.topics
     };
 };
 

@@ -88,7 +88,7 @@ services:
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
 
   ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:5.5.1
+    image: confluentinc/cp-ksqldb-server:latest
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
@@ -133,7 +133,7 @@ services:
     environment:
       POSTGRES_PASSWORD: password
   ksqldb-cli:
-    image: confluentinc/cp-ksqldb-cli:5.5.1
+    image: confluentinc/cp-ksqldb-cli:latest
     container_name: ksqldb-cli
     depends_on:
       - broker

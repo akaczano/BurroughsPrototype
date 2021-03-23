@@ -1,7 +1,7 @@
 //package com.viasat.burroughs.ConsoleLogger;
 package com.viasat.burroughs.execution;
 
-import com.viasat.burroughs.Logger;
+import com.viasat.burroughs.logging.Logger;
 
 public class DebugLevels {
 

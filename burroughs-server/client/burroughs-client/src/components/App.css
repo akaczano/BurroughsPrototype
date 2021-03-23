@@ -53,3 +53,23 @@ body {
 .topic-list p:hover {
     color: blue;
 }
+
+.deleteButton {
+    margin-left: 15px;
+}
+
+.delete-error {
+    color: red;
+}
+
+.data-table td {
+    padding: 5px;        
+}
+
+.data-table th {
+    padding: 8px;
+}
+
+.sql-in {
+    height: 35px;
+}

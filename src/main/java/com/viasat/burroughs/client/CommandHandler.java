@@ -1,4 +1,4 @@
-package com.viasat.burroughs;
+package com.viasat.burroughs.client;
 
 /**
  * Simple interface that defines a command handler

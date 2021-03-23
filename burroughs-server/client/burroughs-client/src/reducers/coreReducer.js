@@ -1,50 +1,24 @@
 import {
-    SET_CONNECTION,
-    SET_TOPICS,
-    SET_QUERY_EXECUTING,
-    SET_QUERY_EXECUTED,
-    SET_QUERY_TERMINATING,
-    SET_QUERY_TERMINATED,    
+    SET_CONNECTION,   
     SET_CODE,
-    SET_OUTPUT_TABLE,
-    QUERY_ERROR,
-    SET_DATABASE,
-    SET_STATUS,
-    STATUS_RUNNING,
-    SET_KEEP_TABLE,
-    APPEND_MESSAGE,
-    SET_DATA,
-    CLOSE_DESCRIPTION,
-    SET_SCHEMA,
-    DATA_LOADING,
-    DATA_ERROR
+    SET_OUTPUT_TABLE,    
+    SET_DATABASE,    
+    APPEND_MESSAGE
 } from '../actions/actionTypes';
 
 const initialState = {
     connection: null,
-    code: '',
-    table: null,
-    status: null,
+    code: '',      
+    table: null,  
     dbInfo: {
         hostname: '',
         username: '',
         password: '',
         database: '',
         table: ''
-    },
-    topics: [],
-    topicSchema: null,
-    queryActive: false,
-    queryExecuting: false,
-    queryTerminating: false,
-    queryErrorMessage: null,
-    statusRunning: false,
-    keepTable: false,
+    },       
     consoleMessages: [],
-    lastConsoleRequest: Date.now(),
-    data: null,
-    dataLoading: false,
-    dataError: null    
+    lastConsoleRequest: Date.now(), 
 };
 
 const reducer = (state = initialState, action) => {
@@ -53,50 +27,8 @@ const reducer = (state = initialState, action) => {
             ...state,
             connection: action.payload
         }
-    }
-    else if (action.type === SET_TOPICS) {
-        return {
-            ...state,
-            topics: action.payload
-        };
-    }
-    else if (action.type === SET_QUERY_EXECUTING) {
-        return {
-            ...state,
-            queryExecuting: true
-        };
-    }
-    else if (action.type === SET_QUERY_EXECUTED) {
-        return {
-            ...state,
-            queryExecuting: false,
-            queryActive: true,
-            queryErrorMessage: null
-        }
-    }
-    else if (action.type === SET_QUERY_TERMINATING) {
-        return {
-            ...state,
-            queryTerminating: true
-        };
-    }
-    else if (action.type === SET_QUERY_TERMINATED) {
-        return {
-            ...state,
-            queryTerminating: false,
-            queryActive: false,
-            queryErrorMessage: null
-        };
-    }
-    else if (action.type === QUERY_ERROR) {
-        return {
-            ...state,
-            queryExecuting: false,
-            queryTerminating: false,
-            queryActive: false,
-            queryErrorMessage: action.payload
-        };
-    }
+    }    
+
     else if (action.type === SET_DATABASE) {        
         return {
             ...state,
@@ -108,20 +40,6 @@ const reducer = (state = initialState, action) => {
                 table: action.payload.table,
                 data: null
             }
-        };
-    }
-    else if (action.type === STATUS_RUNNING) {
-        return {
-            ...state,
-            statusRunning: true
-        };
-    }
-    else if (action.type === SET_STATUS) {                        
-        return {
-            ...state,
-            status: action.payload,
-            statusRunning: false,
-            queryActive: !action.payload ? false : true
         };
     }
     else if (action.type === SET_CODE) {
@@ -139,12 +57,6 @@ const reducer = (state = initialState, action) => {
             }
         };
     }
-    else if (action.type === SET_KEEP_TABLE) {
-        return {
-            ...state,
-            keepTable: !state.keepTable
-        };
-    }
     else if (action.type === APPEND_MESSAGE) {
         let newMessages = state.consoleMessages.slice();
         for (const m of action.payload) {
@@ -157,40 +69,7 @@ const reducer = (state = initialState, action) => {
             consoleMessages: newMessages,
             lastConsoleRequest: Date.now()
         };
-    }
-    else if (action.type === SET_DATA) {
-        return {
-            ...state,
-            data: action.payload,
-            dataLoading: false,
-            dataError: null
-        };
-    }
-    else if (action.type === DATA_LOADING) {
-        return {
-            ...state,
-            dataLoading: true
-        };
-    }
-    else if (action.type === DATA_ERROR) {        
-        return {
-            ...state,
-            dataLoading: false,
-            dataError: action.payload
-        };
-    }
-    else if (action.type === SET_SCHEMA) {        
-        return {
-            ...state,
-            topicSchema: action.payload
-        };
-    }
-    else if (action.type === CLOSE_DESCRIPTION) {
-        return {
-            ...state,
-            topicSchema: null
-        };
-    }    
+    }  
     return state;
 };
 

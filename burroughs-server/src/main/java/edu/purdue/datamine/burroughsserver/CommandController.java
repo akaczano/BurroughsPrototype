@@ -8,9 +8,9 @@ import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
-import edu.purdue.datamine.burroughsserver.model.ProducerModel;
-import edu.purdue.datamine.burroughsserver.model.QueryBody;
-import edu.purdue.datamine.burroughsserver.model.DatabaseProperties;
+import edu.purdue.datamine.burroughsserver.models.ProducerModel;
+import edu.purdue.datamine.burroughsserver.models.QueryBody;
+import edu.purdue.datamine.burroughsserver.models.DatabaseProperties;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -105,6 +105,20 @@ public class CommandController {
     @PostMapping("/command/stop")
     public void stop(@RequestParam(value = "keepTable", defaultValue = "false") boolean keepTable) {
         burroughs.stop(keepTable);
+    }
+
+    @CrossOrigin
+    @PostMapping("/command/cleanup")
+    public void cleanup() {
+        burroughs.cleanUp();
+    }
+
+    @CrossOrigin
+    @PostMapping("/command/drop")
+    public void dropTopic(@RequestParam(value = "topic") String topic) {
+        if (topic != null) {
+            burroughs.dropTopic(topic);
+        }
     }
 
     @CrossOrigin

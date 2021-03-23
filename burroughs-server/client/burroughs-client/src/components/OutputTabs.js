@@ -2,7 +2,7 @@ import React from 'react';
 import { Row } from 'react-bootstrap';
 import { connect } from 'react-redux';
 
-import { loadMessages, loadSnapshot } from '../actions/basicActions';
+import { loadMessages } from '../actions/basicActions';
 import { loadProducers } from '../actions/producerActions';
 import StatusDisplay from './StatusDisplay';
 import Console from './Console';
@@ -48,7 +48,7 @@ class OutputTabs extends React.Component {
                         );
                     })}
                 </Row>
-                <Row style={{margin:'0px', padding: '5px', paddingRight: '15px', maxHeight: '45vh', overflowY: 'auto'}}>                    
+                <Row style={{margin:'0px', padding: '0px', paddingRight: '15px', maxHeight: '45vh', overflowY: 'auto'}}>                    
                     {this.getDisplayedComponent()}
                 </Row>
             </>
@@ -57,4 +57,4 @@ class OutputTabs extends React.Component {
 }
 
 export default connect(state => state, 
-    { loadMessages, loadSnapshot, loadProducers })(OutputTabs);
+    { loadMessages, loadProducers })(OutputTabs);

@@ -1,8 +1,9 @@
 package com.viasat.burroughs;
 
 import com.viasat.burroughs.execution.ExecutionException;
-import com.viasat.burroughs.execution.QueryBase;
 import com.viasat.burroughs.execution.QueryExecutor;
+import com.viasat.burroughs.execution.QueryUtil;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.producer.ProducerInterface;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
@@ -13,14 +14,11 @@ import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.DescribeResponse;
 import com.viasat.burroughs.service.model.description.Field;
-import com.viasat.burroughs.service.model.list.Format;
-import com.viasat.burroughs.service.model.list.ListResponse;
-import com.viasat.burroughs.service.model.list.Topic;
+import com.viasat.burroughs.service.model.list.*;
 import com.viasat.burroughs.validation.ParsedQuery;
 import com.viasat.burroughs.validation.QueryValidator;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
-import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParseException;
 
 import java.sql.Connection;
@@ -48,6 +46,11 @@ public class Burroughs implements DBProvider {
      * Provides access to ksqlDB
      */
     private StatementService service;
+
+    /**
+     * Utilities for working with ksqlDB
+     */
+    private QueryUtil util;
 
     /**
      * In charge of the parsing and execution of queries
@@ -86,6 +89,7 @@ public class Burroughs implements DBProvider {
         if (ksqlConnected) {
             this.producerInterface = new ProducerInterface(producerPath, kafkaHost, schemaRegistry, this);
         }
+        this.util = new QueryUtil(service);
     }
 
     /**
@@ -169,8 +173,8 @@ public class Burroughs implements DBProvider {
      * @return
      */
     public Field[] topic(String topicName) {
-        if (!QueryBase.streamExists(service, "BURROUGHS_" + topicName)) {
-            QueryBase.createStream(service, "BURROUGHS_" + topicName, topicName,
+        if (!util.streamExists("BURROUGHS_" + topicName)) {
+            util.createStream("BURROUGHS_" + topicName, topicName,
                     Format.AVRO);
         }
         DescribeResponse description = service.executeStatement("DESCRIBE BURROUGHS_" + topicName + ";",
@@ -184,7 +188,7 @@ public class Burroughs implements DBProvider {
      */
     public void dropTopic(String topicName) {
         topic(topicName);
-        CommandResponse cr = QueryBase.dropStreamAndTopic(service, "BURROUGHS_" + topicName);
+        CommandResponse cr = util.dropStreamAndTopic("BURROUGHS_" + topicName);
     }
     /**
      * Get a list of topics on the connected broker
@@ -196,6 +200,34 @@ public class Burroughs implements DBProvider {
         return results.getTopics();
     }
 
+
+    public boolean cleanUp() {
+        if (executor.isExecuting()) {
+            return false;
+        }
+        ListResponse connectors = service.executeStatement("SHOW CONNECTORS;", "show connectors");
+        for (Connector c : connectors.getConnectors()) {
+            if (c.getName().toUpperCase().startsWith("BURR_CONNECT_")) {
+                util.dropConnector(c.getName());
+            }
+        }
+        ListResponse tables = service.executeStatement("SHOW TABLES;", "show tables");
+        for (Table t : tables.getTables()) {
+            if (t.getName().toUpperCase().startsWith("BURROUGHS_")) {
+                util.dropTable(t.getName());
+            }
+        }
+        ListResponse streams = service.executeStatement("SHOW STREAMS;", "show streams");
+        for (Stream s : streams.getStreams()) {
+            if (s.getName().toUpperCase().startsWith("BURROUGHS_")) {
+                util.dropStream(s.getName());
+            }
+            else if (s.getName().toUpperCase().startsWith("BURR_")) {
+                util.dropStreamAndTopic(s.getName());
+            }
+        }
+        return true;
+    }
 
     /**
      * Returns the status of the currently executing qurey

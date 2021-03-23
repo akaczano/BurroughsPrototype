@@ -10,6 +10,8 @@ public class ConnectionHolder {
     private Connection connection;
     private final DBProvider dbProvider;
 
+    private final int MAX_RESULT_SIZE = 500;
+
     public ConnectionHolder(DBProvider db) {
         dbProvider = db;
     }
@@ -39,6 +41,7 @@ public class ConnectionHolder {
             }
             data.add(header);
             while (!results.isLast()) {
+                if (data.size() >= MAX_RESULT_SIZE) break;
                 results.next();
                 Object[] row = new Object[count];
                 for (int i = 1; i <= count; i++) {

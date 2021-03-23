@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { ProgressBar } from 'react-bootstrap';
 
-import { getStatus } from '../actions/basicActions';
+import { getStatus } from '../actions/queryActions';
 
 class StatusDisplay extends React.Component {
     componentDidMount() {
@@ -49,10 +49,10 @@ class StatusDisplay extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        errorMessage: state.core.queryErrorMessage,
-        queryActive: state.core.queryActive,
-        status: state.core.status,
-        running: state.core.statusRunning
+        errorMessage: state.query.queryErrorMessage,
+        queryActive: state.query.queryActive,
+        status: state.query.status,
+        running: state.query.statusRunning
     };
 };
 

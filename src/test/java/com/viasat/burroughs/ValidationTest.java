@@ -23,14 +23,14 @@ public class ValidationTest extends ServiceTest{
 
     @Before
     public void createTopics() {
-        String create = "create table valid_topic(id int) with " +
+        String create = "create stream valid_topic(id int) with " +
                 "('kafka_topic'='valid_topic', 'value_format'='avro', 'partitions'='1');";
         service.executeStatement(create, "create fake topic");
     }
 
     @After
     public void deleteTopics() {
-        String delete = "drop table valid_topic delete topic;";
+        String delete = "drop stream valid_topic delete topic;";
         service.executeStatement(delete, "delete fake topic");
     }
 
