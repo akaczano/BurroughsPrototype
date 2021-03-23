@@ -16,6 +16,7 @@ export const SET_DATABASE = 'SET_DATABASE';
 export const SET_DATA = 'SET_DATA';
 export const DATA_LOADING = 'DATA_LOADING';
 export const DATA_ERROR = 'DATA_ERROR';
+export const SET_QUERY_TEXT = 'SET_QUERY_TEXT';
 
 // UI
 export const QUERY_EXECUTING = 'QUERY_EXECUTING';
@@ -27,6 +28,8 @@ export const TOPIC_DELETED = 'TOPIC_DELETED';
 export const DELETE_ERROR = 'DELETE_ERROR';
 export const SET_KEEP_TABLE = 'SET_KEEP_TABLE';
 export const APPEND_MESSAGE = 'APPEND_MESSAGE';
+export const CLEANING_UP = 'CLEANING_UP';
+export const CLEANED_UP = 'CLEANED_UP';
 
 // Producer
 export const PRODUCERS_LOADED = 'PRODUCERS_LOADED';

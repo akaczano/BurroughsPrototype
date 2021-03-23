@@ -16,7 +16,7 @@ import './App.css';
 
 const colStyle = {
     margin: '0px',
-    padding: '0px', 
+    padding: '0px',
     paddingBottom: '100%',
     marginBottom: '-100%',
     overflow: 'hidden'
@@ -27,10 +27,10 @@ class App extends React.Component {
         return (
             <Provider store={store}>
                 <SchemaDisplay />
-                <div style={{margin: '0px'}}>
+                <div style={{ margin: '0px' }}>
                     <Header />
                     <Row>
-                        <Col md={3} style={{...colStyle, borderRight: '0.5px solid black'}}>
+                        <Col md={3} style={{ ...colStyle, borderRight: '0.5px solid black' }}>
                             <TopicList />
                             <DatabaseInfo />
                         </Col>

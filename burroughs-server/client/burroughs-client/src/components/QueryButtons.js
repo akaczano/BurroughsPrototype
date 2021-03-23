@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { executeQuery, terminateQuery, setKeepTable, getStatus } from '../actions/basicActions';
+import { executeQuery, terminateQuery, setKeepTable, getStatus } from '../actions/queryActions';
+import { cleanup } from '../actions/topicActions';
 
 import { Row, Button, Spinner } from 'react-bootstrap'; 
 
@@ -36,6 +37,15 @@ class QueryButtons extends React.Component {
         }     
     }
 
+    getCleanupButton() {
+        if (this.props.cleaningUp) {
+            return <Spinner animation="border" />;
+        }
+        else {
+            return <>Clean Up</>;
+        }
+    }
+
     render() {
         return (
             <Row>
@@ -64,6 +74,13 @@ class QueryButtons extends React.Component {
                     />
                     Keep Table
                 </p>
+                <Button variant="info" 
+                    style={{position: 'absolute', right: '15px', ...buttonStyle}}
+                    disabled={this.props.queryActive}
+                    onClick={e => {this.props.cleanup()}}
+                >
+                    {this.getCleanupButton()}
+                </Button>
             </Row>
         );
     }
@@ -72,12 +89,15 @@ class QueryButtons extends React.Component {
 const mapStateToProps = state => {
     return {
         code: state.core.code,
-        executing: state.core.queryExecuting,
-        terminating: state.core.queryTerminating,
-        queryActive: state.core.queryActive,
+        executing: state.query.queryExecuting,
+        terminating: state.query.queryTerminating,
+        queryActive: state.query.queryActive,
         tableName: state.core.dbInfo.table,
-        keepTable: state.core.keepTable
+        keepTable: state.query.keepTable,
+        cleaningUp: state.topic.cleaningUp
     };
 };
 
-export default connect(mapStateToProps, { executeQuery, terminateQuery, setKeepTable, getStatus })(QueryButtons);
+export default connect(mapStateToProps, 
+    { executeQuery, terminateQuery, setKeepTable, getStatus, cleanup })
+(QueryButtons);

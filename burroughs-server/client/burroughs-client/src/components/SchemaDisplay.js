@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Modal, Table, Button, Spinner } from 'react-bootstrap';
 import { BsFillTrashFill } from 'react-icons/bs';
 
-import { closeDescription, deleteTopic } from '../actions/basicActions';
+import { closeDescription, deleteTopic } from '../actions/topicActions';
 
 class SchemaDisplay extends React.Component {
 
@@ -77,9 +77,9 @@ class SchemaDisplay extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        schema: state.core.topicSchema,
-        deleting: state.core.topicDeleting,
-        error: state.core.topicDeleteError
+        schema: state.topic.topicSchema,
+        deleting: state.topic.topicDeleting,
+        error: state.topic.topicDeleteError
     };
 };
 
