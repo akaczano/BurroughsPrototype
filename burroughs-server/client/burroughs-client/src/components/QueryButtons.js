@@ -43,7 +43,7 @@ class QueryButtons extends React.Component {
                     variant="info" 
                     disabled={this.props.queryActive || (!this.props.tableName || this.props.tableName.length < 1)} 
                     style={{...buttonStyle, marginLeft: '14px'}}
-                    onClick={ () => this.props.executeQuery(this.props.code) }
+                    onClick={ () => this.props.executeQuery(this.props.code.trim()) }
                 >
                     {this.getExecButton()}
                 </Button>

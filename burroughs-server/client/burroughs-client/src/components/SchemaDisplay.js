@@ -1,11 +1,33 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Modal, Table } from 'react-bootstrap';
+import { Modal, Table, Button, Spinner } from 'react-bootstrap';
+import { BsFillTrashFill } from 'react-icons/bs';
 
-import { closeDescription } from '../actions/basicActions';
+import { closeDescription, deleteTopic } from '../actions/basicActions';
 
 class SchemaDisplay extends React.Component {
+
+    getError() {
+        if (this.props.error) {
+            return (
+                <p className="delete-error">
+                    {this.props.error}
+                </p>
+            );
+        }
+        return null;
+    }
+
     render() {
+        const getButtonConntent = () => {
+            if (this.props.deleting) {
+                return <Spinner animation="border" />;
+            }
+            else {
+                return <BsFillTrashFill />;
+            }
+
+        }
         return (
             <Modal
                 size="lg"
@@ -17,8 +39,18 @@ class SchemaDisplay extends React.Component {
                     <Modal.Title >
                         {this.props.schema?.topic}
                     </Modal.Title>
+                    <Button 
+                        variant="info" 
+                        className="deleteButton"
+                        onClick={e => {
+                            this.props.deleteTopic(this.props.schema?.topic);
+                        }}
+                    >
+                        {getButtonConntent()}
+                    </Button>
                 </Modal.Header>
                 <Modal.Body>
+                    {this.getError()}
                     <Table striped bordered hover>
                         <thead>
                             <tr>
@@ -45,8 +77,10 @@ class SchemaDisplay extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        schema: state.core.topicSchema
+        schema: state.core.topicSchema,
+        deleting: state.core.topicDeleting,
+        error: state.core.topicDeleteError
     };
 };
 
-export default connect(mapStateToProps, { closeDescription })(SchemaDisplay);
+export default connect(mapStateToProps, { closeDescription, deleteTopic })(SchemaDisplay);

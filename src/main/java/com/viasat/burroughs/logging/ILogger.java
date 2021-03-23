@@ -1,4 +1,4 @@
-package com.viasat.burroughs;
+package com.viasat.burroughs.logging;
 
 public interface ILogger {
 

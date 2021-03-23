@@ -1,4 +1,4 @@
-package edu.purdue.datamine.burroughsserver.model;
+package edu.purdue.datamine.burroughsserver.models;
 
 import com.viasat.burroughs.producer.ProducerStatus;
 

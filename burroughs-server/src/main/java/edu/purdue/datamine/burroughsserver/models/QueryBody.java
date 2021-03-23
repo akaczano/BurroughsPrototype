@@ -1,4 +1,4 @@
-package edu.purdue.datamine.burroughsserver.model;
+package edu.purdue.datamine.burroughsserver.models;
 
 public class QueryBody {
 

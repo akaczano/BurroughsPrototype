@@ -17,7 +17,10 @@ import {
     CLOSE_DESCRIPTION,
     SET_SCHEMA,
     DATA_LOADING,
-    DATA_ERROR
+    DATA_ERROR,
+    TOPIC_DELETING,
+    TOPIC_DELETED,
+    DELETE_ERROR
 } from '../actions/actionTypes';
 
 const initialState = {
@@ -34,6 +37,8 @@ const initialState = {
     },
     topics: [],
     topicSchema: null,
+    topicDeleting: false,
+    topicDeleteError: null,
     queryActive: false,
     queryExecuting: false,
     queryTerminating: false,
@@ -182,7 +187,8 @@ const reducer = (state = initialState, action) => {
     else if (action.type === SET_SCHEMA) {        
         return {
             ...state,
-            topicSchema: action.payload
+            topicSchema: action.payload,
+            topicDeleteError: null
         };
     }
     else if (action.type === CLOSE_DESCRIPTION) {
@@ -191,6 +197,26 @@ const reducer = (state = initialState, action) => {
             topicSchema: null
         };
     }    
+    else if (action.type === TOPIC_DELETING) {
+        return {
+            ...state,
+            topicDeleting: true
+        };
+    }
+    else if (action.type === TOPIC_DELETED) {
+        return {
+            ...state,
+            topicDeleting: false,
+            topicSchema: null
+        };
+    }
+    else if (action.type === DELETE_ERROR) {
+        return {
+            ...state,
+            topicDeleting: false,
+            topicDeleteError: action.payload
+        };
+    }
     return state;
 };
 

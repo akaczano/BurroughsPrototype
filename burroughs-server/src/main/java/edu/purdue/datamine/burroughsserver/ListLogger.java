@@ -1,7 +1,7 @@
 package edu.purdue.datamine.burroughsserver;
 
-import com.viasat.burroughs.ILogger;
-import edu.purdue.datamine.burroughsserver.model.Message;
+import com.viasat.burroughs.logging.ILogger;
+import edu.purdue.datamine.burroughsserver.models.Message;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 

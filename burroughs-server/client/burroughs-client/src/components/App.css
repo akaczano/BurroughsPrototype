@@ -53,3 +53,11 @@ body {
 .topic-list p:hover {
     color: blue;
 }
+
+.deleteButton {
+    margin-left: 15px;
+}
+
+.delete-error {
+    color: red;
+}

@@ -1,13 +1,12 @@
 package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
-import com.viasat.burroughs.Logger;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.validation.ParsedQuery;
-import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
 
@@ -93,5 +92,8 @@ public class QueryExecutor {
         }
     }
 
+    public boolean isExecuting() {
+        return this.currentQuery != null;
+    }
 
 }

@@ -20,7 +20,10 @@ import {
     APPEND_MESSAGE,
     SET_DATA,
     DATA_LOADING,
-    DATA_ERROR
+    DATA_ERROR,
+    TOPIC_DELETING,
+    TOPIC_DELETED,
+    DELETE_ERROR
 } from './actionTypes';
 
 export const getConnection = () => dispatch => {
@@ -38,10 +41,10 @@ export const getTopics = () => (dispatch, getState) => {
     client
         .get('/command/topics')
         .then(topics => {
-            if (getState().core.topics.length < topics.data.length) {
+            if (getState().core.topics.length !== topics.data.length) {
                 dispatch(setTopics(topics.data));
                 return;
-            }
+            }            
             for (let i = 0; i < topics.data.length; i++) {
                 if (getState().core.topics[i].name !== topics.data[i].name) {
                     dispatch(setTopics(topics.data));
@@ -151,6 +154,20 @@ export const loadSnapshot = query => async dispatch => {
         dispatch(setDataError(err.response.data));
     }
 }
+
+export const deleteTopic = topic => async dispatch => {
+    dispatch({type: TOPIC_DELETING});
+    try {
+        await client.post('/command/drop', null, { params: {topic}});
+        dispatch({type: TOPIC_DELETED});
+    }
+    catch(err) {
+        dispatch({
+            type: DELETE_ERROR,
+            payload: err.response.data
+        });
+    }
+};
 
 export const setData = data => {
     return {

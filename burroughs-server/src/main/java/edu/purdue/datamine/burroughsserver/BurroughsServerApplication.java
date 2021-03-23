@@ -1,7 +1,7 @@
 package edu.purdue.datamine.burroughsserver;
 
-import com.viasat.burroughs.App;
-import com.viasat.burroughs.Logger;
+import com.viasat.burroughs.client.App;
+import com.viasat.burroughs.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,6 +1,10 @@
 package com.viasat.burroughs;
 
+import com.viasat.burroughs.client.App;
+import com.viasat.burroughs.client.BurroughsCLI;
 import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.logging.ConsoleLogger;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.list.Topic;
 import org.junit.Assert;
@@ -60,6 +64,7 @@ public abstract class BurroughsTest {
         Assert.assertTrue("Expected topic test_data to be present", Arrays.stream(topics).anyMatch(t ->
                 t.getName().equalsIgnoreCase("test_data")));
     }
+
 
     protected void waitForQuery() throws InterruptedException {
         while (true) {

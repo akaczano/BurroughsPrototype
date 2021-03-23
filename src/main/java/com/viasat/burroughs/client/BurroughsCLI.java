@@ -1,6 +1,8 @@
-package com.viasat.burroughs;
+package com.viasat.burroughs.client;
 
+import com.viasat.burroughs.Burroughs;
 import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.logging.ConsoleLogger;
 import com.viasat.burroughs.producer.ProducerEntry;
 import com.viasat.burroughs.producer.ProducerInterface;
 import com.viasat.burroughs.producer.ProducerStatus;
@@ -54,6 +56,7 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".file", this::handleFile);
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
+        this.handlers.put(".cleanup", this::handleCleanUp);
     }
 
     /**
@@ -401,6 +404,13 @@ public class BurroughsCLI implements Completer {
         }
         System.out.println("This topic does not seem to exist");
     }
+
+    public void handleCleanUp(String command) {
+        if (!burroughs.cleanUp()) {
+            System.out.println("You must stop the current query before running cleanup.");
+        }
+    }
+
     /**
      * Prints the instructions
      *
