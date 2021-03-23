@@ -17,4 +17,5 @@ public class ExecutionException extends RuntimeException {
     public ExecutionException(StatementError e) {
         super(e.getMessage());
     }
+
 }

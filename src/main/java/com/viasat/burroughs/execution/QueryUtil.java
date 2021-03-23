@@ -124,6 +124,7 @@ public class QueryUtil {
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "drop stream and topic");
+        DebugLevels.appendDebugLevel2("\n\t" + "dropStreamAndTopic from: " + query);
         return result;
     }
 
@@ -138,6 +139,8 @@ public class QueryUtil {
                 "terminate query");
         if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
+        } else {
+            DebugLevels.appendDebugLevel2("The command response is " + result.getCommandStatus().getMessage());
         }
     }
 
@@ -189,6 +192,7 @@ public class QueryUtil {
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
+        DebugLevels.appendDebugLevel2("The status of the result object is " + result.getCommandStatus());
     }
 
 }

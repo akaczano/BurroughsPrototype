@@ -10,6 +10,10 @@ import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.*;
 import org.apache.kafka.common.TopicPartition;
 
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
+
 import java.util.*;
 
 /**
@@ -31,7 +35,7 @@ public abstract class QueryBase extends QueryUtil {
 
     /**
      * Kafka service that can access Kafka broker directly. Used to get consumer
-     * group offsets during .status execution
+     * group offsets during .getCommandStatus() execution
      */
     protected final KafkaService kafkaService;
 
@@ -132,6 +136,7 @@ public abstract class QueryBase extends QueryUtil {
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
+        DebugLevels.appendDebugLevel2("\n\t" + "createTable: " + statement);
         return tableName;
     }
 
@@ -172,11 +177,13 @@ public abstract class QueryBase extends QueryUtil {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
+            DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
+
+        DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
         return "burr_connect_" + id;
     }
-
 
     protected TableStatus getTableStatus(String tableName) {
         TableStatus status = new TableStatus();
