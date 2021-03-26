@@ -30,14 +30,14 @@ class App extends React.Component {
                 <div style={{ margin: '0px' }}>
                     <Header />
                     <Row>
-                        <Col md={3} style={{ ...colStyle, borderRight: '0.5px solid black' }}>
-                            <TopicList />
+                        <Col md={3} style={{ ...colStyle, borderRight: '4px solid #7d1127' }}>
+                            <TopicList/>
                             <DatabaseInfo />
                         </Col>
                         <Col md={9} style={colStyle}>
-                            <CodeEditor />
-                            <QueryButtons />
-                            <OutputTabs />
+                            <CodeEditor style={{margin: '0px'}}/>
+                            <QueryButtons style={{margin: '10px'}} />
+                            <OutputTabs style={{margin: '0px'}} />
                         </Col>
                     </Row>
                 </div>

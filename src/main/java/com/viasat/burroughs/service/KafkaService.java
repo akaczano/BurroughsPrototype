@@ -37,6 +37,15 @@ public class KafkaService {
         this.kafkaHost = kafkaHost;
     }
 
+    public void deleteTopic(String topic) {
+        Properties properties = new Properties();
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, this.kafkaHost);
+        properties.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 5000);
+        properties.put(ConsumerConfig.DEFAULT_API_TIMEOUT_MS_CONFIG, 5001);
+        adminClient = KafkaAdminClient.create(properties);
+        adminClient.deleteTopics(Collections.singleton(topic));
+    }
+
     /**
      * Get the current offsets for a particular consumer group in all of the partitions
      * it is reading from

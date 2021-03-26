@@ -1,9 +1,9 @@
 package com.viasat.burroughs.logging;
 
 
-import com.viasat.burroughs.logging.ILogger;
+import java.util.ArrayList;
 
-public class ConsoleLogger implements ILogger {
+public class ConsoleLogger extends Logger {
 
     // Character sequences used to change text color
     public static final String ANSI_YELLOW = "\u001B[33m";
@@ -11,43 +11,60 @@ public class ConsoleLogger implements ILogger {
     public static final String ANSI_GREEN = "\u001B[32m";
     public static final String ANSI_RESET = "\u001B[0m";
 
+    private ArrayList<LogEntry> debugLevels = new ArrayList<>();
+
+
     @Override
-    public void writeYellow(String text) {
-        System.out.print(ANSI_YELLOW + text + ANSI_RESET);
+    public void write(String text, int color, int debugLevel) {
+        if (debugLevel == NORMAL) {
+            String modifier = "";
+            if (color == ERROR) {
+                modifier = ANSI_RED;
+            }
+            else if (color == SUCCESS) {
+                modifier = ANSI_GREEN;
+            }
+            else if (color == WARNING) {
+                modifier = ANSI_YELLOW;
+            }
+            System.out.printf("%s%s%s", modifier, text, ANSI_RESET);
+        }
+        else {
+            debugLevels.add(new LogEntry(text, System.currentTimeMillis(), color, debugLevel));
+        }
     }
 
     @Override
-    public void writeGreen(String text) {
-        System.out.print(ANSI_GREEN + text + ANSI_RESET);
+    public void writeLine(String text, int color, int debugLevel) {
+        if (debugLevel == NORMAL) {
+            String modifier = "";
+            if (color == ERROR) {
+                modifier = ANSI_RED;
+            }
+            else if (color == SUCCESS) {
+                modifier = ANSI_GREEN;
+            }
+            else if (color == WARNING) {
+                modifier = ANSI_YELLOW;
+            }
+            System.out.printf("%s%s%s\n", modifier, text, ANSI_RESET);
+        }
+        else {
+            debugLevels.add(new LogEntry(text + "\n", System.currentTimeMillis(), color, debugLevel));
+        }
+    }
+
+    public void displayDebug(int level) {
+        this.debugLevels
+                .stream()
+                .filter(e -> e.getDebugLevel() == level)
+                .forEach(e -> {
+                    System.out.print(e.getText());
+                });
     }
 
     @Override
-    public void writeRed(String text) {
-        System.out.print(ANSI_RED + text + ANSI_RESET);
-    }
-
-    @Override
-    public void write(String text) {
-        System.out.print(text);
-    }
-
-    @Override
-    public void writeLineYellow(String line) {
-        System.out.println(ANSI_YELLOW + line + ANSI_RESET);
-    }
-
-    @Override
-    public void writeLineRed(String line) {
-        System.out.println(ANSI_RED + line + ANSI_RESET);
-    }
-
-    @Override
-    public void writeLineGreen(String line) {
-        System.out.println(ANSI_GREEN + line + ANSI_RESET);
-    }
-
-    @Override
-    public void writeLine(String line) {
-        System.out.println(line);
+    public void clearLog() {
+        debugLevels.clear();
     }
 }

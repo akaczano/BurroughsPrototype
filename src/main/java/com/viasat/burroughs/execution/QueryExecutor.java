@@ -11,9 +11,6 @@ import com.viasat.burroughs.validation.ParsedQuery;
 import java.util.UUID;
 
 
-import com.viasat.burroughs.execution.DebugLevels;
-
-
 public class QueryExecutor {
 
     /*
@@ -34,9 +31,10 @@ public class QueryExecutor {
 
     /**
      * Creates an new QueryExecutor object
+     *
      * @param service Service for sending ksql
-     * @param ks Service for querying consumer status
-     * @param dbInfo Database connection info
+     * @param ks      Service for querying consumer status
+     * @param dbInfo  Database connection info
      */
     public QueryExecutor(StatementService service, KafkaService ks, DBProvider dbInfo) {
         this.service = service;
@@ -46,10 +44,14 @@ public class QueryExecutor {
 
     /**
      * Executes a query
+     *
      * @param query The query, already parsed and validated
      */
     public void executeQuery(ParsedQuery query) {
-	      DebugLevels.appendDebugLevel("executeQuery() executing query:" + '\n' + query.toString());  //added
+        Logger.getLogger().clearLog();
+        Logger.getLogger().writeLine("executeQuery() executing query:" + '\n'
+                        + query.getQuery().toString(),
+                Logger.DEFAULT, Logger.LEVEL_1);
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.
@@ -59,7 +61,7 @@ public class QueryExecutor {
 
         try {
             currentQuery.execute();
-        } catch(ExecutionException e) {
+        } catch (ExecutionException e) {
             currentQuery.destroy();
             currentQuery = null;
             throw new ExecutionException("An error occurred during query processing: " +
@@ -77,9 +79,7 @@ public class QueryExecutor {
             currentQuery.destroy();
             currentQuery = null;
 
-	    DebugLevels.clearDebugLevels();  //added to clear debug traceback
-        }
-        else {
+        } else {
             Logger.getLogger().writeLine("No active query. Type some SQL to run one.");
         }
     }
@@ -90,8 +90,7 @@ public class QueryExecutor {
     public QueryStatus status() {
         if (currentQuery == null) {
             return null;
-        }
-        else {
+        } else {
             QueryStatus status = currentQuery.getStatus();
             status.setQueryId(currentQuery.getId());
             return status;

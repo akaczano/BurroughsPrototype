@@ -63,7 +63,7 @@ class SchemaDisplay extends React.Component {
                                 return (
                                     <tr key={item.name}>
                                         <td>{item.name}</td>
-                                        <td>{item.schema.type}</td>
+                                        <td>{item.type}</td>
                                     </tr>
                                 );
                             })}

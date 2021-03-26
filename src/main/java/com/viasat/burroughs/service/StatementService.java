@@ -3,6 +3,7 @@ package com.viasat.burroughs.service;
 
 import com.google.gson.Gson;
 import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.model.StatementError;
 import com.viasat.burroughs.service.model.StatementResponse;
 import com.viasat.burroughs.service.model.body.StatementHolder;
@@ -20,7 +21,7 @@ import java.net.http.HttpResponse;
 
 
 //added
-import com.viasat.burroughs.execution.DebugLevels;
+
 
 /**
  * Service class that provides utilities for executing Ksql statements
@@ -85,11 +86,12 @@ public class StatementService {
      */
     public StatementResponse executeStatement(String statement, StreamProperties properties) {
         try {
-            DebugLevels.appendDebugLevel2("\n\t" + "executeStatement: executing " + "\n\t" + statement);
             statement = statement.trim();
             String up = statement.toUpperCase();
             Class<? extends StatementResponse> format;
             if (up.startsWith("CREATE") || up.startsWith("TERMINATE") || up.startsWith("DROP")) {
+                Logger.getLogger().writeLine("executing: " + statement,
+                        Logger.DEFAULT, Logger.LEVEL_2);
                 format = CommandResponse.class;
             } else if (up.startsWith("SHOW") || up.startsWith("LIST")) {
                 format = ListResponse.class;

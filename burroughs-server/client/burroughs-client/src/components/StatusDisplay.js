@@ -42,7 +42,7 @@ class StatusDisplay extends React.Component {
             );
         }
         else {
-            return <div>No active query.</div>;
+            return <div style={{marginLeft: '3px'}}>No active query.</div>;
         }
     }
 }

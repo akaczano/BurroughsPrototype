@@ -2,6 +2,7 @@ package edu.purdue.datamine.burroughsserver;
 
 import com.viasat.burroughs.Burroughs;
 import com.viasat.burroughs.execution.ExecutionException;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.description.Field;
@@ -11,6 +12,7 @@ import com.viasat.burroughs.validation.UnsupportedQueryException;
 import edu.purdue.datamine.burroughsserver.models.ProducerModel;
 import edu.purdue.datamine.burroughsserver.models.QueryBody;
 import edu.purdue.datamine.burroughsserver.models.DatabaseProperties;
+import org.apache.avro.Schema;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -50,7 +52,16 @@ public class CommandController {
     @CrossOrigin
     @GetMapping("/command/topic")
     public Field[] getSchema(@RequestParam(value = "topicName") String topicName) {
-        return burroughs.topic(topicName);
+        Schema s = burroughs.topic(topicName);
+        Field[] fields = new Field[s.getFields().size()];
+        int i = 0;
+        for (Schema.Field f : s.getFields()) {
+            Field field = new Field();
+            field.setName(f.name());
+            field.setType(f.schema().getType().getName());
+            fields[i++] = field;
+        }
+        return fields;
     }
 
     @CrossOrigin

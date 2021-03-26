@@ -1,5 +1,6 @@
 package com.viasat.burroughs.execution;
 
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.DataType;
@@ -124,7 +125,11 @@ public class QueryUtil {
         String query = String.format("DROP STREAM %s DELETE TOPIC;",
                 streamName);
         CommandResponse result = service.executeStatement(query, "drop stream and topic");
-        DebugLevels.appendDebugLevel2("\n\t" + "dropStreamAndTopic from: " + query);
+        if (result != null && result.getCommandStatus() != null) {
+            Logger.getLogger().writeLine(String.format("Result of dropping stream %s was %s",
+                    query, result.getCommandStatus().getStatus()),
+                    Logger.DEFAULT, Logger.LEVEL_2);
+        }
         return result;
     }
 
@@ -140,7 +145,9 @@ public class QueryUtil {
         if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
             throw new ExecutionException(result.getCommandStatus().getMessage());
         } else {
-            DebugLevels.appendDebugLevel2("The command response is " + result.getCommandStatus().getMessage());
+            Logger.getLogger().writeLine(String.format("Result of terminating %s: %s",
+                    queryId, result.getCommandStatus().getMessage()),
+                    Logger.DEFAULT, Logger.LEVEL_2);
         }
     }
 
@@ -192,7 +199,11 @@ public class QueryUtil {
                 objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
         CommandResponse result = service.executeStatement(command, String.format("drop %s",
                 objectType.toLowerCase()));
-        DebugLevels.appendDebugLevel2("The status of the result object is " + result.getCommandStatus());
+        if (result.getCommandStatus() != null) {
+            Logger.getLogger().writeLine(String.format("Result of dropping object %s: %s",
+                    name, result.getCommandStatus().getStatus()),
+                    Logger.DEFAULT, Logger.LEVEL_2);
+        }
     }
 
 }

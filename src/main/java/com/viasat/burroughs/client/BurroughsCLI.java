@@ -3,16 +3,17 @@ package com.viasat.burroughs.client;
 import com.viasat.burroughs.Burroughs;
 import com.viasat.burroughs.execution.ExecutionException;
 import com.viasat.burroughs.logging.ConsoleLogger;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.producer.ProducerEntry;
 import com.viasat.burroughs.producer.ProducerInterface;
 import com.viasat.burroughs.producer.ProducerStatus;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.burroughs.TableStatus;
-import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
+import org.apache.avro.Schema;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
@@ -21,8 +22,6 @@ import org.jline.reader.ParsedLine;
 
 import java.io.*;
 import java.util.*;
-
-import com.viasat.burroughs.execution.DebugLevels;  //added
 
 /**
  * Class that handles all CLI commands and prints responses
@@ -40,6 +39,7 @@ public class BurroughsCLI implements Completer {
 
     /**
      * Constructor. Initialize handlers table
+     *
      * @param burroughs
      */
     public BurroughsCLI(Burroughs burroughs) {
@@ -58,8 +58,8 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".delete", this::handleDeletion);
         this.handlers.put(".file", this::handleFile);
 
-	this.handlers.put(".debug", this::handleDebug);
-	this.handlers.put(".file", this::handleFilein);
+        this.handlers.put(".debug", this::handleDebug);
+        this.handlers.put(".file", this::handleFilein);
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
         this.handlers.put(".cleanup", this::handleCleanUp);
@@ -97,8 +97,7 @@ public class BurroughsCLI implements Completer {
                 // If it doesn't start with a period, we assume it's a SQL query.
                 try {
                     burroughs.processQuery(command);
-                }
-                catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
+                } catch (SqlParseException | TopicNotFoundException | UnsupportedQueryException e) {
                     System.out.printf("%sValidation error: %s%s\n",
                             ConsoleLogger.ANSI_RED, e.getMessage(), ConsoleLogger.ANSI_RESET);
                 }
@@ -121,11 +120,11 @@ public class BurroughsCLI implements Completer {
             System.out.println("Usage: .topic <topic>");
         } else {
             String topicName = words[1];
-            Field[] fields = burroughs.topic(topicName);
+            Schema schema = burroughs.topic(topicName);
 
             System.out.println("Field Name: Type");
-            for (Field f : fields) {
-                System.out.printf("%s: %s\n", f.getName(), f.getSchema().getType());
+            for (Schema.Field f : schema.getFields()) {
+                System.out.printf("%s: %s\n", f.name(), f.schema().getName());
             }
         }
     }
@@ -148,24 +147,21 @@ public class BurroughsCLI implements Completer {
      * @param command Command string starting with .debug
      */
     private void handleDebug(String command) {
-	
         String[] words = command.split("\\s+");
-	if (words.length == 1) {
-		System.out.println("Usage: .debug <value>, where value = 1 or 2 ");
-		return;
-	}
-	else if (Integer.parseInt(words[1]) == 1) {
-		System.out.println("Preliminary Traceback:" + '\n');
-		DebugLevels.displayDebugLevel();
-	}
-	else if (Integer.parseInt(words[1]) == 2) {
-		System.out.println("Preliminary Traceback:" + '\n');
-		DebugLevels.displayDebugLevel2();
-	}
-	else {
-		System.out.println("Error.  Invalid value. Please use value = 1 or 2.");
-	}
-    
+        ConsoleLogger logger = (ConsoleLogger) Logger.getLogger();
+        if (words.length == 1) {
+            System.out.println("Usage: .debug <value>, where value = 1 or 2 ");
+            return;
+        } else if (Integer.parseInt(words[1]) == 1) {
+            System.out.println("Preliminary Traceback:" + '\n');
+            logger.displayDebug(Logger.LEVEL_1);
+        } else if (Integer.parseInt(words[1]) == 2) {
+            System.out.println("Preliminary Traceback:" + '\n');
+            logger.displayDebug(Logger.LEVEL_2);
+        } else {
+            System.out.println("Error.  Invalid value. Please use value = 1 or 2.");
+        }
+
     }
 
 
@@ -175,7 +171,7 @@ public class BurroughsCLI implements Completer {
      * @param command Command string starting with .topics
      */
     private void handleFilein(String command) {
-	System.out.println("This is the current directory" + System.getProperty("user.dir"));
+        System.out.println("This is the current directory" + System.getProperty("user.dir"));
     }
 
     /**
@@ -200,6 +196,7 @@ public class BurroughsCLI implements Completer {
 
     /**
      * Handles the .stop command
+     *
      * @param command The command string beginning with .stop
      */
     private void handleStop(String command) {
@@ -282,8 +279,7 @@ public class BurroughsCLI implements Completer {
         if (status.getConnectorStatus() != null) {
             if (!status.getConnectorStatus().isConnectorRunning()) {
                 System.out.println(ConsoleLogger.ANSI_YELLOW + "Connector not running" + ConsoleLogger.ANSI_RESET);
-            }
-            else {
+            } else {
                 for (String error : status.getConnectorStatus().getErrors()) {
                     System.out.println(ConsoleLogger.ANSI_RED + "Connector Error:" + ConsoleLogger.ANSI_RESET);
                     System.out.println(error);
@@ -325,18 +321,18 @@ public class BurroughsCLI implements Completer {
                     commands.add(line);
                     line = br.readLine();
                 }
-            } catch(IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             StringBuilder sb = new StringBuilder();
-            for(String c : commands){
+            for (String c : commands) {
                 sb.append(c).append(' ');
             }
             String[] commandList = sb.toString().split(delimiter);
-            for(int i = 0; i < commandList.length - 1; i++){
+            for (int i = 0; i < commandList.length - 1; i++) {
                 this.handleCommand(commandList[i]);
             }
-            
+
         }
     }
 
@@ -350,6 +346,7 @@ public class BurroughsCLI implements Completer {
 
     /**
      * Handles all producer commands
+     *
      * @param command The command, starting with .producer
      */
     private void handleProducer(String command) {
@@ -378,44 +375,36 @@ public class BurroughsCLI implements Completer {
             }
             System.out.printf("Records produced: %d\n", producerStatus.getRecordsProduced());
             System.out.printf("Records lost: %d\n", producerStatus.getRecordsLost());
-        }
-        else if (op.equalsIgnoreCase("pause")) {
+        } else if (op.equalsIgnoreCase("pause")) {
             if (words.length > 3) {
                 try {
                     int time = Integer.parseInt(words[3]);
                     producerInterface.pauseProducer(name, time);
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     System.out.printf("Invalid delay %s\n", words[3]);
                 }
-            }
-            else {
+            } else {
                 producerInterface.pauseProducer(name);
             }
-        }
-        else if (op.equalsIgnoreCase("resume")) {
+        } else if (op.equalsIgnoreCase("resume")) {
             producerInterface.resumeProducer(name);
-        }
-        else if (op.equalsIgnoreCase("kill")) {
+        } else if (op.equalsIgnoreCase("kill")) {
             producerInterface.terminateProducer(name);
-        }
-        else if (op.equalsIgnoreCase("start")) {
+        } else if (op.equalsIgnoreCase("start")) {
             if (words.length > 3) {
                 try {
                     int limit = Integer.parseInt(words[3]);
                     producerInterface.startProducer(name, limit);
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     System.out.printf("Invalid limit %s\n", words[3]);
                 }
+            } else {
+                producerInterface.startProducer(name, -1);
             }
-            else {
-                producerInterface.startProducer(name,-1);
-            }
-        }
-        else if (op.equalsIgnoreCase("set-delay")) {
+        } else if (op.equalsIgnoreCase("set-delay")) {
             if (words.length < 4) {
                 System.out.println("Usage: .producer <producer> set-delay delay (ms)");
-            }
-            else {
+            } else {
                 try {
                     int delay = Integer.parseInt(words[3]);
                     System.out.printf("Changed delay from %d to %d\n",
@@ -425,8 +414,7 @@ public class BurroughsCLI implements Completer {
                     System.out.printf("Invalid delay: %s\n", words[3]);
                 }
             }
-        }
-        else {
+        } else {
             System.out.printf("Unknown operation: %s\n", op);
         }
     }
@@ -438,7 +426,7 @@ public class BurroughsCLI implements Completer {
             return;
         }
 
-        for (Topic t: burroughs.topics()) {
+        for (Topic t : burroughs.topics()) {
             if (t.getName().equals(words[1])) {
                 System.out.println("Dropping it ");
                 burroughs.dropTopic(t.getName());
@@ -493,9 +481,9 @@ public class BurroughsCLI implements Completer {
         System.out.println("\tresume: resumes producer operation");
         System.out.println("\tkill: stops producer operation");
         System.out.println("\tset-delay delay (ms): sets the artificial delay between messages");
-	
-	System.out.println(".debug <debug value>");
-	System.out.println("\tdebug value: \n\t1 = shows the kSQL query(ies) executed;  2 = shows more in-depth traceback of query transformation");
+
+        System.out.println(".debug <debug value>");
+        System.out.println("\tdebug value: \n\t1 = shows the kSQL query(ies) executed;  2 = shows more in-depth traceback of query transformation");
 
         System.out.println(".file <file name> <delimiter>");
         System.out.println("\tReads and executes commands and/or a query from the specified file.");
@@ -506,9 +494,10 @@ public class BurroughsCLI implements Completer {
 
     /**
      * Computes auto-complete candidates
+     *
      * @param lineReader The associated line reader
      * @param parsedLine The line of text, already parsed
-     * @param list The list of candidates for completion
+     * @param list       The list of candidates for completion
      */
     @Override
     public void complete(LineReader lineReader, ParsedLine parsedLine, List<Candidate> list) {
@@ -523,9 +512,8 @@ public class BurroughsCLI implements Completer {
                 if (parsedLine.words().size() == 1 ||
                         (parsedLine.words().size() == 2 && producer.startsWith(parsedLine.words().get(1)))) {
                     list.add(new Candidate(producer));
-                }
-                else if (parsedLine.words().size() >= 2 &&
-                        burroughs.producerInterface().getList().contains(parsedLine.words().get(1)))     {
+                } else if (parsedLine.words().size() >= 2 &&
+                        burroughs.producerInterface().getList().contains(parsedLine.words().get(1))) {
                     for (String op : ProducerInterface.COMMAND_LIST) {
                         list.add(new Candidate(op));
                     }

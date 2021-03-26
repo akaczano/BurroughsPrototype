@@ -12,8 +12,11 @@ class DatabaseInfo extends React.Component {
 
     render() {
         return (
-            <Form style={{ marginLeft: '18px' }} className="db-info">
-                <strong>Database Info</strong>
+            <Form style={{ margin: '1px', marginLeft: '18px', width: '100%'}} className="db-info">
+                <Form.Row style={{backgroundColor: '#e6e6e6', width: '100%', padding: '5px', borderBottom: '1.5px ridge gray'}}>
+                <strong style={{marginLeft: '5px', color: 'black' }}>
+                    Database Info</strong>
+                </Form.Row>
                 <Form.Group>
                     <Form.Label>
                         Output Table

@@ -1,6 +1,7 @@
 body {
     overflow-x: hidden;
     width: 100vw;
+    margin: 0;
 }
 
 .tab-button {
@@ -12,11 +13,12 @@ body {
 }
 
 .tab-button:hover {
-    background-color: #ddd;
+    background-color: #c9c9c9;
 }
 
 .tab-button.active {
-    background-color: #ccc;
+    background-color: #363636;
+    color: white;
 }
 
 .db-info strong {
@@ -51,7 +53,8 @@ body {
 }
 
 .topic-list p:hover {
-    color: blue;
+    color: #092996;
+    font-size: 17px;
 }
 
 .deleteButton {
@@ -73,3 +76,32 @@ body {
 .sql-in {
     height: 35px;
 }
+
+.output-messages td{
+    padding: 3px;
+}
+
+.output-messages th {
+    padding: 4px;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+  }
+   
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #888; 
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+  }
