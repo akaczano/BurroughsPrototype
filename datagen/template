@@ -1,0 +1,3 @@
+create source connector CONNECTOR_NAME with(\"connector.class\" = 'io.confluent.kafka.connect.datagen.DatagenConnector',\"kafka.topic\" = 'DATA_SET',\"quickstart\" = 'DATA_SET',\"key.converter\"= 'org.apache.kafka.connect.storage.StringConverter',\"value.converter.schemas.enable\"= false,\"max.interval\"= 1000,\"iterations\"= 10000000,\"tasks.max\" = 1);
+
+
