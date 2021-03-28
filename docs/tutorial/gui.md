@@ -61,6 +61,6 @@ When you're done, simply press the stop button to shut everything done. If you a
 
 ### What's Next?
 
-Ready to connect Burroughs to your own Kafka environment? Have a look at [System Configuration](/tutorial/config).
+Ready to connect Burroughs to your own Kafka environment? Have a look at [System Configuration]({{ '/tutorial/config' | relative_rul }}).
 
-Want to learn more about what is going on under the hood? Head over to the [documentation section](/documentation)
+Want to learn more about what is going on under the hood? Head over to the [documentation section]({{ '/documentation' | relative_url }})

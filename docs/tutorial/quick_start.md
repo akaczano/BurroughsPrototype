@@ -67,7 +67,7 @@ If would rather take the GUI-based route, you can use `./run-client.sh` to run t
 ### Up Next
 Now that you have Burroughs up and running, you are ready to start writing queries.
 
-Want to run queries using the minimal Burroughs CLI? Checkout [Using the Burroughs CLI](/tutorial/cli_tutorial). To work through the same tutorial in a graphical setting have a look at [The Burroughs Browser Interface](/tutorial/gui). 
+Want to run queries using the minimal Burroughs CLI? Checkout [Using the Burroughs CLI]({{ '/tutorial/cli_tutorial' | relative_url }}). To work through the same tutorial in a graphical setting have a look at [The Burroughs Browser Interface]({{ '/tutorial/gui' | relative_url }}). 
 
 
 

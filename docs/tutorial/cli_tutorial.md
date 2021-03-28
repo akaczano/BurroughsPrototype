@@ -54,8 +54,8 @@ The actual stream processing mechanism consists of a set of KsqlDB objects (stre
 If you already closed your Burroughs CLI, you can no longer run `.stop`, but do not despair. You can simply start up a new Burroughs CLI and run `.cleanup` this will destroy all Burroughs query objects that haven't been reclaimed.
 
 ### What's Next?
-If you found the CLI experience to be unfriendly, you may want to checkout [The Burroughs Browser Interface](/tutorial/gui).
+If you found the CLI experience to be unfriendly, you may want to checkout [The Burroughs Browser Interface]({{ '/tutorial/gui' | relative_url }}).
 
-Ready to connect Burroughs to your own Kafka environment? Have a look at [System Configuration](/tutorial/config).
+Ready to connect Burroughs to your own Kafka environment? Have a look at [System Configuration]({{ '/tutorial/config' | relative_url }}).
 
-Want to learn more about what is going on under the hood? Head over to the [documentation section](/documentation)
+Want to learn more about what is going on under the hood? Head over to the [documentation section]({{ '/documentation' | relative_url }})
