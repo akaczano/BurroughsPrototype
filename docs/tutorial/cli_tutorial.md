@@ -4,7 +4,7 @@ sort: 2
 
 # Using the Burroughs CLI
 
-This tutorial covers using the Burroughs CLI to do some simple query processing. If you don't have Burroughs running yet, you may want to look at the [quick start guide](/tutorial/quick_start) first.
+This tutorial covers using the Burroughs CLI to do some simple query processing. If you don't have Burroughs running yet, you may want to look at the [quick start guide]({{ '/tutorial/quick_start' | relative_path }}) first.
 
 ### Getting Some Test Data
 We are now ready to start writing queries, the only problem is we don't currently have any Kafka topics to work with. To solve this, Burroughs provides a built in producer utility to enable users to quickly get some test data to work with. It also ships with a couple of preconfigured producers and associated datasets. To produce some test data to work with, do the following:

@@ -4,7 +4,7 @@ sort: 3
 
 # The Burroughs Browser Interface
 
-This tutorial covers using the Burroughs GUI to do some simple query processing. If you don't have Burroughs running yet, you may want to look at the [quick start guide](/tutorial/quick_start) first.
+This tutorial covers using the Burroughs GUI to do some simple query processing. If you don't have Burroughs running yet, you may want to look at the [quick start guide]({{ '/tutorial/quick_start' | relative_path }}) first.
 
 ### A Quick Tour of the UI
 Before we get started, I would like to point out a few things about this user interface.
@@ -24,7 +24,7 @@ Before we get started, I would like to point out a few things about this user in
 To get some test data to work with, navigate to the producers tab and click the 'start' button under the 'transactions_producer' entry. You should see an entry titled 'transactions' pop up in the topics list. Feel free to click on it to view the schema.
 
 #### A Few More Words on Producers
-Producers can be configured to limit the quantity data produced and the rate at which it is produced. Setting a positive value for limit will stop the producer once that many records have been produced. The delay field is the length of a sleep period (in ms) to be inserted between every produced record. You can also pause and resume your producers to simulate a large delay. 
+Producers can be configured to limit the quantity of data produced and the rate at which it is transmitted. Setting a positive value for limit will stop the producer once that many records have been produced. The delay field is the length of a sleep period (in ms) to be inserted between every produced record. You can also pause and resume your producers to simulate a large delay. 
 
 ### Running a query
 To run a query, you need to do the following
@@ -61,6 +61,6 @@ When you're done, simply press the stop button to shut everything done. If you a
 
 ### What's Next?
 
-Ready to connect Burroughs to your own Kafka environment? Have a look at [System Configuration]({{ '/tutorial/config' | relative_rul }}).
+Ready to connect Burroughs to your own Kafka environment? Have a look at [System Configuration]({{ '/tutorial/config' | relative_url }}).
 
 Want to learn more about what is going on under the hood? Head over to the [documentation section]({{ '/documentation' | relative_url }})
