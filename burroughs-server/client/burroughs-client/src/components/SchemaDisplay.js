@@ -33,14 +33,14 @@ class SchemaDisplay extends React.Component {
                 size="lg"
                 show={this.props.schema !== null}
                 onHide={() => this.props.closeDescription()}
-                aria-labelledby="example-modal-sizes-title-lg"
+                aria-labelledby="example-modal-sizes-title-lg"                
             >
-                <Modal.Header closeButton>
+                <Modal.Header closeButton style={{backgroundColor: '#e6e6e6'}}>
                     <Modal.Title >
                         {this.props.schema?.topic}
                     </Modal.Title>
                     <Button 
-                        variant="info" 
+                        variant="dark" 
                         className="deleteButton"
                         onClick={e => {
                             this.props.deleteTopic(this.props.schema?.topic);
@@ -51,7 +51,7 @@ class SchemaDisplay extends React.Component {
                 </Modal.Header>
                 <Modal.Body>
                     {this.getError()}
-                    <Table striped bordered hover>
+                    <Table striped bordered hover className="data-table">
                         <thead>
                             <tr>
                                 <th>Field Name</th>

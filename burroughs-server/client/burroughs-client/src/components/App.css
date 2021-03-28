@@ -1,6 +1,6 @@
 body {
     overflow-x: hidden;
-    width: 100vw;
+    width: 100%;
     margin: 0;
 }
 
@@ -89,19 +89,63 @@ body {
 ::-webkit-scrollbar {
     width: 4px;
     height: 4px;
-  }
+}
   
-  /* Track */
-  ::-webkit-scrollbar-track {
-    background: #f1f1f1; 
-  }
-   
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    background: #888; 
-  }
-  
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background: #555; 
-  }
+/* Track */
+::-webkit-scrollbar-track {
+background: #f1f1f1; 
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+background: #555; 
+}
+
+.accent-border {            
+    background-image: linear-gradient(to bottom, #d99000, #c60907);
+    cursor: ew-resize;      
+}
+
+.accent-border-header {            
+background-image: linear-gradient(to right, #d99000, #c60907)
+}
+
+.default-button:hover {
+    color: #a6a5a4;
+    cursor: pointer;
+}
+
+.play-button {
+    color: #0d6936;    
+}
+
+.play-button.enabled:hover {
+    color: #18d66d;
+    cursor: pointer;
+}
+
+.play-button.disabled {
+    opacity: 0.5;
+}
+
+.stop-button {
+    color: #d11f04;
+}
+
+.stop-button.disabled {
+    opacity: 0.5;
+}
+
+.stop-button.enabled:hover {
+    color: #de5d54;
+    cursor: pointer;
+}
+
+.default-button.disabled {
+    opacity: 0.5;
+}

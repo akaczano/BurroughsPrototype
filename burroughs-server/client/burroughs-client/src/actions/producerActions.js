@@ -4,7 +4,8 @@ import {
     PRODUCER_ERROR,    
 } from './actionTypes';
 
-export const loadProducers = () => async dispatch => {
+export const loadProducers = () => async (dispatch, getState) => {
+    if (!getState().core.connection) return;
     try {
         let producers = (await client.get('/producer')).data;
         dispatch(setProducers(producers.map(p => ({...p, limit: -1}))));

@@ -54,7 +54,7 @@ class DataView extends React.Component {
 
     render() {
         return (
-            <div style={{width: '100%'}}>
+            <div style={{width: '100%', margin: '0px'}}>
                 <Form
                     style={{
                         position: 'sticky',
@@ -90,7 +90,7 @@ class DataView extends React.Component {
                             disabled={this.props.dataLoading}
                         >
                             <BsFillPlayFill
-                                style={{ color: '#34ba42', fontSize: '24px' }}
+                                style={{ color: 'white', fontSize: '24px' }}
                             />
                         </Button>
                     </Form.Row>

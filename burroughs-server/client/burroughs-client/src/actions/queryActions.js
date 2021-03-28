@@ -11,7 +11,8 @@ import {
     LOAD_ERROR
 } from './actionTypes';
 
-export const getStatus = () => dispatch => {
+export const getStatus = () => (dispatch, getState) => {
+    if (!getState().core.connection) return;
     dispatch({ type: STATUS_RUNNING });
     client
         .get('/command/status')
@@ -24,6 +25,7 @@ export const getStatus = () => dispatch => {
 };
 
 export const executeQuery = query => async (dispatch, getState) => {
+    if (!getState().core.connection) return;
     dispatch({ type: SET_QUERY_EXECUTING });
     try {
         await client.post('/command/table', null, { params: { tableName: getState().core.dbInfo.table } })
@@ -36,9 +38,11 @@ export const executeQuery = query => async (dispatch, getState) => {
 };
 
 export const terminateQuery = () => (dispatch, getState) => {
+    if (!getState().core.connection) return;
     dispatch({ type: SET_QUERY_TERMINATING });
+    console.log(getState().query.keepTable);
     client
-        .post('/command/stop', null, {params: {keepTable: getState().core.keepTable}})
+        .post('/command/stop', null, {params: {keepTable: getState().query.keepTable}})
         .then(() => {
             dispatch({ type: SET_QUERY_TERMINATED });
         })

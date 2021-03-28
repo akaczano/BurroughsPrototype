@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Row } from 'react-bootstrap';
 import { getTopics, getSchema } from '../actions/topicActions';
 
 class TopicList extends React.Component {
     componentDidMount() {
         setInterval(this.props.getTopics, 500);
     }
+    
     render() {
         return (
             <div className="topic-list" style={{ width: '100%' }}>
@@ -15,7 +15,7 @@ class TopicList extends React.Component {
                         <strong>Topics</strong>
                     </span>
                 </div>
-                <div style={{ height: '34vh', overflowY: 'auto', width: '100%' }}>
+                <div style={{ height: '28vh', overflowY: 'auto', width: '100%' }}>
                     {this.props.topics.map(topic =>
                         <p
                             key={topic.name}

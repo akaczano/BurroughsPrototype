@@ -17,9 +17,8 @@ class CodeEditor extends React.Component {
                 mode="mysql"
                 theme="xcode"
                 onChange={code => this.props.setCode(code)}
-                value={this.props.code}
-                editorProps={{$blockScrolling: true}}
-                style={{height: '37vh', width: '100%', borderBottom: '0.5px solid gray'}}
+                value={this.props.code}                
+                style={{height: this.props.height + 'vh', width: '100%' }}
                 fontSize="16px"
                 
             />
@@ -29,7 +28,8 @@ class CodeEditor extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        code: state.core.code
+        code: state.core.code,
+        height: state.ui.rowSize
     };
 };
 

@@ -14,7 +14,7 @@ class Header extends React.Component {
 
     getConnectionLabel(c) {
         if (!this.props.connection) {
-            return <span style={{ color: 'lightgray' }}>Getting status...</span>
+            return <span style={{ color: '#ff3300' }}>Server not connected</span>
         }
         else {
             let connected = (this.props.connection.ksqlConnected && c) ||
@@ -30,7 +30,7 @@ class Header extends React.Component {
 
     render() {
         return (
-            <Row style={{ padding: '7px', margin: '0px', backgroundColor: '#e6e6e6', color: 'dark-gray', borderBottom: '2px ridge #7d1127'}}>
+            <Row style={{ padding: '7px', margin: '0px', backgroundColor: '#e6e6e6', color: 'dark-gray', height: '10vh'}}>
                 <Row style={{ position: 'absolute', right: '0px', marginRight: '20px' }}>
                     <span style={{fontSize: '12px'}}>
                         KsqlDB: {this.getConnectionLabel(true)}

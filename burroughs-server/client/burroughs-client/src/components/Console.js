@@ -46,8 +46,12 @@ class Console extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.props.messages.filter(m => m.debugLevel == this.state.debugLevel)
-                        .map(this.displayMessage)}
+                        {
+                            this.props.messages
+                                .filter(m => m.debugLevel == this.state.debugLevel)
+                                .filter(m => m.text.length > 1)
+                                .map(this.displayMessage)
+                        }
                     </tbody>
                 </Table>
             </>
