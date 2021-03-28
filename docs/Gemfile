@@ -1,0 +1,4 @@
+
+gem "github-pages", "~> 209"
+gem "jekyll-remote-theme", "~> 0.4.2"
+gem "jekyll-rtd-theme", "~> 2.0"
