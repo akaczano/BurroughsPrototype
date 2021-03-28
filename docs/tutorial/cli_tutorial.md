@@ -30,7 +30,7 @@ select storer, sum(spend) as Total from transactions group by storer;
 
 How do you get Burroughs to execute this? Just type it in:
 
-![](/assets/images/running_a_query.png)
+![]({{ '/assets/images/running_a_query.png' | relative_url }})
 
 As you can see above, the `.status` command will show you some statistics about the currently executing query and give an estimate for how much of the backlog has been processed.
 
@@ -42,7 +42,7 @@ At this point, you are probably thinking: "That's great and all, but where are m
 
 This will get you a SQL interface into the output database, where you can see if everything is working properly. If so, you should be able to do this:
 
-![](/assets/images/viewing_results.png)
+![]({{ '/assets/images/viewing_results.png' | relative_url }})
 
 There is the result of our query, just like we asked. You can now do anything with the results that you can do with a relational database table. As more records are produced to the transactions topic, the new data will be processed and the output table updated accordingly. 
 

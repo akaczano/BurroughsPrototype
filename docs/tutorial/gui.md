@@ -46,17 +46,17 @@ group by basketnum
 
 Here is what executing it should look like:
 
-![](/assets/images/running_a_query_gui.png)
+![]({{ '/assets/images/running_a_query_gui.png' | relative_url }})
 
 As you can see, the status display gives information on the current process rate and the amount of backlog still remaining to be processed.
 
 We can also look at the results from the data tab like so:
 
-![](/assets/images/viewing_results_gui.png)
+![]({{ '/assets/images/viewing_results_gui.png' | relative_url }})
 
 When you're done, simply press the stop button to shut everything done. If you are curious about what that entails, have a look at the console while that's running:
 
-![](/assets/images/console.png)
+![]({{ '/assets/images/console.png' | relative_url }})
 
 
 ### What's Next?

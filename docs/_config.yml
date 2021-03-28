@@ -8,6 +8,8 @@ repository: akaczano/BurroughsPrototype
 exclude:
   - README.md
 
+baseurl: /Burroughs/Burroughs
+
 plugins:
   # Necessary to use the ReadTheDocs theme
   - jekyll-remote-theme
