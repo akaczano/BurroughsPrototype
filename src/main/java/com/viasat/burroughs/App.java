@@ -25,7 +25,7 @@ public class App {
      */
     public static void loadConfiguration(Burroughs burroughs) {
         String ksqlHost = "http://localhost:8088";
-        String dbHost = "localhost:5433";
+        String dbHost = "localhost:5432";
         String connectorDB = "postgres:5432";
         String database = "burroughs";
         String dbUser = "postgres";

@@ -39,7 +39,6 @@ public class SimpleQuery extends QueryBase {
     private String groupby;
 
     private Stack<String> names = new Stack<>();
-    private Stack<SqlNode> nodes = new Stack<>();
     private int subqueryCounter = 0;
 
     /**
