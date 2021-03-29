@@ -142,6 +142,11 @@ public abstract class QueryBase {
     protected String createStream(String name, String query) {
         String ksql = String.format("CREATE STREAM %s as %s EMIT CHANGES;", name, query);
         CommandResponse result = service.executeStatement(ksql, "create stream");
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return name;
     }
 

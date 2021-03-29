@@ -25,11 +25,11 @@ public class App {
      */
     public static void loadConfiguration(Burroughs burroughs) {
         String ksqlHost = "http://localhost:8088";
-        String dbHost = "localhost:5432";
+        String dbHost = "localhost:5433";
         String connectorDB = "postgres:5432";
         String database = "burroughs";
         String dbUser = "postgres";
-        String dbPassword = "";
+        String dbPassword = "password";
         String kafkaHost = "localhost:9092";
         String schemaRegistry = "http://localhost:8081";
 

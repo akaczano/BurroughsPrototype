@@ -128,11 +128,10 @@ public class SimpleQuery extends QueryBase {
             String l = createStreams(replacements, join.getLeft(), extras);
             String r = createStreams(replacements, join.getRight(), extras);
             if (l.equals(r)) {
-                System.out.println("self join code executing");
                 String duplicated_stream = "duplicated_"+l;
                 if (!streamExists(duplicated_stream)) {
                     duplicated_stream = createStream(duplicated_stream, "select * from " + l);
-                    streams.add(new StreamEntry(duplicated_stream, false));
+                    streams.add(new StreamEntry(duplicated_stream, true));
                 }
                 SqlBasicCall right = ((SqlBasicCall)(join.getRight()));
                 SqlIdentifier sqi = (SqlIdentifier)(right.operand(0));
@@ -141,7 +140,6 @@ public class SimpleQuery extends QueryBase {
                 names.add(duplicated_stream);
                 positions.add(new SqlParserPos(0, 0));
                 sqi.setNames(names, positions);
-                System.out.println("Self Join finished");
             }
         }
         else if (from instanceof SqlSelect) {

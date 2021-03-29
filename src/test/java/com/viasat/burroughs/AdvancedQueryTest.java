@@ -53,6 +53,7 @@ public class AdvancedQueryTest extends BurroughsTest {
             burroughs.setDbTable(table);
             burroughs.processQuery(query);
             waitForQuery();
+            Thread.sleep(128000);
             compareCount(query, table);
             Map<String, Class> fieldMap = new HashMap<>();
             fieldMap.put("frequency", Integer.class);
@@ -61,6 +62,7 @@ public class AdvancedQueryTest extends BurroughsTest {
             e.printStackTrace();
             fail();
         }
+
     }
 
     @Test
@@ -101,6 +103,7 @@ public class AdvancedQueryTest extends BurroughsTest {
             e.printStackTrace();
             fail();
         }
+        dispose();
     }
 
     @After
