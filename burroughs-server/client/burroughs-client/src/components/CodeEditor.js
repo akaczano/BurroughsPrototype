@@ -18,9 +18,9 @@ class CodeEditor extends React.Component {
                 theme="xcode"
                 onChange={code => this.props.setCode(code)}
                 value={this.props.code}                
-                style={{height: this.props.height + 'vh', width: '100%' }}
-                fontSize="16px"
-                
+                style={{ ...this.props.style, width: '100%' }}
+                fontSize="16px"       
+                editorProps={{ $blockScrolling: true }}                         
             />
         );
     }
@@ -28,8 +28,7 @@ class CodeEditor extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        code: state.core.code,
-        height: state.ui.rowSize
+        code: state.core.code        
     };
 };
 

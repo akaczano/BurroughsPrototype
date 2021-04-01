@@ -56,10 +56,5 @@ class OutputTabs extends React.Component {
     }
 }
 
-const mapStateToProps = state => {
-    return {
-        rowSize: state.ui.rowSize
-    };
-};
 
-export default connect(mapStateToProps, { loadMessages, loadProducers })(OutputTabs);
+export default connect(() => {}, { loadMessages, loadProducers })(OutputTabs);

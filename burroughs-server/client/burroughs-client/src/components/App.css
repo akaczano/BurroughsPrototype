@@ -111,11 +111,19 @@ background: #555;
     cursor: ew-resize;      
 }
 
+.gutter-horizontal {
+    margin: 0px; 
+    background-color: #b3b3b3;
+    height: 4px;
+    width: 100%;
+    cursor: row-resize;
+}
+
 .accent-border-header {            
 background-image: linear-gradient(to right, #d99000, #c60907)
 }
 
-.default-button:hover {
+.default-button.enabled:hover {
     color: #a6a5a4;
     cursor: pointer;
 }

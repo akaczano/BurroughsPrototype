@@ -91,8 +91,9 @@ class ToolBar extends React.Component {
         let clickHandler = () => { };
         if (this.props.queryActive) {
             className += " disabled";
-        }
+        }        
         else {
+            className += " enabled";
             clickHandler = () => {
                 this.props.cleanup();
             }
@@ -124,11 +125,11 @@ class ToolBar extends React.Component {
         return (
             <Row style={{ margin: '0px', padding: '3px', paddingLeft: '10px', backgroundColor: '#f0f0f0', width: '100%', height: '5vh', fontSize: '20px' }}>
                 <FaFolderOpen 
-                    className="default-button" 
+                    className="default-button enabled" 
                     onClick={() => this.fileRef.current.click()}
                 />
                 <FaSave 
-                    className="default-button" 
+                    className="default-button enabled   " 
                     style={{ marginLeft: '6px' }} 
                     onClick={() => {
                         let blob = new Blob([this.props.code], {type: "text/plain;charset=utf-8"});
