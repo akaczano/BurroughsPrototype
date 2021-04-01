@@ -12,9 +12,6 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-//added
-import com.viasat.burroughs.execution.DebugLevels;
-
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -104,9 +101,9 @@ public class SimpleQuery extends QueryBase {
      * @param from
      */
     private void createStreams(Map<String, String> replacements, SqlNode from, List<SqlBasicCall> extras) {
-	      DebugLevels.appendDebugLevel2("createStreams inputs: "+ replacements + " and "+ from);
+        DebugLevels.appendDebugLevel2("createStreams inputs: "+ replacements + " and "+ from);
         if (from instanceof SqlJoin) {
-	        DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlJoin.");
+            DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlJoin.");
 
             SqlJoin join = (SqlJoin)from;
             translateCondition(join.getCondition(), extras);
@@ -115,7 +112,7 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, join.getRight(), extras);
         }
         else if (from instanceof SqlSelect) {
-	          DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlSelect.");
+            DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlSelect.");
             SqlSelect subquery = (SqlSelect)from;
             Map<String, String> sqReplacements = new HashMap<>();
             List<SqlBasicCall> sqExtras = new ArrayList<>();
@@ -129,7 +126,7 @@ public class SimpleQuery extends QueryBase {
             streams.add(new StreamEntry(stream, true));
         }
         else if (from instanceof SqlBasicCall) {
-	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlBasicCall.");
+            DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlBasicCall.");
 
 
             SqlBasicCall call = (SqlBasicCall)from;
@@ -139,7 +136,7 @@ public class SimpleQuery extends QueryBase {
             createStreams(replacements, call.operand(0), extras);
         }
         else if (from instanceof SqlIdentifier) {
-	    DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlIdentifier.");
+            DebugLevels.appendDebugLevel2("createStreams: interpreting " + from + " as SqlIdentifier.");
             SqlIdentifier identifier = (SqlIdentifier)from;
 
             String streamName = String.format("burroughs_%s", identifier.toString());
@@ -187,7 +184,10 @@ public class SimpleQuery extends QueryBase {
                     if (literal.isInteger()) {
                         SqlNode field = query.getSelectList().get(position - 1);
                         if (field instanceof SqlBasicCall) {
-                            field = ((SqlBasicCall) field).operand(0);
+                            SqlBasicCall call = (SqlBasicCall)field;
+                            if (call.getOperator().toString().equalsIgnoreCase("AS")) {
+                                field = call.operand(0);
+                            }
                         }
                         query.getGroup().set(i, field);
                     }
@@ -215,10 +215,14 @@ public class SimpleQuery extends QueryBase {
 //	DebugLevels.appendDebugLevel2("translateQuery (loop 1) generated " + query);
 
         for (int i = 0; i < query.getSelectList().size(); i++) {
-            SqlNode newNode = translateFunction(query.getSelectList().get(i));
+            SqlNode newNode = translateFunction(query.getSelectList().get(i), true);
             query.getSelectList().set(i, newNode);
         }
         translateJoins(query.getFrom(), replacements);
+
+        if (query.getWhere() != null){
+            translateWhere(query.getWhere());
+        }
 
         String preparedQuery = query.toString();
 
@@ -231,7 +235,7 @@ public class SimpleQuery extends QueryBase {
         }
         preparedQuery = preparedQuery.replaceAll("`", "");
 
-	DebugLevels.appendDebugLevel2("translateQuery generated: " + preparedQuery);
+        DebugLevels.appendDebugLevel2("translateQuery generated: " + preparedQuery);
 
 
         return preparedQuery;
@@ -282,20 +286,20 @@ public class SimpleQuery extends QueryBase {
             if (id.names.size() == 2) {
                 String source = id.names.get(0);
                 streams
-                    .stream()
-                    .filter(s -> s.getTopicName() != null)
-                    .filter(s -> s.getTopicName().equalsIgnoreCase(source))
-                    .map(StreamEntry::getStreamName)
-                    .findFirst()
-                    .ifPresent(name -> {
-                        List<String> names = new ArrayList<>();
-                        names.add(name);
-                        names.add(id.names.get(1));
-                        List<SqlParserPos> positions = new ArrayList<>();
-                        positions.add(new SqlParserPos(0, 0 ));
-                        positions.add(new SqlParserPos(0, 0 ));
-                        id.setNames(names, positions);
-                    });
+                        .stream()
+                        .filter(s -> s.getTopicName() != null)
+                        .filter(s -> s.getTopicName().equalsIgnoreCase(source))
+                        .map(StreamEntry::getStreamName)
+                        .findFirst()
+                        .ifPresent(name -> {
+                            List<String> names = new ArrayList<>();
+                            names.add(name);
+                            names.add(id.names.get(1));
+                            List<SqlParserPos> positions = new ArrayList<>();
+                            positions.add(new SqlParserPos(0, 0 ));
+                            positions.add(new SqlParserPos(0, 0 ));
+                            id.setNames(names, positions);
+                        });
             }
         }
     }
@@ -315,11 +319,30 @@ public class SimpleQuery extends QueryBase {
         }
     }
 
-    private SqlNode translateFunction(SqlNode item) {
+    private void translateWhere(SqlNode condition){
+        if(condition instanceof SqlBasicCall){
+            SqlBasicCall call = (SqlBasicCall) condition;
+            SqlNode left = call.operand(0);
+            SqlNode right = call.operand(1);
+            if(left instanceof SqlBasicCall){
+                translateWhere(left);
+            }
+            if(right instanceof SqlBasicCall){
+                translateWhere(right);
+            }
+            // the recursion part goes here parse through up until the left and right-hand side is a SqlBasicCall
+            if (call.getOperator().getName().equalsIgnoreCase("CAST")){
+                translateFunction(call, false);
+            }
+        }
+    }
+
+
+    private SqlNode translateFunction(SqlNode item, boolean isSelect) {
         if (item instanceof SqlBasicCall) {
             SqlBasicCall call = (SqlBasicCall)item;
             if (call.getOperator().toString().equalsIgnoreCase("AS")) {
-                call.setOperand(0, translateFunction(call.operand(0)));
+                call.setOperand(0, translateFunction(call.operand(0), isSelect));
                 return call;
             }
             else if (call.getOperator().toString().equalsIgnoreCase("GROUP_CONCAT")) {
@@ -343,18 +366,33 @@ public class SimpleQuery extends QueryBase {
                 return new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition());
             }
             else if (call.getOperator().toString().equalsIgnoreCase("CAST")) {
+                String operatorName;
+                if (isSelect) {
+                    operatorName = "DATETOSTRING";
 
+                } else {
+                    operatorName = "STRINGTODATE";
+                }
+                SqlIdentifier identifier = call.getOperator().getNameAsId().setName(0, operatorName);
+                SqlOperator op = new SqlUserDefinedFunction(identifier, null,
+                        null, null, new ArrayList<RelDataType>(), null);
+                call.setOperator(op);
+                SqlIdentifier id = (SqlIdentifier)call.getOperator().getNameAsId()
+                        .clone(new SqlParserPos(0, 0, 0, 0));
+                id = id.setName(0, "'yyyy-MM-dd'");
+                call.setOperand(1, id);
             }
         }
         return item;
     }
 
+    private int fieldNameCount = 0;
     private void addKeyTransforms(SqlSelect query) {
         Transform keyTransform = new Transform("IncludeKey", "com.viasat.burroughs.smt.IncludeKey");
         transforms.add(keyTransform);
         if (query.getGroup().size() < 2) {
             keyTransform.addProperty("field_name", evaluateGroupField(query,
-                    (SqlIdentifier) query.getGroup().get(0)));
+                    query.getGroup().get(0)));
             keyTransform.addProperty("multiple", "false");
             return;
         }
@@ -380,7 +418,12 @@ public class SimpleQuery extends QueryBase {
         keyTransform.addProperty("field_name", groupParam.toString());
     }
 
-    private String evaluateGroupField(SqlSelect query, SqlIdentifier group) {
+    private String evaluateGroupField(SqlSelect query, SqlNode node) {
+
+        if (! (node instanceof SqlIdentifier)) {
+            return "COLUMN_" + (fieldNameCount++);
+        }
+        SqlIdentifier group = (SqlIdentifier)node;
         for (SqlNode n : query.getSelectList()) {
             if (n instanceof SqlBasicCall) {
                 SqlBasicCall call = (SqlBasicCall)n;
