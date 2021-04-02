@@ -32,7 +32,7 @@ public class App {
         String connectorDB = "postgres:5432";
         String database = "burroughs";
         String dbUser = "postgres";
-        String dbPassword = "";
+        String dbPassword = "password";
         String kafkaHost = "localhost:9092";
         String schemaRegistry = "http://localhost:8081";
 
