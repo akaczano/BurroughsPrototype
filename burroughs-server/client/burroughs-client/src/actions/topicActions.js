@@ -11,6 +11,7 @@ import {
 } from './actionTypes';
 
 export const getTopics = () => (dispatch, getState) => {
+    if (!getState().core.connection) return;
     client
         .get('/command/topics')
         .then(topics => {
@@ -60,7 +61,8 @@ export const deleteTopic = topic => async dispatch => {
     }
 };
 
-export const cleanup = () => async dispatch => {
+export const cleanup = () => async (dispatch, getState) => {
+    if (!getState().core.connection) return;
     dispatch({type: CLEANING_UP})
     try {
         await client.post('/command/cleanup');

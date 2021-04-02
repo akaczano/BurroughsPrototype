@@ -16,7 +16,7 @@ const initialState = {
         password: '',
         database: '',
         table: ''
-    },       
+    },           
     consoleMessages: [],
     lastConsoleRequest: Date.now(), 
 };
@@ -70,6 +70,7 @@ const reducer = (state = initialState, action) => {
             lastConsoleRequest: Date.now()
         };
     }  
+    
     return state;
 };
 

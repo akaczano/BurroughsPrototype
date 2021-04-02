@@ -11,5 +11,5 @@ export default combineReducers({
     producer: producerReducer,
     topic: topicReducer,
     query: queryReducer,
-    data: dataReducer 
+    data: dataReducer    
 });

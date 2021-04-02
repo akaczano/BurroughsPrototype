@@ -1,5 +1,7 @@
 package com.viasat.burroughs;
 
+import com.viasat.burroughs.logging.ConsoleLogger;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.model.list.Topic;
 import com.viasat.burroughs.validation.QueryValidator;
 import com.viasat.burroughs.validation.TopicNotFoundException;
@@ -18,6 +20,7 @@ public class ValidationTest extends ServiceTest{
     private final QueryValidator validator;
 
     public ValidationTest() {
+        Logger.setLogger(new ConsoleLogger());
         validator = new QueryValidator(service);
     }
 

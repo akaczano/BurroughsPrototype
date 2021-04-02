@@ -31,6 +31,7 @@ export const loadDatabase = () => async dispatch => {
 }
 
 export const loadMessages = () => async (dispatch, getState) => {
+    if (!getState().core.connection) return;
     try {
         let data = await client.get('/console', {params: {lastQuery: getState().core.lastConsoleRequest}})        
         dispatch(appendMessages(data.data));        
@@ -100,3 +101,5 @@ export const appendMessages = messages => {
         payload: messages
     };
 };
+
+

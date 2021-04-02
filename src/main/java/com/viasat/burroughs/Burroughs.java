@@ -6,19 +6,19 @@ import com.viasat.burroughs.execution.QueryUtil;
 import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.producer.ProducerInterface;
 import com.viasat.burroughs.service.KafkaService;
+import com.viasat.burroughs.service.SchemaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.StatusService;
 import com.viasat.burroughs.service.model.HealthStatus;
 import com.viasat.burroughs.service.model.burroughs.BurroughsConnection;
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
-import com.viasat.burroughs.service.model.command.CommandResponse;
-import com.viasat.burroughs.service.model.description.DescribeResponse;
-import com.viasat.burroughs.service.model.description.Field;
 import com.viasat.burroughs.service.model.list.*;
+import com.viasat.burroughs.service.model.schema.Subject;
 import com.viasat.burroughs.validation.ParsedQuery;
 import com.viasat.burroughs.validation.QueryValidator;
 import com.viasat.burroughs.validation.TopicNotFoundException;
 import com.viasat.burroughs.validation.UnsupportedQueryException;
+import org.apache.avro.Schema;
 import org.apache.calcite.sql.parser.SqlParseException;
 
 import java.sql.Connection;
@@ -46,6 +46,8 @@ public class Burroughs implements DBProvider {
      * Provides access to ksqlDB
      */
     private StatementService service;
+
+    private SchemaService schemaService;
 
     /**
      * Utilities for working with ksqlDB
@@ -85,6 +87,7 @@ public class Burroughs implements DBProvider {
         dbConnected = checkDatabaseConnection() != null;
         this.service = new StatementService(ksqlHost);
         this.kafkaService = new KafkaService(kafkaHost);
+        this.schemaService = new SchemaService(schemaRegistry);
         this.executor = new QueryExecutor(service, kafkaService, this);
         if (ksqlConnected) {
             this.producerInterface = new ProducerInterface(producerPath, kafkaHost, schemaRegistry, this);
@@ -172,14 +175,12 @@ public class Burroughs implements DBProvider {
      * @param topicName The name of the topic
      * @return
      */
-    public Field[] topic(String topicName) {
-        if (!util.streamExists("BURROUGHS_" + topicName)) {
-            util.createStream("BURROUGHS_" + topicName, topicName,
-                    Format.AVRO);
+    public Schema topic(String topicName) {
+        Subject subject = this.schemaService.getSchema(topicName);
+        if (subject == null) {
+            throw new ExecutionException("Failed to find schema for topic: " + topicName);
         }
-        DescribeResponse description = service.executeStatement("DESCRIBE BURROUGHS_" + topicName + ";",
-                "retrieve topic metadata");
-        return description.getSourceDescription().getFields();
+        return subject.getSchema();
     }
 
     /**
@@ -187,8 +188,7 @@ public class Burroughs implements DBProvider {
      * @param topicName
      */
     public void dropTopic(String topicName) {
-        topic(topicName);
-        CommandResponse cr = util.dropStreamAndTopic("BURROUGHS_" + topicName);
+        kafkaService.deleteTopic(topicName);
     }
     /**
      * Get a list of topics on the connected broker
@@ -249,10 +249,12 @@ public class Burroughs implements DBProvider {
         // Send request to /healthcheck endpoint
         HealthStatus status = statusService.checkConnection();
         if (status == null) {
-            Logger.getLogger().writeLineRed("Failed to connect to ksqlDB at " + ksqlHost);
+            Logger.getLogger().writeLine("Failed to connect to ksqlDB at " + ksqlHost,
+                    Logger.ERROR, Logger.NORMAL);
             return false;
         } else if (!status.isHealthy()) {
-            Logger.getLogger().writeLineYellow("ksqlDB server is unhealthy");
+            Logger.getLogger().writeLine("ksqlDB server is unhealthy",
+                    Logger.WARNING, Logger.NORMAL);
             return false;
         } else {
             Logger.getLogger().writeLine("ksqlDB connected successfully");
@@ -287,8 +289,10 @@ public class Burroughs implements DBProvider {
                     e = ex;
                 }
             }
-            Logger.getLogger().writeLineRed("Failed to connect to database: " + e.getMessage());
-            Logger.getLogger().writeLineRed(String.format("Database host: %s\nUser: %s\n Database: %s\n", dbHost, dbUser, database));
+            Logger.getLogger().writeLine("Failed to connect to database: " + e.getMessage(),
+                    Logger.ERROR, Logger.NORMAL);
+            Logger.getLogger().writeLine(String.format("Database host: %s\nUser: %s\n Database: %s\n", dbHost, dbUser, database),
+                    Logger.ERROR, Logger.NORMAL);
         }
         return conn;
     }

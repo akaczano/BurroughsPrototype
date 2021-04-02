@@ -34,7 +34,7 @@ class OutputTabs extends React.Component {
     render() {
         return (
             <>
-                <Row className="tab-group" style={{ backgroundColor: '#f1f1f1', margin: '0px', marginTop: '6px' }}>
+                <Row className="tab-group" style={{ backgroundColor: '#f1f1f1', margin: '0px' }}>
                     {tabs.map((tab, i) => {
                         let className = i === this.state.selectedTab ? 'tab-button active' : 'tab-button';
                         return (
@@ -48,7 +48,7 @@ class OutputTabs extends React.Component {
                         );
                     })}
                 </Row>
-                <Row style={{margin:'0px', padding: '0px', paddingRight: '15px', maxHeight: '45vh', overflowY: 'auto'}}>                    
+                <Row style={{margin:'0px', padding: '0px', paddingRight: '15px', maxHeight: 100 - this.props.rowSize - 18 + 'vh', overflowY: 'auto'}}>                    
                     {this.getDisplayedComponent()}
                 </Row>
             </>
@@ -56,5 +56,5 @@ class OutputTabs extends React.Component {
     }
 }
 
-export default connect(state => state, 
-    { loadMessages, loadProducers })(OutputTabs);
+
+export default connect(() => {}, { loadMessages, loadProducers })(OutputTabs);

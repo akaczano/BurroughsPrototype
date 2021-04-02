@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Row, Button } from 'react-bootstrap';
 
-import { getConnection, reconnect } from '../actions/basicActions';
+import { getConnection, reconnect, loadDatabase } from '../actions/basicActions';
 
 class Header extends React.Component {
 
@@ -12,15 +12,15 @@ class Header extends React.Component {
     }
 
 
-    getConnectionLabel() {
+    getConnectionLabel(c) {
         if (!this.props.connection) {
-            return <span style={{ color: 'lightgray' }}>Getting status...</span>
+            return <span style={{ color: '#ff3300' }}>Server not connected</span>
         }
         else {
-            let connected = this.props.connection.ksqlConnected &&
-                this.props.connection.dbConnected;
-            if (connected) {
-                return <span style={{ color: '#2ad16d' }}>Connected</span>
+            let connected = (this.props.connection.ksqlConnected && c) ||
+                (this.props.connection.dbConnected && !c);
+            if (connected) {                
+                return <span style={{ color: '#1b872f' }}>Connected</span>
             }
             else {
                 return <span style={{ color: 'red' }}>Disconnected</span>
@@ -30,17 +30,22 @@ class Header extends React.Component {
 
     render() {
         return (
-            <Row style={{ padding: '7px', margin: '0px', backgroundColor: '#474a48' }}>
-                <Row style={{ position: 'absolute', right: '0px', marginRight: '20px', color: 'white' }}>
-                    <span>Status: {this.getConnectionLabel()}</span>
-                    <Button 
-                        variant="secondary" style={{ marginLeft: '8px' }}                        
+            <Row style={{ padding: '7px', margin: '0px', backgroundColor: '#e6e6e6', color: 'dark-gray', height: '10vh'}}>
+                <Row style={{ position: 'absolute', right: '0px', marginRight: '20px' }}>
+                    <span style={{fontSize: '12px'}}>
+                        KsqlDB: {this.getConnectionLabel(true)}
+                        <br />
+                        Database: {this.getConnectionLabel(false)}
+                    </span>
+                    <Button
+                        variant="dark" 
+                        style={{ marginLeft: '8px', height: '35px', fontSize: '15px'}}
                         onClick={() => this.props.reconnect()}
                     >
                         Reconnect
                     </Button>
                 </Row>
-                <h4 style={{ color: 'white', float: 'left' }}>Burroughs</h4>
+                <h3 style={{ float: 'left', fontFamil: 'Tahoma' }}>Burroughs</h3>
             </Row>
         );
     }
@@ -52,4 +57,4 @@ const mapStateToProps = state => {
     };
 };
 
-export default connect(mapStateToProps, { getConnection, reconnect })(Header);
+export default connect(mapStateToProps, { getConnection, reconnect, loadDatabase })(Header);

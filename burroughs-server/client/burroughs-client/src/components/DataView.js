@@ -15,17 +15,17 @@ class DataView extends React.Component {
         }
         else if (this.props.dataError) {
             return (
-                <p style={{ color: 'red' }}>{this.props.dataError}</p>
+                <p style={{ color: 'red', marginLeft: '3px' }}>{this.props.dataError}</p>
             );
         }
         else if (!this.props.data || this.props.data.length < 1) {
-            return <div>No data to display</div>;
+            return <div style={{marginLeft: '3px'}}>No data to display</div>;
         }
         else {
             const headers = this.props.data[0];
             return (
                 <Table striped bordered hover className="data-table">
-                    <thead>
+                    <thead style={{position: 'sticky', top: '0px'}}>
                         <tr>
                             <th>#</th>
                             {headers.map(h => (
@@ -54,7 +54,7 @@ class DataView extends React.Component {
 
     render() {
         return (
-            <div>
+            <div style={{width: '100%', margin: '0px'}}>
                 <Form
                     style={{
                         position: 'sticky',
@@ -63,6 +63,7 @@ class DataView extends React.Component {
                         paddingBottom: '0px',
                         backgroundColor: 'white',
                         marginBottom: '5px',
+                        width: '100%',
                         borderBottom: '1px solid black'
                     }}
                     onSubmit={e => {
@@ -77,18 +78,19 @@ class DataView extends React.Component {
                         <Form.Control
                             className="sql-in"
                             type="text"
+                            placeHolder="SQL"
                             value={this.props.queryText}
                             onChange={e => this.props.setQueryText(e.target.value)}
                             style={{ width: '60vw' }}
                         />
                         <Button
                             onClick={() => this.props.loadSnapshot(this.props.queryText)}
-                            variant="secondary"
-                            style={{ marginLeft: '18px' }}
+                            variant="dark"
+                            style={{ marginLeft: '18px', paddingTop: '1px', paddingBottom: '1px' }}
                             disabled={this.props.dataLoading}
                         >
                             <BsFillPlayFill
-                                style={{ color: '#35e871', fontSize: '24px' }}
+                                style={{ color: 'white', fontSize: '24px' }}
                             />
                         </Button>
                     </Form.Row>

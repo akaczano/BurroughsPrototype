@@ -10,6 +10,7 @@ docker run  -d \
 	-e DB_PASSWORD=password \
 	-e KAFKA_HOST=broker:29092 \
 	-e SCHEMA_REGISTRY=http://schema-registry:8081 \
+	-e PRODUCER_PATH=/producer \
 	burroughs-server
 docker run -d \
 	--name burroughs_client \

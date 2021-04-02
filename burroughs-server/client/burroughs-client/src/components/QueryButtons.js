@@ -9,8 +9,7 @@ const buttonStyle = {
     marginTop: '3px',    
     marginRight: '5px',
     paddingTop: '1px',
-    paddingBottom: '1px',
-    marginLeft: '3px'  
+    paddingBottom: '1px',    
 };
 
 class QueryButtons extends React.Component {    
@@ -48,17 +47,17 @@ class QueryButtons extends React.Component {
 
     render() {
         return (
-            <Row>
+            <Row style={{margin: '0px', marginLeft: '5px'}}>
                 <Button 
-                    variant="info" 
+                    variant="dark" 
                     disabled={this.props.queryActive || (!this.props.tableName || this.props.tableName.length < 1)} 
-                    style={{...buttonStyle, marginLeft: '14px'}}
+                    style={{...buttonStyle }}
                     onClick={ () => this.props.executeQuery(this.props.code.trim()) }
                 >
                     {this.getExecButton()}
                 </Button>
                 <Button 
-                    variant="info" 
+                    variant="dark" 
                     disabled={!this.props.queryActive} 
                     style={buttonStyle}
                     onClick={ () => this.props.terminateQuery() }
@@ -74,7 +73,7 @@ class QueryButtons extends React.Component {
                     />
                     Keep Table
                 </p>
-                <Button variant="info" 
+                <Button variant="dark" 
                     style={{position: 'absolute', right: '15px', ...buttonStyle}}
                     disabled={this.props.queryActive}
                     onClick={e => {this.props.cleanup()}}

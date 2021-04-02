@@ -1,6 +1,7 @@
 package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 import com.viasat.burroughs.service.model.burroughs.ConnectStatus;
@@ -12,7 +13,6 @@ import org.apache.kafka.common.TopicPartition;
 
 
 //added
-import com.viasat.burroughs.execution.DebugLevels;
 
 import java.util.*;
 
@@ -136,7 +136,7 @@ public abstract class QueryBase extends QueryUtil {
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
-        DebugLevels.appendDebugLevel2("\n\t" + "createTable: " + statement);
+        Logger.getLogger().writeLine("\n\t" + "createTable: " + statement, Logger.DEFAULT, Logger.LEVEL_2);
         return tableName;
     }
 
@@ -177,11 +177,13 @@ public abstract class QueryBase extends QueryUtil {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
-            DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
+            Logger.getLogger().writeLine("Failed to create connector using: " + response,
+                    Logger.DEFAULT, Logger.LEVEL_2);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
 
-        DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
+        Logger.getLogger().writeLine("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus(),
+                Logger.DEFAULT, Logger.LEVEL_2);
         return "burr_connect_" + id;
     }
 
