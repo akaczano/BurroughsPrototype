@@ -40,7 +40,7 @@ public class Burroughs implements DBProvider {
     private String kafkaHost;
     private String schemaRegistry;
     private String connectorDB;
-    private String producerPath = "/producer";
+    private String producerPath = "src/test/producer";
 
     /**
      * Provides access to ksqlDB
