@@ -88,7 +88,7 @@ services:
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
 
   ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:5.5.1
+    image: confluentinc/cp-ksqldb-server:latest
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
@@ -133,7 +133,7 @@ services:
     environment:
       POSTGRES_PASSWORD: password
   ksqldb-cli:
-    image: confluentinc/cp-ksqldb-cli:5.5.1
+    image: confluentinc/cp-ksqldb-cli:latest
     container_name: ksqldb-cli
     depends_on:
       - broker
@@ -141,5 +141,27 @@ services:
       - ksqldb-server
     entrypoint: /bin/sh
     tty: true
+  ksql-datagen:
+    image: confluentinc/ksqldb-examples:5.5.1
+    hostname: ksql-datagen
+    container_name: ksql-datagen
+    depends_on:
+      - ksqldb-server
+      - broker
+      - schema-registry
+      - connect
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b broker:29092 1 40 && \
+                       echo Waiting for Confluent Schema Registry to be ready... && \
+                       cub sr-ready schema-registry 8081 40 && \
+                       echo Waiting a few seconds for topic creation to finish... && \
+                       sleep 11 && \
+                       tail -f /dev/null'"
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      STREAMS_BOOTSTRAP_SERVERS: broker:29092
+      STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
+      STREAMS_SCHEMA_REGISTRY_PORT: 8081
 volumes:
   db-data:
+

@@ -1,6 +1,9 @@
-package com.viasat.burroughs;
+package com.viasat.burroughs.client;
 
 
+import com.viasat.burroughs.Burroughs;
+import com.viasat.burroughs.logging.ConsoleLogger;
+import com.viasat.burroughs.logging.Logger;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;

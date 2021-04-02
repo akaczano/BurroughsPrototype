@@ -103,7 +103,29 @@ public class AdvancedQueryTest extends BurroughsTest {
             e.printStackTrace();
             fail();
         }
-        dispose();
+    }
+
+    @Test
+    public void testMultipleJoin() {
+        try {
+            checkConditions();
+            String table = "test_multiple_join";
+            String query = "with transactions2 as (" +
+                    "select * from test_data" +
+                    ") select custid, t1.productnum as p1, t2.productnum as p2, count(*) " +
+                    "from test_data t1 inner join transactions2 t2 " +
+                    "on t1.basketnum = t2.basketnum " +
+                    "inner join test_customers c on t1.basketnum = c.basketnum " +
+                    "group by 1,2,3;";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @After

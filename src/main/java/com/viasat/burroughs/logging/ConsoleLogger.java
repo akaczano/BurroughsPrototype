@@ -1,6 +1,7 @@
-package com.viasat.burroughs;
+package com.viasat.burroughs.logging;
 
 
+import com.viasat.burroughs.logging.ILogger;
 
 public class ConsoleLogger implements ILogger {
 

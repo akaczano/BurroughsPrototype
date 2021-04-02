@@ -8,9 +8,11 @@ import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.service.model.burroughs.TableStatus;
 import com.viasat.burroughs.service.model.command.CommandResponse;
 import com.viasat.burroughs.service.model.description.*;
-import com.viasat.burroughs.service.model.list.Format;
-import com.viasat.burroughs.service.model.list.ListResponse;
 import org.apache.kafka.common.TopicPartition;
+
+
+//added
+import com.viasat.burroughs.execution.DebugLevels;
 
 import java.util.*;
 
@@ -18,7 +20,7 @@ import java.util.*;
  * Base class that provides a large array of useful methods
  * for interacting with ksqlDB
  */
-public abstract class QueryBase {
+public abstract class QueryBase extends QueryUtil {
 
     /**
      * Service object for execution ksql statements
@@ -33,7 +35,7 @@ public abstract class QueryBase {
 
     /**
      * Kafka service that can access Kafka broker directly. Used to get consumer
-     * group offsets during .status execution
+     * group offsets during .getCommandStatus() execution
      */
     protected final KafkaService kafkaService;
 
@@ -48,6 +50,7 @@ public abstract class QueryBase {
     private String keyConverter = "org.apache.kafka.connect.storage.StringConverter";
 
 
+
     protected List<Transform> transforms;
 
     /**
@@ -59,6 +62,7 @@ public abstract class QueryBase {
      */
     public QueryBase(StatementService service, KafkaService kafkaService,
                      QueryProperties properties) {
+        super(service);
         this.service = service;
         this.properties = properties;
         this.kafkaService = kafkaService;
@@ -81,12 +85,6 @@ public abstract class QueryBase {
      */
     public abstract QueryStatus getStatus();
 
-    /**
-     * Set the group by field from which the group by data type can be determined
-     *
-     * @param field Field name
-     */
-    public abstract void setGroupBy(String field);
 
     /**
      * Set the group by data type which is used to determine the Key converter class
@@ -115,6 +113,8 @@ public abstract class QueryBase {
         }
     }
 
+
+
     /**
      * Gets the query ID
      *
@@ -131,65 +131,13 @@ public abstract class QueryBase {
      * @param query The query to build the table from
      * @return The table's name
      */
-    protected String createTable(String id, String query) {
+    public String createTable(String id, String query) {
         String tableName = "burroughs_" + id;
         String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
                 tableName, query);
         CommandResponse response = service.executeStatement(statement, "create table");
+        DebugLevels.appendDebugLevel2("\n\t" + "createTable: " + statement);
         return tableName;
-    }
-
-    protected String createStream(String name, String query) {
-        String ksql = String.format("CREATE STREAM %s as %s EMIT CHANGES;", name, query);
-        CommandResponse result = service.executeStatement(ksql, "create stream");
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return name;
-    }
-
-    /**
-     * Creates a ksqlDB stream
-     *
-     * @param streamName The name of the stream to create
-     * @param topic      The topic to create the stream from
-     * @param format     The topic serialization format (only AVRO for now)
-     * @return The stream name
-     */
-    protected String createStream(String streamName, String topic, Format format) {
-        return createStream(service, streamName, topic, format);
-    }
-
-    /**
-     * Actually does the work of creating the stream.
-     *
-     * @param service    The statement service to send the query with
-     * @param streamName The name of the stream
-     * @param topic      The topic to create the stream from
-     * @param format     The value format
-     * @return The name of the stream
-     */
-    public static String createStream(StatementService service, String streamName,
-                                      String topic, Format format) {
-        String query = String.format("CREATE STREAM %s WITH (kafka_topic='%s', value_format='%s');",
-                streamName, topic, format.toString());
-        CommandResponse result = service.executeStatement(query, "create stream");
-        return streamName;
-    }
-    /**
-     * Version of dropStream that can be done from a static context and takes the underlying topic with it
-     *
-     * @param service    The statement service to send the query with
-     * @param streamName The name of the stream
-     * @return The name of the stream
-     */
-    public static CommandResponse dropStreamAndTopic(StatementService service, String streamName) {
-        String query = String.format("DROP STREAM %s DELETE TOPIC;",
-                streamName);
-        CommandResponse result = service.executeStatement(query, "stream and topic dropped");
-        return result;
     }
 
     /**
@@ -229,127 +177,13 @@ public abstract class QueryBase {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
+            DebugLevels.appendDebugLevel2("Failed to create connector using: " + response);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
+
+        DebugLevels.appendDebugLevel2("\n\t" + "createConnector: " + command + "\n\t" + "Status: " + response.getCommandStatus());
         return "burr_connect_" + id;
     }
-
-    /**
-     * Gets the schema, as a field name - data type table,
-     * for a stream
-     *
-     * @param stream The desired stream
-     * @return The schema
-     */
-    protected Map<String, DataType> GetSchema(String stream) {
-        DescribeResponse description = service.executeStatement(String.format("DESCRIBE %s;", stream),
-                "describe stream");
-        Map<String, DataType> results = new HashMap<>();
-        for (Field f : description.getSourceDescription().getFields()) {
-            results.put(f.getName(), f.getSchema().getType());
-        }
-        return results;
-    }
-
-    /**
-     * Checks if a stream exists
-     *
-     * @param streamName The name of the stream
-     * @return Whether or not the stream exists
-     */
-    protected boolean streamExists(String streamName) {
-        return streamExists(service, streamName);
-    }
-
-    /**
-     * Checks if a stream exists
-     *
-     * @param service    The StatementService object to use
-     * @param streamName The stream to look for
-     * @return Whether or not the stream exists
-     */
-    public static boolean streamExists(StatementService service, String streamName) {
-        ListResponse listResponse = service.executeStatement("LIST STREAMS;",
-                "executed statement: LIST STREAMS");
-
-        return Arrays.stream(listResponse.getStreams())
-                .anyMatch(s -> s.getName().equalsIgnoreCase(streamName));
-    }
-
-    /**
-     * Utility method for dropping a stream
-     *
-     * @param streamName The stream to drop
-     */
-    protected void dropStream(String streamName) {
-        terminateQueries(streamName);
-        drop("STREAM", streamName);
-    }
-
-    /**
-     * Terminates the given query
-     *
-     * @param queryId The query to terminate
-     */
-    private void terminateQuery(String queryId) {
-        CommandResponse result = service.executeStatement(
-                String.format("TERMINATE %s;", queryId),
-                "terminate query");
-        if (!result.getCommandStatus().getStatus().equals("SUCCESS")) {
-            throw new ExecutionException(result.getCommandStatus().getMessage());
-        }
-    }
-
-    /**
-     * Terminates all queries that depend upon the given object
-     *
-     * @param objectName The object to check, usually a table
-     */
-    protected void terminateQueries(String objectName) {
-        DescribeResponse description = service.
-                executeStatement(String.format("DESCRIBE %s;", objectName), "terminate queries");
-        for (Query query : description.getSourceDescription().getReadQueries()) {
-            terminateQuery(query.getId());
-        }
-        for (Query query : description.getSourceDescription().getWriteQueries()) {
-            terminateQuery(query.getId());
-        }
-    }
-
-    /**
-     * Drops the specified table
-     *
-     * @param tableName the table to drop
-     */
-    protected void dropTable(String tableName) {
-        terminateQueries(tableName);
-        drop("TABLE", tableName);
-    }
-
-    /**
-     * Drops the specified connector
-     *
-     * @param connectorName The connector to drop
-     */
-    protected void dropConnector(String connectorName) {
-        drop("CONNECTOR", connectorName);
-    }
-
-    /**
-     * Generalized drop method which can drop streams, tables, and connectors.
-     * It also deletes the underlying topic for any tables.
-     *
-     * @param objectType The type of object (stream, table, or connector)
-     * @param name       The name of the object
-     */
-    protected void drop(String objectType, String name) {
-        String command = String.format("DROP %s %s%s",
-                objectType, name,
-                objectType.equalsIgnoreCase("table") ? " DELETE TOPIC;" : ";");
-        CommandResponse result = service.executeStatement(command, String.format("drop %s",
-                objectType.toLowerCase()));
-    }
-
 
     protected TableStatus getTableStatus(String tableName) {
         TableStatus status = new TableStatus();

@@ -1,6 +1,5 @@
 package com.viasat.burroughs;
 
-import com.google.common.hash.HashingInputStream;
 import org.junit.After;
 import org.junit.Test;
 
@@ -142,6 +141,105 @@ public class BasicQueryTest extends BurroughsTest {
             }
 
         } catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testGroupByDifferentTypes() {
+        try {
+            checkConditions();
+            String table = "test_multi_group_type1";
+            String query = "select storer, basketnum, avg(units) as AvgUnits from test_data group by 1,2";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+            Map<String, Class> fields = new HashMap<>();
+            fields.put("basketnum", Integer.class);
+            compareFields(query, table, fields, "storer,basketnum");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testGroupByDifferentTypes2() {
+        try {
+            checkConditions();
+            String table = "test_multi_group_type2";
+            String query = "select t.storer, c.basketnum, avg(units) as AvgUnits " +
+                    "from test_data t inner join test_customers c on t.basketnum = c.basketnum " +
+                    "group by 1,2";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+            Map<String, Class> fields = new HashMap<>();
+            fields.put("basketnum", Integer.class);
+            compareFields(query, table, fields, "storer,basketnum");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testGroupByDifferentTypes3() {
+        try {
+            checkConditions();
+            String table = "test_multi_group_type3";
+            String query = "select t.storer, custid, avg(units) as AvgUnits " +
+                    "from test_data t inner join test_customers c on t.basketnum = c.basketnum " +
+                    "group by 1,2";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+            Map<String, Class> fields = new HashMap<>();
+            fields.put("custid", Integer.class);
+            compareFields(query, table, fields, "storer,custid");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testJoinHaving() {
+        try {
+            checkConditions();
+            String table = "test_join_having";
+            String query = "select custid, sum(spend) as TotalSpend, count(*) as TotalTransactions " +
+                    "from test_data t left join test_customers c on t.basketnum = c.basketnum " +
+                    "group by 1 having count(*) > 2;";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void testFullAlias() {
+        try {
+            checkConditions();
+            String table = "test_full_alias";
+            String query = "select test_customers.custid, avg(units) from test_data " +
+                    "inner join test_customers on test_data.basketnum = test_customers.basketnum " +
+                    "group by 1";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query, table);
+        }
+        catch (Exception e) {
             e.printStackTrace();
             fail();
         }

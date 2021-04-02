@@ -1,15 +1,18 @@
 package com.viasat.burroughs.execution;
 
 import com.viasat.burroughs.DBProvider;
-import com.viasat.burroughs.Logger;
+import com.viasat.burroughs.logging.Logger;
 import com.viasat.burroughs.service.KafkaService;
 import com.viasat.burroughs.service.StatementService;
 
 import com.viasat.burroughs.service.model.burroughs.QueryStatus;
 import com.viasat.burroughs.validation.ParsedQuery;
-import org.apache.calcite.sql.SqlSelect;
 
 import java.util.UUID;
+
+
+import com.viasat.burroughs.execution.DebugLevels;
+
 
 public class QueryExecutor {
 
@@ -46,25 +49,15 @@ public class QueryExecutor {
      * @param query The query, already parsed and validated
      */
     public void executeQuery(ParsedQuery query) {
+	      DebugLevels.appendDebugLevel("executeQuery() executing query:" + '\n' + query.toString());  //added
         QueryProperties props = new QueryProperties();
         props.setDbInfo(this.dbInfo);
         // Generate an ID for the query.
         props.setId(UUID.randomUUID().toString().replaceAll("-", ""));
 
-        // Create a new SimpleQuery object
-        // Originally, I intended to have a handful of different query classes,
-        // each one handling a different kind of query, but I now doubt the sense
-        // of that design
         currentQuery = new SimpleQuery(service, kafkaService, props, query);
-        if (query.getQuery().getGroup().getList().size() == 1) {
-            // Set the group by field to correctly configure the connector
-            // Currently, this isn't working and all keys are being converted to
-            // hex strings
-            String groupByField = query.getQuery().getGroup().get(0).toString();
-            currentQuery.setGroupBy(groupByField);
-        }
+
         try {
-            // Show time
             currentQuery.execute();
         } catch(ExecutionException e) {
             currentQuery.destroy();
@@ -83,6 +76,8 @@ public class QueryExecutor {
         if (currentQuery != null) {
             currentQuery.destroy();
             currentQuery = null;
+
+	    DebugLevels.clearDebugLevels();  //added to clear debug traceback
         }
         else {
             Logger.getLogger().writeLine("No active query. Type some SQL to run one.");
@@ -103,5 +98,8 @@ public class QueryExecutor {
         }
     }
 
+    public boolean isExecuting() {
+        return this.currentQuery != null;
+    }
 
 }

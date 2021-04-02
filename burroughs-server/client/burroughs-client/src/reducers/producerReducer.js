@@ -1,5 +1,5 @@
 import {
-    PRODUCERS_LOADED, SET_PRODUCER_LIMIT
+    PRODUCERS_LOADED
 } from '../actions/actionTypes';
 
 const initialState = {
