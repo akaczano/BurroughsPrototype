@@ -105,6 +105,19 @@ public class QueryUtil {
     }
 
     /**
+     * Checks if a table exists
+     *
+     * @param tableName The table to look for
+     * @return Whether or not the table exists
+     */
+    public boolean tableExists(String tableName) {
+        ListResponse listResponse = service.executeStatement("SHOW TABLES;",
+                "executed statement: SHOW TABLES");
+        return Arrays.stream(listResponse.getTables())
+                .anyMatch(s -> s.getName().equalsIgnoreCase(tableName));
+    }
+
+    /**
      * Utility method for dropping a stream
      *
      * @param streamName The stream to drop

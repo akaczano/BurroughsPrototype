@@ -129,9 +129,9 @@ public class QueryValidator {
     }
 
     private void validateSubquery(SqlSelect select) throws UnsupportedQueryException {
-        if (select.getGroup() != null) {
-            throw new UnsupportedQueryException("Subquery cannot contain group by");
-        }
+//        if (select.getGroup() != null) {
+//            throw new UnsupportedQueryException("Subquery cannot contain group by");
+//        }
         for (SqlNode n : select.getSelectList()) {
             if (n.isA(SqlKind.AGGREGATE)) {
                 throw new UnsupportedQueryException("Subquery cannot contain aggregate function.");

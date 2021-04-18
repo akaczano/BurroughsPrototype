@@ -141,6 +141,25 @@ public abstract class QueryBase extends QueryUtil {
     }
 
     /**
+     * Creates a ksqlDB table
+     *
+     * @param id    The query ID to be used in the naming of the table
+     * @param query The query to build the table from
+     * @return The table's name
+     */
+    public String createTable(String id, String query, boolean isInnerTable) {
+        String tableName = id;
+        if (!isInnerTable) {
+            tableName = "burroughs_" + tableName;
+        }
+        String statement = String.format("CREATE TABLE %s AS %s EMIT CHANGES;",
+                tableName, query);
+        CommandResponse response = service.executeStatement(statement, "create table");
+        Logger.getLogger().writeLine("\n\t" + "createTable: " + statement, Logger.DEFAULT, Logger.LEVEL_2);
+        return tableName;
+    }
+
+    /**
      * Creates a sink connector for a table
      *
      * @param id The id from which to get the table name
@@ -177,8 +196,8 @@ public abstract class QueryBase extends QueryUtil {
 
         CommandResponse response = service.executeStatement(command, "create connector");
         if (response.getType().equals("error_entity")) {
-            Logger.getLogger().writeLine("Failed to create connector using: " + response,
-                    Logger.DEFAULT, Logger.LEVEL_2);
+//            Logger.getLogger().writeLine("Failed to create connector using: " + response,
+//                    Logger.DEFAULT, Logger.LEVEL_2);
             throw new ExecutionException("Failed to create connector. Make sure the output table doesn't already exist.");
         }
 
