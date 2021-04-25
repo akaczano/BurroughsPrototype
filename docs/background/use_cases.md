@@ -9,7 +9,7 @@ A Burroughs user can specify the output table with
 .table <tablename>
 ```
 From then on real time mirroring links will be created for any given sql query to an output table in the connected database named
-`tablename`.
+`<tablename>`.
 
 Basic sql queries such as the following are fully supported in Burroughs
 
@@ -36,7 +36,23 @@ group by 1 having count(*) > 2
 Burroughs also supports common table expressions and multiple joins.
 
 ```sql
-with transactions3 as (select * from test_data), pairs as select it1.productnum as source_item,
-it2.productnum as target_item from test_data it1 inner join transactions3 it2 on it1.basketnum = it2.basketnum and it1.productnum < it2.productnum
-where it1.units > 0 and it2.units > 0) select source_item, target_item, count(1) as frequency from pairs group by 1,2 having count(1) > 2
+with transactions3 as (
+    select * from test_data
+), pairs as (
+    select 
+        it1.productnum as source_item,
+        it2.productnum as target_item 
+        from test_data it1 
+        inner join transactions3 it2 
+            on it1.basketnum = it2.basketnum
+                and it1.productnum < it2.productnum
+    where it1.units > 0 and it2.units > 0
+) 
+select 
+    source_item,
+    target_item, 
+    count(1) as frequency 
+from pairs 
+group by 1,2
+having count(1) > 2
 ```

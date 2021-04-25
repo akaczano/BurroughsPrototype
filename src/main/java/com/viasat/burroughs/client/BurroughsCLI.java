@@ -54,12 +54,9 @@ public class BurroughsCLI implements Completer {
         this.handlers.put(".connection", this::handleConnection);
         this.handlers.put(".status", this::handleStatus);
         this.handlers.put(".quit", this::handleQuit);
-
         this.handlers.put(".delete", this::handleDeletion);
         this.handlers.put(".file", this::handleFile);
-
         this.handlers.put(".debug", this::handleDebug);
-        this.handlers.put(".file", this::handleFilein);
         this.handlers.put(".producers", this::handleProducers);
         this.handlers.put(".producer", this::handleProducer);
         this.handlers.put(".cleanup", this::handleCleanUp);
@@ -104,7 +101,7 @@ public class BurroughsCLI implements Completer {
             }
         } catch (ExecutionException e) {
             // Display error
-            System.out.println(e.getMessage());
+            System.out.println("\n" + e.getMessage());
             System.out.println("Use .debug for more info.");
         }
     }
@@ -322,7 +319,8 @@ public class BurroughsCLI implements Completer {
                     line = br.readLine();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Could not open file");
+                return;
             }
             StringBuilder sb = new StringBuilder();
             for (String c : commands) {
