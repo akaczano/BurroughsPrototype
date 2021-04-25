@@ -9,7 +9,7 @@ A Burroughs user can specify the output table with
 .table <tablename>
 ```
 From then on real time mirroring links will be created for any given sql query to an output table in the connected database named
-<tablename>.
+`tablename`.
 
 Basic sql queries such as the following are fully supported in Burroughs
 
