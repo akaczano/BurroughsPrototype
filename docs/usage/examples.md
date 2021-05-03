@@ -166,6 +166,38 @@ group by 1;
 
 ### Example 7: Date Manipulation
 
+
+Burroughs, like its dependencies Avro and KsqlDB, does not support any kind of date data type. Instead, dates must be stored as integers representing the number of days since the epoch. Such dates are not human readable, so Burroughs provides the ability to turn those into normal date strings using the `cast` function as shown in the following query which counts the total number of transactions that occur on each day.
+
+#### Query 
+```sql
+select 
+    cast("Date" as Date), 
+    count(*) as TotalTransactions
+from transactions
+group by 1;
+```
+*Note: if date is a column name, it must be surrounded by double quotes because date is a keyword in SQL*
+
+#### Output
+
+![]({{ '/assets/images/ex7_output.png' | relative_url }})
+
+You can also use the cast function to transform a literal date to the proper integer representation for comparison, like in the following query, which finds largest purchase in terms of quantity for each date after June 1, 2016.
+
+#### Query
+
+```sql
+select 
+    max(units) as BiggestPurchase,
+    cast("Date" as Date) from transactions
+where "Date" > CAST('2016-06-01' as date)
+group by 2; 
+```  
+
+#### Output
+![]({{ '/assets/images/ex7b_output.png' | relative_url }})
+
 ### Example 8: Multiple Group By Clauses
 
 ### Example 9: Windowing

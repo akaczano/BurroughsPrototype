@@ -413,6 +413,9 @@ public class SimpleQuery extends QueryBase {
                 id = id.setName(0, "'yyyy-MM-dd'");
                 call.setOperand(1, id);
             }
+            for (int i = 0; i < call.operandCount(); i++) {
+                call.setOperand(i, translateFunction(call.operand(i), isSelect));
+            }
         }
         return item;
     }
