@@ -245,6 +245,36 @@ public class BasicQueryTest extends BurroughsTest {
         }
     }
 
+    @Test
+    public void testMultipleGroupBy() {
+        try {
+            checkConditions();
+            String table = "groupbytest";
+            String query = "with raw as (\n" +
+                    "    select\n" +
+                    "        earliest_by_offset(storer) as region,\n" +
+                    "        basketnum,\n" +
+                    "        count(1) as num_products,\n" +
+                    "        sum(units) as total_quantity\n" +
+                    "    from test_data\n" +
+                    "    group by 2\n" +
+                    ")\n" +
+                    "select\n" +
+                    "    region,\n" +
+                    "    avg(num_products) as avg_products,\n" +
+                    "    avg(total_quantity) as avg_quantity\n" +
+                    "from raw\n" +
+                    "group by 1;";
+            burroughs.setDbTable(table);
+            burroughs.processQuery(query);
+            waitForQuery();
+            compareCount(query.replace("earliest_by_offset", "min"), table);
+        } catch(Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
     @After
     public void dispose() {
         burroughs.stop(false);

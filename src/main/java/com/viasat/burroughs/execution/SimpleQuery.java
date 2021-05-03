@@ -30,6 +30,7 @@ public class SimpleQuery extends QueryBase {
 
     // All of the associated streams
     private final List<StreamEntry> streams = new ArrayList<>();
+    private final List<TableEntry> tables = new ArrayList<>();
 
     private Stack<String> names = new Stack<>();
     private int subqueryCounter = 0;
@@ -65,8 +66,14 @@ public class SimpleQuery extends QueryBase {
                 createStreams(replacements, select.getFrom(), extras);
 
                 String queryText = translateQuery(select, replacements, extras);
-                String name = createStream(String.format("burr_%s_%s", getId().substring(0, 5), withItem.name.getSimple()), queryText);
-                streams.add(new StreamEntry(name, withItem.name.getSimple(),true));
+                if (select.getGroup() == null) {
+                    String name = createStream(String.format("burr_%s_%s", getId().substring(0, 5), withItem.name.getSimple()), queryText);
+                    streams.add(new StreamEntry(name, true));
+                } else {
+                    String name = createTable(String.format("burr_%s_%s", getId().substring(0, 5), withItem.name.getSimple()), queryText, true);
+                    tables.add(new TableEntry(name, false));
+                }
+
             }
         }
 
@@ -171,7 +178,7 @@ public class SimpleQuery extends QueryBase {
             String streamName = String.format("burroughs_%s", identifier.toString());
 
             String alternateName = String.format("burr_%s_%s", getId().substring(0, 5), identifier.toString());
-            if (!streamExists(alternateName)) {
+            if (!streamExists(alternateName) && !tableExists(alternateName)) {
                 Logger.getLogger().write(String.format("Creating stream %s...", streamName));
                 Logger.getLogger().write(String.format("Creating stream %s...", streamName));
                 if (!streamExists(streamName)) {
@@ -529,6 +536,11 @@ public class SimpleQuery extends QueryBase {
             } else {
                 dropStream(stream.getStreamName());
             }
+        }
+        for (TableEntry table : tables) {
+            Logger.getLogger().write("Dropping table " + table.getTableName() + "...");
+            terminateQueries(table.getTableName());
+            dropTable(table.getTableName());
         }
     }
 
