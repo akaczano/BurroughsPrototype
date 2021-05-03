@@ -199,5 +199,27 @@ group by 2;
 ![]({{ '/assets/images/ex7b_output.png' | relative_url }})
 
 ### Example 8: Multiple Group By Clauses
+The following query is an example of performing aggregations in multiple stages using common table expressions. Note that it would be cleaner to group by `storer` in addition to `basketnum` in the inner query, but this is not possible because Burroughs does not allow multiple fields in the group by of a CTE. Instead, the function `earliest_by_offset` is used to include the region, assuming that each basket number belongs to only one region. 
+
+#### Query
+```sql
+with raw as (
+    select
+        earliest_by_offset(store_r) as region,
+        basketnum,
+        count(1) as num_products,
+        sum(units) as total_quantity
+    from transactions
+    group by 2
+)
+select
+    region,
+    avg(num_products) as avg_products,
+    avg(total_quantity) as avg_quantity
+from raw
+group by 1;
+```
+#### Output
+![]({{ '/assets/images/ex8_output.png' | relative_url }})
 
 ### Example 9: Windowing
