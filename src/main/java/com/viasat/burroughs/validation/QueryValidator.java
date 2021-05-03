@@ -55,7 +55,7 @@ public class QueryValidator {
                     throw new UnsupportedQueryException("Order by and limit not allowed in subquery.");
                 }
                 SqlSelect select = (SqlSelect)item;
-                validateSubquery(select);
+                validateSubquery(select, true);
                 validateFrom(select.getFrom());
             }
             selectNode = (SqlSelect) with.body;
@@ -121,17 +121,17 @@ public class QueryValidator {
             }
         } else if (from instanceof SqlSelect) {
             SqlSelect select = (SqlSelect) from;
-            validateSubquery(select);
+            validateSubquery(select, false);
             validateFrom(select.getFrom());
         } else if (from instanceof SqlOrderBy) {
             throw new UnsupportedQueryException("Subquery cannot have limit or order by");
         }
     }
 
-    private void validateSubquery(SqlSelect select) throws UnsupportedQueryException {
-//        if (select.getGroup() != null) {
-//            throw new UnsupportedQueryException("Subquery cannot contain group by");
-//        }
+    private void validateSubquery(SqlSelect select, boolean allowGroup) throws UnsupportedQueryException {
+        if (select.getGroup() != null && !allowGroup) {
+            throw new UnsupportedQueryException("Subquery cannot contain group by");
+        }
         for (SqlNode n : select.getSelectList()) {
             if (n.isA(SqlKind.AGGREGATE)) {
                 throw new UnsupportedQueryException("Subquery cannot contain aggregate function.");
