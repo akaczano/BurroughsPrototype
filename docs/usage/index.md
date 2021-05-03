@@ -1,6 +1,7 @@
 ---
-sort: 5
+sort: 2
 ---
 
-# About
+# Using Burroughs
+
 {% include list.liquid all=true %}

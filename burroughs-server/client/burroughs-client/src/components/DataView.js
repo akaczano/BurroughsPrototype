@@ -34,13 +34,13 @@ class DataView extends React.Component {
                         </tr>
                     </thead>
                     <tbody>
-                        {this.props.data.slice(1).map((row, i) => {
+                        {this.props.data.slice(1).map((row, i) => {                            
                             return (
                                 <tr key={row.toString()}>
                                     <td>{i + 1}</td>
-                                    {row.map(item => {
+                                    {row.map((item, idx) => {                                        
                                         return (
-                                            <td key={row.toString() + item}>{item}</td>
+                                            <td key={row.toString() + idx}>{item}</td>
                                         );
                                     })}
                                 </tr>

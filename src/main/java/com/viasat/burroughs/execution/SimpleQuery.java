@@ -73,6 +73,7 @@ public class SimpleQuery extends QueryBase {
                     String name = createTable(String.format("burr_%s_%s", getId().substring(0, 5), withItem.name.getSimple()), queryText, true);
                     tables.add(new TableEntry(name, false));
                 }
+
             }
         }
 
@@ -130,7 +131,7 @@ public class SimpleQuery extends QueryBase {
                 String duplicated_stream = "duplicated_" + l;
                 if (!streamExists(duplicated_stream)) {
                     duplicated_stream = createStream(duplicated_stream, "select * from " + l);
-                    streams.add(new StreamEntry(duplicated_stream, true));
+                    streams.add(new StreamEntry(duplicated_stream, l, true));
                 }
                 SqlBasicCall right = ((SqlBasicCall) (join.getRight()));
                 SqlIdentifier sqi = (SqlIdentifier) (right.operand(0));
@@ -153,9 +154,10 @@ public class SimpleQuery extends QueryBase {
                 names.push("burr_" + getId().substring(0, 5) + "_" + subqueryCounter++);
             }
 
-            String stream = createStream(names.pop(), queryText);
+            String name = names.pop();
+            String stream = createStream(name, queryText);
             replacements.put("(" + subquery.toString() + ")", stream);
-            streams.add(new StreamEntry(stream, true));
+            streams.add(new StreamEntry(stream, name, true));
             return stream;
         } else if (from instanceof SqlBasicCall) {
             Logger.getLogger().writeLine("createStreams: interpreting " + from + " as SqlBasicCall.",
@@ -181,8 +183,7 @@ public class SimpleQuery extends QueryBase {
                 Logger.getLogger().write(String.format("Creating stream %s...", streamName));
                 if (!streamExists(streamName)) {
                     StreamEntry ent = new StreamEntry(createStream(streamName, identifier.getSimple()
-                            .toLowerCase(), Format.AVRO), false);
-                    ent.setTopicName(identifier.toString());
+                            .toLowerCase(), Format.AVRO), identifier.toString(), false);
                     streams.add(ent);
                     Logger.getLogger().write("Done\n");
                 } else {
@@ -401,6 +402,9 @@ public class SimpleQuery extends QueryBase {
                 }
                 return new SqlBasicCall(op, new SqlNode[]{call.getOperands()[0]}, call.getParserPosition());
             } else if (call.getOperator().toString().equalsIgnoreCase("CAST")) {
+                if (call.operands.length < 2) return item;
+                if (!call.operand(1).toString().equalsIgnoreCase("Date")) return item;
+
                 String operatorName;
                 if (isSelect) {
                     operatorName = "DATETOSTRING";
@@ -415,6 +419,9 @@ public class SimpleQuery extends QueryBase {
                         .clone(new SqlParserPos(0, 0, 0, 0));
                 id = id.setName(0, "'yyyy-MM-dd'");
                 call.setOperand(1, id);
+            }
+            for (int i = 0; i < call.operandCount(); i++) {
+                call.setOperand(i, translateFunction(call.operand(i), isSelect));
             }
         }
         return item;

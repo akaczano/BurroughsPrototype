@@ -5,10 +5,10 @@ public class StreamEntry {
     private final String streamName;
     private final boolean deleteTopic;
 
-    public StreamEntry(String streamName, boolean deleteTopic) {
+    public StreamEntry(String streamName, String topicName, boolean deleteTopic) {
         this.streamName = streamName;
         this.deleteTopic = deleteTopic;
-        this.topicName = null;
+        this.topicName = topicName;
     }
 
     public String getStreamName() {

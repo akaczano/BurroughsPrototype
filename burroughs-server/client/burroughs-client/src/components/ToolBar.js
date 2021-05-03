@@ -111,11 +111,11 @@ class ToolBar extends React.Component {
         }
     }
 
-    handleFileUpload(e) {
+    handleFileUpload(e) {        
         if (e.target.files.length > 0) {
             const reader = new FileReader();            
             reader.onload = res => {
-                this.props.setCode(res.target.result);
+                this.props.setCode(res.target.result);                
             }
             reader.readAsText(e.target.files[0]);
         }
@@ -126,7 +126,10 @@ class ToolBar extends React.Component {
             <Row style={{ margin: '0px', padding: '3px', paddingLeft: '10px', backgroundColor: '#f0f0f0', width: '100%', height: '5vh', fontSize: '20px' }}>
                 <FaFolderOpen 
                     className="default-button enabled" 
-                    onClick={() => this.fileRef.current.click()}
+                    onClick={() => {
+                        this.fileRef.current.value = '';
+                        this.fileRef.current.click();
+                    }}
                 />
                 <FaSave 
                     className="default-button enabled   " 
