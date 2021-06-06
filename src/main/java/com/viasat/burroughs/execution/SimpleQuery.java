@@ -68,7 +68,7 @@ public class SimpleQuery extends QueryBase {
                 String queryText = translateQuery(select, replacements, extras);
                 if (select.getGroup() == null) {
                     String name = createStream(String.format("burr_%s_%s", getId().substring(0, 5), withItem.name.getSimple()), queryText);
-                    streams.add(new StreamEntry(name, true));
+                    streams.add(new StreamEntry(name, null, true));
                 } else {
                     String name = createTable(String.format("burr_%s_%s", getId().substring(0, 5), withItem.name.getSimple()), queryText, true);
                     tables.add(new TableEntry(name, false));
@@ -131,7 +131,7 @@ public class SimpleQuery extends QueryBase {
                 String duplicated_stream = "duplicated_" + l;
                 if (!streamExists(duplicated_stream)) {
                     duplicated_stream = createStream(duplicated_stream, "select * from " + l);
-                    streams.add(new StreamEntry(duplicated_stream, l, true));
+                    streams.add(new StreamEntry(duplicated_stream, null, true));
                 }
                 SqlBasicCall right = ((SqlBasicCall) (join.getRight()));
                 SqlIdentifier sqi = (SqlIdentifier) (right.operand(0));
