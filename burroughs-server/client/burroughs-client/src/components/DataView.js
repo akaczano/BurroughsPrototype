@@ -25,7 +25,7 @@ class DataView extends React.Component {
             const headers = this.props.data[0];
             return (
                 <Table striped bordered hover className="data-table">
-                    <thead style={{position: 'sticky', top: '0px'}}>
+                    <thead style={{position: 'sticky', top: '0px', zIndex: 0}}>
                         <tr>
                             <th>#</th>
                             {headers.map(h => (
@@ -59,6 +59,7 @@ class DataView extends React.Component {
                     style={{
                         position: 'sticky',
                         top: 0,
+                        zIndex: 100,
                         padding: '5px',
                         paddingBottom: '0px',
                         backgroundColor: 'white',

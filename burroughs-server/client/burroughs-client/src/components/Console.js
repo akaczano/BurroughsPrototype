@@ -18,7 +18,7 @@ class Console extends React.Component {
         );
     }
 
-    render() {
+    render() {        
         return (
             <>                
                 <Form style={{width: '100%', position: 'sticky', top: 0, backgroundColor: '#e6e6e6'}}>
@@ -47,6 +47,7 @@ class Console extends React.Component {
                     </thead>
                     <tbody>
                         {
+                            
                             this.props.messages
                                 .filter(m => m.debugLevel == this.state.debugLevel)
                                 .filter(m => m.text.length > 1)
